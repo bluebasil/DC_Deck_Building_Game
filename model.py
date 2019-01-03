@@ -333,6 +333,7 @@ class model:
 	notify = None
 	whose_turn = 0
 	persona_list = []
+	turn_number = 0
 
 	#initialize Game
 	def __init__(self,number_of_players=2):
@@ -354,13 +355,28 @@ class model:
 		#2 human players for initialization
 		
 
-		for i in range(4):
-			new_player = player(i,None)
-			new_controler = controlers.cpu(new_player,True)
-			new_player.controler = new_controler
-			self.players.append(new_player)
+		#for i in range(4):
+		new_player = player(0,None)
+		new_controler = controlers.cpu(new_player,True)
+		new_player.controler = new_controler
+		self.players.append(new_player)
 
-		#for player_id in range(2):
+		new_player = player(1,None)
+		new_controler = controlers.cpu_greedy(new_player,True)
+		new_player.controler = new_controler
+		self.players.append(new_player)
+
+		new_player = player(2,None)
+		new_controler = controlers.cpu(new_player,True)
+		new_player.controler = new_controler
+		self.players.append(new_player)
+
+		new_player = player(3,None)
+		new_controler = controlers.cpu_greedy(new_player,True)
+		new_player.controler = new_controler
+		self.players.append(new_player)
+
+		# in range(2):
 		#	new_player = player(player_id,None)
 		#	new_controler = controlers.human(new_player)
 		#	new_player.controler = new_controler
@@ -377,6 +393,7 @@ class model:
 	def start_game(self):
 		self.choose_personas()
 		while self.supervillain_stack.get_count() > 0:
+			self.turn_number += 1
 			if self.notify != None:
 				self.notify()
 			if globe.DEBUG:

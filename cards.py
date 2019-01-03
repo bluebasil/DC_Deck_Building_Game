@@ -445,7 +445,8 @@ class the_emerald_knight(card_class):
 		return 0
 
 	def end_of_turn(self):
-		globe.boss.lineup.add(self.played_card.pop_self())
+		if self.played_card != None:
+			globe.boss.lineup.add(self.played_card.pop_self())
 		return
 
 #Done
@@ -1009,7 +1010,7 @@ class arkham_asylum(card_class):
 	ongoing = True
 
 	def arkham_mod(self,card,player):
-		if card.ctype == cardtype.VILLAIN:
+		if card.ctype == cardtype.VILLAIN and self.arkham_mod in player.played.card_mods:
 			player.played.card_mods.remove(self.arkham_mod)
 			player.draw_card()
 		return 0
@@ -1036,7 +1037,7 @@ class the_batcave(card_class):
 	text = "Ongoing: When you play your first Equipment on each of your turns, Draw a card."
 
 	def batcave_mod(self,card,player):
-		if card.ctype == cardtype.EQUIPMENT:
+		if card.ctype == cardtype.EQUIPMENT and self.batcave_mod in player.played.card_mods:
 			player.played.card_mods.remove(self.batcave_mod)
 			player.draw_card()
 		return 0
@@ -1064,7 +1065,7 @@ class fortress_of_solitude(card_class):
 	ongoing = True
 
 	def solitude_mod(self,card,player):
-		if card.ctype == cardtype.SUPERPOWER:
+		if card.ctype == cardtype.SUPERPOWER and self.solitude_mod in player.played.card_mods:
 			player.played.card_mods.remove(self.solitude_mod)
 			player.draw_card()
 		return 0
@@ -1092,7 +1093,7 @@ class titans_tower(card_class):
 	ongoing = True
 
 	def titan_mod(self,card,player):
-		if card.cost == 2 or card.cost == 3:
+		if card.cost == 2 or card.cost == 3 and self.titan_mod in player.played.card_mods:
 			player.played.card_mods.remove(self.titan_mod)
 			player.draw_card()
 		return 0
@@ -1120,7 +1121,7 @@ class the_watchtower(card_class):
 	ongoing = True
 
 	def watchtower_mod(self,card,player):
-		if card.ctype == cardtype.HERO:
+		if card.ctype == cardtype.HERO and self.watchtower_mod in player.played.card_mods:
 			player.played.card_mods.remove(self.watchtower_mod)
 			player.draw_card()
 		return 0
@@ -1136,7 +1137,8 @@ class the_watchtower(card_class):
 				if c.ctype == cardtype.HERO:
 					already_played = True
 			if not already_played:
-				player.played.card_mods.append(self.watchtower_mod)
+				if player == self.owner:
+					player.played.card_mods.append(self.watchtower_mod)
 		return 0
 
 

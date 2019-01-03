@@ -527,3 +527,45 @@ class cpu(controler):
 						lowest_position = i
 		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to discard a {self.player.hand.contents[lowest_position].name}")
 		return (option.OK,lowest_position)
+
+
+
+
+class cpu_greedy(cpu):
+
+	# Choose to end turn or play any cards
+	def turn(self):
+		global view
+		if not self.invisible:
+			view.print_board()
+		self.display_thought(f"Begining of AI {self.player.pid}'s turn")
+		self.player.hand.contents.sort(key = self.sort_by_play_order)
+		
+		while self.player.hand.size() > 0:
+			size_check = self.player.hand.size()
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is going to play a {self.player.hand.contents[0].name} (total power = {self.player.played.power})")
+			self.player.play(0)
+			if size_check - 1 != self.player.hand.size():
+				self.display_thought("(Differtent cards than expected)")
+				self.player.hand.contents.sort(key = self.sort_by_play_order)
+
+		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} has {self.player.played.power} power!")
+		if globe.boss.supervillain_stack.size() > 0 and self.player.played.power >= globe.boss.supervillain_stack.contents[-1].cost:
+			self.player.buy_supervillain()
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is buying the supervillain! ({self.player.played.power} power left)")
+		assemble = []
+		for c in globe.boss.lineup.contents:
+			assemble.append(c)
+		assemble.sort(reverse = True,key = self.sort_by_cost)
+		#Tries to buy everything from most to least expensive
+		while len(assemble) > 0:
+			test = assemble.pop()
+			if self.player.buy_c(test):
+				self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought {test.name} ({self.player.played.power} power left)")
+		while self.player.played.power >= 3 and globe.boss.kick_stack.size() > 0:
+			self.player.buy_kick()
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)")
+
+		return
+
+
