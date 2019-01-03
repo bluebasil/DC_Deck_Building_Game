@@ -3,6 +3,7 @@ import ai_hint
 import time
 import random
 import globe
+import cardtype
 
 view = None
 def set_view(vi):
@@ -45,7 +46,7 @@ class controler:
 		return [option.NO]
 
 	#No responce needed
-	def reveal(self,player,cards):
+	def reveal(self,instruction_text,player,cards):
 		return
 
 	def choose_even_or_odd(self,instruction_text,player):
@@ -160,7 +161,7 @@ class human(controler):
 				if not result:
 					print("COULD NOT BUY")
 			elif x[0] == "riddle":
-				if player.played_riddler:
+				if self.player.played_riddler:
 					result = self.player.riddle()
 					if not result:
 						print("COULD NOT BUY")
@@ -248,14 +249,16 @@ class human(controler):
 			return [option.NO]
 		elif x[0] == "ok":
 			intx = -1
+			safe = True
 			try:
-				intx = int(x[0])
+				intx = int(x[1])
 			except:
 				print("?")
-				return self.may_choose_one_of(instruction_text,player,cards)
-			return [option.OK,intx]
-		else:
-			return self.may_choose_one_of(instruction_text,player,cards,hint)
+				safe = False
+			if safe:
+				return [option.OK,intx]
+		print("??")
+		return self.may_choose_one_of(instruction_text,player,cards,hint)
 
 	def ok_or_no(self,instruction_text,player,card,hint):
 		self.state_name()
@@ -273,21 +276,22 @@ class human(controler):
 			print("?")
 			return self.ok_or_no(instruction_text,player,card,hint)
 
-	def reveal(self,player,cards):
+	def reveal(self,instruction_text,player,cards):
 		self.state_name()
 		global view
+		print(instruction_text, flush = True)
 		view.print_custom(cards)
-		time.sleep(0.5)
+		time.sleep(3)
 		return
 
 	def choose_even_or_odd(self,instruction_text,player):
 		self.state_name()
-		print(f"{instruction_text} (even/odd")
+		print(f"{instruction_text} (even/odd)")
 		x = get_input()
 		if x[0] == "even":
-			return option.EVEN
+			return [option.EVEN]
 		elif x[0] == "odd":
-			return option.ODD
+			return [option.ODD]
 		else:
 			return choose_even_or_odd(instruction_text,player)
 
@@ -420,6 +424,8 @@ class cpu(controler):
 			return 750
 		if card.name == "Punch":
 			return 250
+		if card.ctype == cardtype.LOCATION:
+			return -1
 		return card.cost
 
 	def choose_persona(self,persona_list):

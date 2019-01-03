@@ -7,17 +7,6 @@ def get_starting_deck(player):
 		assemble.append(cards.punch(player))
 	for c in range(3):
 		assemble.append(cards.vunerability(player))
-	#assemble.append(cards.kick(player))
-	#assemble.append(cards.kick(player))
-	#assemble.append(cards.kick(player))
-	#assemble.append(cards.kick(player))
-	#assemble.append(cards.kick(player))
-	#assemble.append(cards.kick(player))
-	#assemble.append(cards.catwoman(player))
-	#assemble.append(cards.catwoman(player))
-	#assemble.append(cards.the_dark_knight(player))
-	#assemble.append(cards.clayface(player))
-
 
 	random.shuffle(assemble)
 
@@ -206,6 +195,12 @@ def initialize_deck():
 
 	for c in range(2):
 		assemble.append(cards.zatanna_zatara())
+
+	assemble.append(cards.arkham_asylum())
+	assemble.append(cards.the_batcave())
+	assemble.append(cards.fortress_of_solitude())
+	assemble.append(cards.titans_tower())
+	assemble.append(cards.the_watchtower())
 
 	random.shuffle(assemble)
 	return assemble

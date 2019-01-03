@@ -80,6 +80,7 @@ class playing(pile):
 		self.power = 0
 		self.played_this_turn = []
 		self.card_mods = [self.no_mod]
+
 		#self.owner.persona.set_modifiers()
 		self.double_modifier = 0
 		while self.size() > 0:
@@ -97,12 +98,18 @@ class playing(pile):
 		self.play(card)
 
 
-	def play(self,card):
-		card.times_played += 1
-		self.contents.append(card)
+	def play(self,card,ongoing = False):
+		if not ongoing:
+			card.times_played += 1
+			self.contents.append(card)
 		modifier = 0
 
+		# SO tht the mods can delete themselves afterwards
+		assemble = []
 		for mod in self.card_mods:
+			assemble.append(mod)
+
+		for mod in assemble:
 
 			modifier += mod(card,self.owner)
 		#modifier = card.play_action(self.owner)
@@ -113,13 +120,19 @@ class playing(pile):
 
 		#print("MOD WAS",modifier)
 		self.power += modifier
-		self.played_this_turn.append(card)
+		if not ongoing:
+			self.played_this_turn.append(card)
 		#print("PLAYED!", self.power, self)
 
 	def parallax_double(self):
 		self.power *= 2
 		self.double_modifier += 1
 
+class ongoing_pile(pile):
+
+	def begin_turn(self):
+		for c in self.contents:
+			self.owner.played.play(c,True)
 
 
 class player:
@@ -143,7 +156,7 @@ class player:
 		self.deck = pile(self, visibilities.SECRET)
 		self.hand = pile(self, visibilities.PRIVATE)
 		self.discard = pile(self)
-		self.ongoing = pile(self)
+		self.ongoing = ongoing_pile(self)
 		self.played = playing(self)
 
 		#These should be reinitialized or they share values with all insatnces
@@ -160,6 +173,11 @@ class player:
 		persona_list.remove(self.persona)
 		self.persona = self.persona(self)
 		self.persona.reset()
+
+	def turn(self):
+		self.ongoing.begin_turn()
+		self.controler.turn()
+		self.end_turn()
 
 	def draw_card(self):
 		if not self.manage_reveal():
@@ -336,17 +354,17 @@ class model:
 		#2 human players for initialization
 		
 
-		#for i in range(4):
-		#	new_player = player(i,None)
-		#	new_controler = controlers.cpu(new_player,True)
-		#	new_player.controler = new_controler
-		#	self.players.append(new_player)
-
-		for player_id in range(2):
-			new_player = player(player_id,None)
-			new_controler = controlers.human(new_player)
+		for i in range(4):
+			new_player = player(i,None)
+			new_controler = controlers.cpu(new_player,True)
 			new_player.controler = new_controler
 			self.players.append(new_player)
+
+		#for player_id in range(2):
+		#	new_player = player(player_id,None)
+		#	new_controler = controlers.human(new_player)
+		#	new_player.controler = new_controler
+		#	self.players.append(new_player)
 
 	def choose_personas(self):
 		for i,p in enumerate(self.players):
@@ -364,8 +382,7 @@ class model:
 			if globe.DEBUG:
 				print(f"{self.whose_turn} turn")
 
-			self.players[self.whose_turn].controler.turn()
-			self.players[self.whose_turn].end_turn()
+			self.players[self.whose_turn].turn()
 
 			for i in range(5 - self.lineup.size()):
 				card_to_add = self.main_deck.draw()

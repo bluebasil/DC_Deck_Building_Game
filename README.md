@@ -23,7 +23,7 @@ add heros						Done
 integration testing				ongoing...
 persona's 						Done
 add basic ai 					Done
-add locations					TODO
+add locations					Done
 add personalities 				Done
 add sv logic					TODO
 advance ai logic				TODO

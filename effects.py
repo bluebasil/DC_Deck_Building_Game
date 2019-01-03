@@ -79,13 +79,17 @@ def may_choose_one_of(instruction_text,player,cards,hint = ai_hint.BEST):
 		print("may_choose_one_of",result)
 	if result[0] == option.NO:
 		return None
-	else:
+	elif result[0] == option.OK:
 		if not ensure_int(result[1]):
-			return may_choose_one_of(instruction_text,player,cards)
+			return may_choose_one_of(instruction_text,player,cards,hint)
 		elif result[1] < 0 or result[1] >= len(cards):
 			print(f"ERR: invalid number. max:{len(cards)-1}")
-			return choose_one_of(instruction_text,player,cards)
+			return may_choose_one_of(instruction_text,player,cards,hint)
 		return cards[result[1]]
+	else:
+		print(f"ERR: invalid responce code")
+		return may_choose_one_of(instruction_text,player,cards,hint)
+
 
 def ok_or_no(instruction_text,player,card = None,hint = ai_hint.IFBAD):
 	result = player.controler.ok_or_no(instruction_text,player,card,hint)
@@ -100,7 +104,7 @@ def ok_or_no(instruction_text,player,card = None,hint = ai_hint.IFBAD):
 		return ok_or_no(instruction_text,player,hint)
 
 def reveal(reveal_text,player,cards):
-	player.controler.reveal(player,cards)
+	player.controler.reveal(reveal_text,player,cards)
 
 #True for even
 def choose_even_or_odd(instruction_text,player):

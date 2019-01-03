@@ -145,7 +145,7 @@ class kick(card_class):
 	def play_action(self,player):
 		return 2
 
-#TODO: Not Done UI
+#DOne
 class aquamans_trident(card_class):
 	name = "Auquaman's Trident"
 	vp = 1
@@ -367,6 +367,8 @@ class the_dark_knight(card_class):
 	def the_dark_knight_mod(self,card,player):
 		if card.name == "Catwoman" and not self.catwoman_played:
 			self.catwoman_played = True
+			#should be able to remove 'catwoman_played'
+			player.played.card_mods.remove(self.the_dark_knight_mod)
 			used = False
 			for c in player.gained_this_turn:
 				if not used and c in player.discard.contents and effects.ok_or_no(f"Would you like to put {c.name} into your hand?-",player,c,ai_hint.ALWAYS):
@@ -488,7 +490,7 @@ class green_arrow(card_class):
 		else:
 			return 0
 
-#Test
+#Done
 class green_arrows_bow(card_class):
 	name = "Green Arrow's Bow"
 	vp = 1
@@ -552,7 +554,7 @@ class high_tech_hero(card_class):
 		else:
 			return 1
 
-#Test
+#Done
 class jonn_jonzz(card_class):
 	name = "J'onn J'onzz"
 	vp = 2
@@ -669,7 +671,7 @@ class nth_metal(card_class):
 			top_card.destroy()
 		return 0
 
-# Test
+#DOne
 class the_penguin(card_class):
 	name = "The Penguin"
 	vp = 1
@@ -684,7 +686,7 @@ class the_penguin(card_class):
 			effects.discard_a_card(player)
 		return 0
 
-#TODO: attack
+#Done
 class poison_ivy(card_class):
 	name = "Poison Ivy"
 	vp = 1
@@ -708,7 +710,7 @@ class poison_ivy(card_class):
 		return
 
 
-#TODO: TEST, i dont think UI will work properly
+#Done
 class power_ring(card_class):
 	name = "Power Ring"
 	vp = 1
@@ -723,7 +725,7 @@ class power_ring(card_class):
 			return 3
 		return 2
 
-#Test
+#Done
 class princess_diana_of_themyscira(card_class):
 	name = "Princess Diana of Themyscira"
 	vp = 2
@@ -740,19 +742,19 @@ class princess_diana_of_themyscira(card_class):
 			player.gain(c.pop_self())
 		return 0
 
-#test
+#done
 class the_riddler(card_class):
 	name = "The Riddler"
 	vp = 1
 	cost = 3
 	ctype = cardtype.VILLAIN
-	text = "You may pay 3 Power.  If you do, gain the top card of the main deck.  Use this ability any number of times this turn.  If you choose not to, +1 Power instead"
+	text = "type 'riddle' to pay 3 Power.  If you do, gain the top card of the main deck.  Use this ability any number of times this turn.  If you choose not to, +1 Power instead"
 
 	def play_action(self,player):
 		player.played_riddler = True
 		return 1
 
-#test
+#done
 class robin(card_class):
 	name = "Robin"
 	vp = 1
@@ -792,7 +794,7 @@ class scarecrow(card_class):
 				p.gain_a_weakness()
 		return
 
-#TEst
+#done
 class solomon_grundy(card_class):
 	name = "Solomon Grundy"
 	vp = 2
@@ -813,7 +815,7 @@ class solomon_grundy(card_class):
 		return
 
 
-#TEst
+#done
 class starro(card_class):
 	name = "Starro"
 	vp = 2
@@ -833,8 +835,8 @@ class starro(card_class):
 				card_to_discard = p.reveal_card()
 				if card_to_discard.ctype != cardtype.LOCATION:
 					result = effects.ok_or_no(f"Would you like to play a {card_to_discard.name}?",by_player,card_to_discard,ai_hint.ALWAYS)
-					if result == option.OK:
-						player.play_and_return(card_to_discard,p.discard)
+					if result:
+						by_player.play_and_return(card_to_discard.pop_self(),p.discard)
 		return
 
 #test vp
@@ -865,7 +867,7 @@ class suicide_squad(card_class):
 				count += 1
 		return count
 
-#TODO: Defence
+#done
 class super_speed(card_class):
 	name = "Super Speed"
 	vp = 1
@@ -896,7 +898,7 @@ class super_strength(card_class):
 	def play_action(self,player):
 		return 5
 
-#Test
+#done
 class super_girl(card_class):
 	name = "Super Girl"
 	vp = 1
@@ -912,7 +914,7 @@ class super_girl(card_class):
 			player.hand.add(new_kick)
 		return 0
 
-#Test
+#done
 class swamp_thing(card_class):
 	name = "Swamp Thing"
 	vp = 1
@@ -938,7 +940,7 @@ class two_face(card_class):
 		choose_even = effects.choose_even_or_odd("Choose even or odd, then reveal the top card of your deck.  If its cost matches your choice, draw it.  If not, discard it.",player)
 		
 		on_top = player.reveal_card()
-		effects.reveal("This was on top of your deck",player,on_top)
+		effects.reveal("This was on top of your deck",player,[on_top])
 		if on_top.cost%2 == 0:
 			card_is_even = True
 		else:
@@ -997,9 +999,145 @@ class zatanna_zatara(card_class):
 				player.deck.contents.insert(0,result.pop_self())
 		return 1
 
+#Locations
+class arkham_asylum(card_class):
+	name = "Arkham Asylum"
+	vp = 1
+	cost = 5
+	ctype = cardtype.LOCATION
+	text = "Ongoing: When you play your first Villain on each of your turns, draw a card."
+	ongoing = True
 
+	def arkham_mod(self,card,player):
+		if card.ctype == cardtype.VILLAIN:
+			player.played.card_mods.remove(self.arkham_mod)
+			player.draw_card()
+		return 0
 
+	def play_action(self,player):
+		if self in player.ongoing.contents:
+			player.played.card_mods.append(self.arkham_mod)
+		else:
+			player.ongoing.add(self.pop_self())
 
+			already_played = False
+			for c in player.played.played_this_turn:
+				if c.ctype == cardtype.VILLAIN:
+					already_played = True
+			if not already_played:
+				player.played.card_mods.append(self.arkham_mod)
+		return 0
+
+class the_batcave(card_class):
+	name = "The Batcave"
+	vp = 1
+	cost = 5
+	ctype = cardtype.LOCATION
+	text = "Ongoing: When you play your first Equipment on each of your turns, Draw a card."
+
+	def batcave_mod(self,card,player):
+		if card.ctype == cardtype.EQUIPMENT:
+			player.played.card_mods.remove(self.batcave_mod)
+			player.draw_card()
+		return 0
+
+	def play_action(self,player):
+		if self in player.ongoing.contents:
+			player.played.card_mods.append(self.batcave_mod)
+		else:
+			player.ongoing.add(self.pop_self())
+
+			already_played = False
+			for c in player.played.played_this_turn:
+				if c.ctype == cardtype.EQUIPMENT:
+					already_played = True
+			if not already_played:
+				player.played.card_mods.append(self.batcave_mod)
+		return 0
+
+class fortress_of_solitude(card_class):
+	name = "Fortress of Solitude"
+	vp = 1
+	cost = 5
+	ctype = cardtype.LOCATION
+	text = "Ongoing: When you play your first Super Poweron each of your turns, draw a card."
+	ongoing = True
+
+	def solitude_mod(self,card,player):
+		if card.ctype == cardtype.SUPERPOWER:
+			player.played.card_mods.remove(self.solitude_mod)
+			player.draw_card()
+		return 0
+
+	def play_action(self,player):
+		if self in player.ongoing.contents:
+			player.played.card_mods.append(self.solitude_mod)
+		else:
+			player.ongoing.add(self.pop_self())
+
+			already_played = False
+			for c in player.played.played_this_turn:
+				if c.ctype == cardtype.SUPERPOWER:
+					already_played = True
+			if not already_played:
+				player.played.card_mods.append(self.solitude_mod)
+		return 0
+
+class titans_tower(card_class):
+	name = "Titans Tower"
+	vp = 1
+	cost = 5
+	ctype = cardtype.LOCATION
+	text = "Ongoing: When you play your first card with cost 2 or 3 on each of your turns, draw a card."
+	ongoing = True
+
+	def titan_mod(self,card,player):
+		if card.cost == 2 or card.cost == 3:
+			player.played.card_mods.remove(self.titan_mod)
+			player.draw_card()
+		return 0
+
+	def play_action(self,player):
+		if self in player.ongoing.contents:
+			player.played.card_mods.append(self.titan_mod)
+		else:
+			player.ongoing.add(self.pop_self())
+
+			already_played = False
+			for c in player.played.played_this_turn:
+				if c.cost == 2 or c.cost == 3:
+					already_played = True
+			if not already_played:
+				player.played.card_mods.append(self.titan_mod)
+		return 0
+
+class the_watchtower(card_class):
+	name = "The Watchtower"
+	vp = 1
+	cost = 5
+	ctype = cardtype.LOCATION
+	text = "Ongoing: When you play your first hero on each of your turns, draw a card."
+	ongoing = True
+
+	def watchtower_mod(self,card,player):
+		if card.ctype == cardtype.HERO:
+			player.played.card_mods.remove(self.watchtower_mod)
+			player.draw_card()
+		return 0
+
+	def play_action(self,player):
+		if self in player.ongoing.contents:
+			player.played.card_mods.append(self.watchtower_mod)
+		else:
+			player.ongoing.add(self.pop_self())
+
+			already_played = False
+			for c in player.played.played_this_turn:
+				if c.ctype == cardtype.HERO:
+					already_played = True
+			if not already_played:
+				player.played.card_mods.append(self.watchtower_mod)
+		return 0
 
 
 

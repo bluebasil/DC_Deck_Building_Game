@@ -27,7 +27,7 @@ class persona:
 		return
 
 class auquaman(persona):
-	name = "Auqaman"
+	name = "Aquaman"
 	text = "You may put any cards with cost 5 or less you buy or gain during your turn on top of your deck."
 
 	def aquaman_redirect(self,player,card):
