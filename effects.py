@@ -1,6 +1,7 @@
 import option
 import globe
 import cardtype
+import ai_hint
 
 
 def ensure_int(i):
@@ -9,6 +10,79 @@ def ensure_int(i):
 		return False
 	else:
 		return True
+
+def attack_all(card):
+	total_hit = 0
+	for p in globe.boss.players:
+		if attack(p,card):
+			total_hit += 1
+	return total_hit
+
+#Returns true if hit by attack
+def attack(player,card,by_player = None):
+	assemble = []
+	for c in player.hand.contents:
+		if c.defence:
+			assemble.append(c)
+	for c in player.ongoing.contents:
+		if c.defence:
+			assemble.append(c)
+
+	if len(assemble) > 0:
+		responce = player.controler.may_defend(assemble,card,by_player)
+		if responce[0] == option.OK:
+			if not ensure_int(result[1]):
+				return attack(player,card,by_player)
+			elif result[1] < 0 or result[1] >= len(assemble):
+				print("Err: invalid number")
+				return attack(player,card,by_player)
+			else:
+				assemble[result[1]].defend()
+				return False
+		elif responce[0] == option.NO:
+			return True
+		else:
+			print("Err: responce")
+			return attack(player,card,by_player)
+	else:
+		return True
+
+def choose_one_of(instruction_text,player,cards,hint = ai_hint.WORST):
+	result = player.controler.choose_one_of(instruction_text,player,cards,hint)
+	if globe.boss.DEBUG:
+		print("choose_one_of",result)
+	if not ensure_int(result[0]):
+		return choose_one_of(instruction_text,player,cards)
+	elif result[0] < 0 or result[0] >= len(cards):
+		print(f"ERR: invalid number. max:{len(cards)-1}")
+		return choose_one_of(instruction_text,player,cards)
+	return cards[result[0]]
+
+def may_choose_one_of(instruction_text,player,cards,hint = ai_hint.BEST):
+	result = player.controler.choose_one_of(instruction_text,player,card,hint)
+	if globe.boss.DEBUG:
+		print("may_choose_one_of",result)
+	if not ensure_int(result[0]):
+		return choose_one_of(instruction_text,player,cards)
+	elif result[0] < 0 or result[0] >= len(cards):
+		print(f"ERR: invalid number. max:{len(cards)-1}")
+		return choose_one_of(instruction_text,player,cards)
+	return cards[result[0]]
+
+def ok_or_no(instruction_text,player,card = None,hint = ai_hint.IFBAD):
+	result = player.controler.ok_or_no(instruction_text,player,card,hint)
+	if globe.boss.DEBUG:
+		print("ok_or_no",result)
+	if result[0] == option.OK:
+		return True
+	elif result[0] == option.NO:
+		return False
+	else:
+		print(f"ERR: invalid responce code")
+		return ok_or_no(instruction_text,player,hint)
+
+def reveal(reveal_text,player,cards):
+	player.controler.reveal(reveal_text,player,cards)
 
 # (no/hand/disccard, if hand or discard: #)
 def may_destroy_card_in_hand_or_discard(player):
@@ -34,7 +108,7 @@ def may_destroy_card_in_hand_or_discard(player):
 			card_to_destroy = player.hand.contents.pop(result[1])
 		else:
 			card_to_destroy = player.discard.contents.pop(result[1])
-		globe.boss.destroyed_stack.add(card_to_destroy)
+		card_to_destroy.destroy()
 		return (result[0],card_to_destroy)
 	else:
 		print(f"ERR: invalid responce code: {result[0]}")
@@ -53,7 +127,7 @@ def discard_a_card(player):
 		else:
 			return(option.CANNOT,)
 	if not ensure_int(result[1]):
-			discard_a_card(player)
+		return discard_a_card(player)
 	elif result[1] < 0 or result[1] >= player.hand.size():
 		print(f"ERR: invalid number. max:{player.hand.size()-1}")
 		return discard_a_card(player)
@@ -105,9 +179,73 @@ def may_destroy_card_in_discard(player):
 		elif result[1] < 0 or result[1] >= player.discard.size():
 			print(f"ERR: invalid number. max:{player.discard.size()-1}")
 			return may_destroy_card_in_discard(player)
-		card_to_destroy = player.discard.pop(result[1])
-		globe.boss.destroyed_stack.add(card_to_destroy)
+		#card_to_destroy = player.discard.contents.pop(result[1])
+		card_to_destroy.destroy()
 		return (option.OK,card_to_destroy)
 	else:
 		print(f"ERR: invalid responce code: {result[0]}")
 		return may_destroy_card_in_hand_or_discard(player)
+
+
+def replace_cards_in_lineup(player):
+	return
+
+def discard_top_of_deck(player):
+	return None
+
+def play_random_card_from_opponents_hands(player):
+	for p in globe.boss.players:
+		if p != player:
+			#since cards cants be ordered, the first card is random
+			card = p.hand.contents.pop()
+			player.play_and_return(card,p.hand)
+	return 0
+
+def may_destroy_two_cards(player):
+	return  []
+
+def gain_card_from_lineup(player):
+	return None
+
+def may_discard_a_card(player):
+	return None
+
+#This effects 1 player
+def fa_add_card_to_lineup(caused_by,player):
+	#if attack(player,caused_by):
+	#	player.
+	return
+
+def fa_hide_card_under_superhero(caused_by,player):
+	return
+
+def return_hidden_cards(player):
+	return
+
+def fa_destroy_or_discard_hand(caused_by,player,card_to_destroy):
+	return
+
+def fa_random_shuffle_two_cards(caused_by,player):
+	return []
+
+def fa_disable_superhero(caused_by,player):
+	return
+
+def enable_superhero(player):
+	return
+
+def fa_reveal_villain_or_discard_two(caused_by,player):
+	return
+
+def fa_destroy_hero_villain_superpower_in_hand_discard(caused_by,player):
+	return None
+
+def fa_card_in_discard_to_left(caused_by,player):
+	return None
+
+def fa_gain_weakness_villains_lineup(caused_by,player):
+	return None
+
+def fa_discard_two_or_less(caused_by,player):
+	return
+

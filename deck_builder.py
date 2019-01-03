@@ -7,12 +7,29 @@ def get_starting_deck(player):
 	#	assemble.append(cards.punch(player))
 	#for c in range(3):
 	#	assemble.append(cards.vunerability(player))
-	assemble.append(cards.punch(player))
+	for c in range(10):
+		assemble.append(cards.punch(player))
+	assemble.append(cards.the_bat_signal(player))
+	for c in range(3):
+		assemble.append(cards.punch(player))
+	assemble.append(cards.fastest_man_alive(player))
+	assemble.append(cards.the_batmobile(player))
+	"""assemble.append(cards.punch(player))
 	assemble.append(cards.lasso_of_truth(player))
 	assemble.append(cards.high_tech_hero(player))
 	assemble.append(cards.x_ray_vision(player))
 	assemble.append(cards.heat_vision(player))
+	assemble.append(cards.king_of_atlantis(player))"""
+	for c in range(3):
+		assemble.append(cards.punch(player))
 	assemble.append(cards.king_of_atlantis(player))
+	assemble.append(cards.weakness(player))
+	assemble.append(cards.kick(player))
+	assemble.append(cards.vunerability(player))
+	assemble.append(cards.punch(player))
+	assemble.append(cards.suicide_squad(player))
+	assemble.append(cards.suicide_squad(player))
+	assemble.append(cards.suicide_squad(player))
 	
 
 	return assemble

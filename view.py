@@ -24,7 +24,7 @@ class view_controler():
 
 	def print_card(self,card, num = 0):
 		print("\033[;7m" + self.colour[card.ctype] + f"{num:<2} {card.name:<20}vp:{card.vp:>2} cost:{card.cost:>2} {card.owner}" + self.colour[cardtype.ANY] + \
-			f"\n{card.text}")
+			f"\n{card.text}\n{card.attack_text}")
 		print("----------------------")
 
 	def print_board(self,turn = -1):

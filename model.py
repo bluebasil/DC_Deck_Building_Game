@@ -42,7 +42,7 @@ class pile:
 	def add_bottom(self,card):
 		self.contents.insert(0,card)
 
-	def get_count(self,pid = -1,find_type = cardtype.ANY):
+	def get_count(self,find_type = cardtype.ANY):
 		if find_type == cardtype.ANY:
 			return self.size()
 		else:
@@ -56,9 +56,24 @@ class pile:
 
 class playing(pile):
 	power = 0
+	card_mods = []
+	double_modifier = 0
+
+	def no_mod(self,card):
+		return card.play_action(self.owner)
+
+	def __init__(self,owner = None,visibility = visibilities.PUBLIC):
+		self.owner = owner
+		self.visibility = visibility
+		self.contents = []
+		self.card_mods = [self.no_mod]
+
+
 	def turn_end(self):
 		print("ENDEDPLAYING")
 		self.power = 0
+		self.card_mods = [self.no_mod]
+		self.double_modifier = 0
 		while self.size() > 0:
 			c = self.contents.pop()
 			print(c.name,self.size(), c.owner)
@@ -75,13 +90,26 @@ class playing(pile):
 	def add(self,card):
 		self.play(card)
 
+
 	def play(self,card):
 		self.contents.append(card)
+		modifier = 0
 		#print("ABIOUT TO PLAY")
-		modifier = card.play_action(self.owner)
+		for mod in self.card_mods:
+			modifier += mod(card)
+		#modifier = card.play_action(self.owner)
+		#modifier = post_power()
+
+		for i in range(self.double_modifier):
+			modifier *= 2
+
 		#print("MOD WAS",modifier)
 		self.power += modifier
 		#print("PLAYED!", self.power, self)
+
+	def parallax_double():
+		power *= 2
+		double_modifier += 1
 
 
 
@@ -94,6 +122,11 @@ class player:
 	played = None
 	controler = None
 
+	gain_redirect = []
+	gained_this_turn = []
+	discount_on_sv = 0
+	played_riddler = False
+
 	def __init__(self,pid, controler):
 		self.controler = controler
 		self.pid = pid
@@ -102,6 +135,10 @@ class player:
 		self.discard = pile(self)
 		self.ongoing = pile(self)
 		self.played = playing(self)
+
+		#These should be reinitialized or they share values with all insatnces
+		gain_redirect = []
+		gained_this_turn = []
 
 		self.deck.contents = deck_builder.get_starting_deck(self)
 		#self.deck.shuffle()
@@ -135,6 +172,7 @@ class player:
 			return True
 
 	def play(self, cardnum):
+		print("Tried to play")
 		self.played.play(self.hand.contents.pop(cardnum))
 
 	def play_and_return(self, card, pile):
@@ -143,8 +181,8 @@ class player:
 		pile.add(card)
 
 	def buy_supervillain(self):
-		if self.played.power >= globe.boss.supervillain_stack.contents[-1].cost:
-			self.played.power -= globe.boss.supervillain_stack.contents[-1].cost
+		if self.played.power >= globe.boss.supervillain_stack.contents[-1].cost - discount_on_sv:
+			self.played.power -= globe.boss.supervillain_stack.contents[-1].cost -discount_on_sv
 			self.gain(globe.boss.supervillain_stack.contents.pop())
 			return True
 		return False
@@ -153,6 +191,19 @@ class player:
 		if globe.boss.kick_stack.size() > 0 and self.played.power >= globe.boss.kick_stack.contents[-1].cost:
 			self.played.power -= globe.boss.kick_stack.contents[-1].cost
 			self.gain(globe.boss.kick_stack.contents.pop())
+			return True
+		return False
+
+	def riddle(self):
+		if self.played_riddler and globe.boss.main_deck.size() > 0 and self.played.power >= 3:
+			self.played.power -= 3
+			self.gain(globe.boss.main_deck.contents.pop())
+			return True
+		return False
+
+	def gain_a_weakness(self):
+		if globe.boss.weakness_stack.size() > 0:
+			self.gain(globe.boss.weakness_stack.contents.pop())
 			return True
 		return False
 
@@ -166,16 +217,41 @@ class player:
 		return False
 
 	def gain(self, card):
-		print(card.name,card.owner,self)
 		card.set_owner(player=self)
-		print(card.name,card.owner,self)
+		gained_this_turn.append(card)
+		card.buy_action()
+
+		if len(self.gain_redirect) > 0:
+			assemble = []
+			for re in self.gain_redirect:
+				assemble.append(re)
+			for re in assemble:
+				if re == self.hand and controler.may_put_on_top("of hand",card):
+					self.gain_redirect.remove(re)
+					self.hand.add(card)
+					return
+				elif re == self.deck:
+					if controler.may_put_on_top("of deck",card):
+						self.gain_redirect.remove(re)
+						self.deck.add(card)
+						return
+					# If theres a better way to do solomun grudy with the architecture avalable...
+					elif card.name == "Solomon Grundy":
+						self.gain_redirect.remove(re)
+
 		self.discard.add(card)
+		return
+			
 
 	def discard_hand(self):
 		self.discard.contents.extend(self.hand.contents)
 		self.hand.contents = []
 
 	def end_turn(self):
+		gain_redirect = []
+		gained_this_turn = []
+		discount_on_sv = 0
+		played_riddler = False
 		for c in self.played.contents:
 			c.end_of_turn()
 		self.played.turn_end()
@@ -207,7 +283,7 @@ class model:
 	supervillain_stack = None
 	lineup = None
 	players = []
-	players_score = []
+	player_score = []
 	destroyed_stack = None
 	notify = None
 	whose_turn = 0
@@ -248,8 +324,8 @@ class model:
 			if self.whose_turn >= len(self.players):
 				self.whose_turn = 0
 
-		for p in range(len(self.players)):
-			self.players_score[p] = self.players[p].calculate_vp()
+		for p in self.players:
+			self.player_score.append(p.calculate_vp())
 
 
 

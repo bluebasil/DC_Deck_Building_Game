@@ -1,0 +1,3 @@
+BEST = 0
+WORST = 1
+IFBAD = 2
