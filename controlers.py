@@ -1,5 +1,8 @@
 import option
 import ai_hint
+import time
+import random
+import globe
 
 view = None
 def set_view(vi):
@@ -16,27 +19,40 @@ class controler:
 		#self.boss = boss
 		self.player = player
 
+	def choose_persona(self,persona_list):
+		return persona_list[0]
+
 	# Choose to end turn or play any cards
 	def turn(self):
 		#This is where turn logic goes
 		return True
 
-	def may_defend(self,card,player = None):
+	def may_defend(self, options, attacking_card, attacking_player = None):
 		return (option.OK,0)
 
-	def choose_one_of(instruction_text,player,cards,hint):
+	def choose_one_of(self,instruction_text,player,cards,hint):
 		#base on hint
 		return [0]
 
-	def may_put_on_top(instruction_text,self):
-		return option.OK
+	def may_choose_one_of(self,instruction_text,player,cards,hint):
+		#base on hint
+		return [option.NO]
 
-	def ok_or_no(instruction_text,player,card,hint):
-		return option.NO
+	def may_put_on_top(self,instruction_text):
+		return [option.OK]
+
+	def ok_or_no(self,instruction_text,player,card,hint):
+		return [option.NO]
 
 	#No responce needed
-	def reveal(player,cards):
+	def reveal(self,player,cards):
 		return
+
+	def choose_even_or_odd(self,instruction_text,player):
+		return [option.EVEN]
+
+	def choose_a_player(self,player,options):
+		return options[0]
 
 	#NO,HAND,DISCARD
 	def may_destroy_card_in_hand_or_discard(self):
@@ -110,13 +126,15 @@ def get_input():
 
 class human(controler):
 	global view
+	def state_name(self):
+		print(f" - {self.player.pid} - {self.player.persona.name} - ")
+
 	def turn(self):
 		view.print_board()
 		print(f"{self.player.pid}'s Turn!")
 		while True:
 			x = get_input()
 			if x[0] == "end":
-				self.player.end_turn()
 				return
 			#print(int(x))
 			#try:
@@ -142,19 +160,42 @@ class human(controler):
 					print("You have not played the riddler this turn")
 
 			else:
-				intx = int(x[0])
-				if intx < 0 or intx >= self.player.hand.size():
-					print("Err: Not a valid card")
+				safe = True
+				intx = -1
+				try:
+					intx = int(x[0])
+				except:
+					print("?")
+					safe == False
+				if safe:
+					if intx < 0 or intx >= self.player.hand.size():
+						print("Err: Not a valid card")
+					else:
+						self.player.play(intx)
+						view.print_board()
 				else:
-					self.player.play(intx)
-					view.print_board()
+					print("?")
 			#except Exception as e:
 			#	print("?", e)
 			#except:
 			#	print("?")
 
+	def choose_persona(self,persona_list):
+		print("Who would you like to be?")
+		for i,p in enumerate(persona_list):
+			print(f"{i} {p.name}: {p.text}")
+		x = get_input()
+		try:
+			intx = int(x[0])
+		except:
+			print("?")
+			return self.choose_persona(persona_list)
+		return persona_list[intx]
+
+
 	def may_defend(self, options, attacking_card, attacking_player = None):
 		global view
+		self.state_name()
 		print(f"!{self.player.pid}! may_defend")
 		print(f"{attacking_card.name}'s attack: {attacking_card.attack_text}.")
 		view.print_custom(options)
@@ -174,6 +215,7 @@ class human(controler):
 			return self.may_defend(options,attacking_card,attacking_player)
 
 	def choose_one_of(self,instruction_text,player,cards,hint):
+		self.state_name()
 		global view
 		print(instruction_text)
 		view.print_custom(cards)
@@ -184,10 +226,31 @@ class human(controler):
 			intx = int(x[0])
 		except:
 			print("?")
-			self.choose_one_of(instruction_text,player,cards)
+			return self.choose_one_of(instruction_text,player,cards,hint)
 		return [intx]
 
+	def may_choose_one_of(self,instruction_text,player,cards,hint):
+		self.state_name()
+		global view
+		print(instruction_text)
+		view.print_custom(cards)
+		print(instruction_text)
+		x = get_input()
+		if x[0] == "no":
+			return [option.NO]
+		elif x[0] == "ok":
+			intx = -1
+			try:
+				intx = int(x[0])
+			except:
+				print("?")
+				return self.may_choose_one_of(instruction_text,player,cards)
+			return [option.OK,intx]
+		else:
+			return self.may_choose_one_of(instruction_text,player,cards,hint)
+
 	def ok_or_no(self,instruction_text,player,card,hint):
+		self.state_name()
 		global view
 		print(instruction_text)
 		if card != None:
@@ -195,20 +258,49 @@ class human(controler):
 			print(instruction_text)
 		x = get_input()
 		if x[0] == "ok":
-			return option.OK
+			return [option.OK]
 		elif x[0] == "no":
-			return option.NO
+			return [option.NO]
 		else:
 			print("?")
 			return self.ok_or_no(instruction_text,player,card,hint)
 
-	def reveal(player,cards):
+	def reveal(self,player,cards):
+		self.state_name()
 		global view
 		view.print_custom(cards)
+		time.sleep(0.5)
 		return
+
+	def choose_even_or_odd(self,instruction_text,player):
+		self.state_name()
+		print(f"{instruction_text} (even/odd")
+		x = get_input()
+		if x[0] == "even":
+			return option.EVEN
+		elif x[0] == "odd":
+			return option.ODD
+		else:
+			return choose_even_or_odd(instruction_text,player)
+
+	def choose_a_player(self,instruction_text,player,options):
+		self.state_name()
+		print(instruction_text)
+		for i,p in enumerate(options):
+			print(f"{i} - {p.persona.name}")
+		x = get_input()
+		intx = -1
+		try:
+			intx = int(x[0])
+		except:
+			print("?")
+			return self.choose_a_player(instruction_text,player,options)
+		return [intx]
+
 
 	# card number, 0 is none
 	def may_destroy_card_in_hand_or_discard(self):
+		self.state_name()
 		print("may_destroy_card_in_hand_or_discard (Example: 'ok hand 2', or 'no')")
 		x = get_input()
 		if x[0] == "no":
@@ -235,6 +327,8 @@ class human(controler):
 
 	#card number
 	def discard_a_card(self):
+		self.state_name()
+
 		print("discard_a_card")
 		x = get_input()
 		intx = -1
@@ -248,6 +342,7 @@ class human(controler):
 			
 
 	def may_play_one_of_these_cards(self,cards):
+		self.state_name()
 		global view
 		print("may_play_one_of_these_cards:")
 		print(cards)
@@ -269,6 +364,7 @@ class human(controler):
 		return self.may_play_one_of_these_cards(cards)
 
 	def may_destroy_card_in_discard(self):
+		self.state_name()
 		print("may_destroy_card_in_discard (Example: 'ok 2', or 'no')")
 		x = get_input()
 		if x[0] == "no":
@@ -286,3 +382,141 @@ class human(controler):
 
 
 
+class cpu(controler):
+	#sleep length between actions
+	slti = 0.0001
+
+	def sort_by_cost(self,card):
+		if card.name == "Weakness":
+			return -2
+		if card.name == "Vunerability":
+			return -1
+		#if card.name == "Punch":
+		return card.cost
+
+	def sort_by_play_order(self,card):
+		if card.name == "Weakness":
+			return 500
+		if card.name == "Vunerability":
+			return 750
+		if card.name == "Punch":
+			return 250
+		return card.cost
+
+	def choose_persona(self,persona_list):
+		return random.choice(persona_list)
+
+	# Choose to end turn or play any cards
+	def turn(self):
+		global view
+		view.print_board()
+		print(f"Begining of AI {self.player.pid}'s turn", flush=True)
+		time.sleep(self.slti)
+		self.player.hand.contents.sort(key = self.sort_by_play_order)
+		
+		while self.player.hand.size() > 0:
+			size_check = self.player.hand.size()
+			print(f"AI {self.player.pid}-{self.player.persona.name} is going to play a {self.player.hand.contents[0].name} (total power = {self.player.played.power})", flush=True)
+			time.sleep(self.slti)
+			self.player.play(0)
+			if size_check - 1 != self.player.hand.size():
+				print("(Differtent cards than expected)", flush=True)
+				self.player.hand.contents.sort(key = self.sort_by_play_order)
+
+		print(f"AI {self.player.pid}-{self.player.persona.name} has {self.player.played.power} power!", flush=True)
+		if globe.boss.supervillain_stack.size() > 0 and self.player.played.power >= globe.boss.supervillain_stack.contents[-1].cost:
+			self.player.buy_supervillain()
+			print(f"AI {self.player.pid}-{self.player.persona.name} is buying the supervillain! ({self.player.played.power} power left)", flush=True)
+			time.sleep(self.slti)
+		assemble = []
+		for c in globe.boss.lineup.contents:
+			assemble.append(c)
+		assemble.sort(key = self.sort_by_cost)
+		#Tries to buy everything from most to least expensive
+		while len(assemble) > 0:
+			test = assemble.pop()
+			if self.player.buy_c(test):
+				print(f"AI {self.player.pid}-{self.player.persona.name} bought {test.name} ({self.player.played.power} power left)", flush=True)
+		while self.player.played.power >= 3 and globe.boss.kick_stack.size() > 0:
+			self.player.buy_kick()
+			print(f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)", flush=True)
+
+		return
+
+
+	def choose_one_of(self,instruction_text,player,cards,hint):
+		cards.sort(key = self.sort_by_cost)
+		print(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}", flush=True)
+		time.sleep(self.slti)
+		if hint == ai_hint.BEST:
+			print(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[-1].name}", flush=True)
+			time.sleep(self.slti)
+			return [-1]
+		print(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}", flush=True)
+		time.sleep(self.slti)
+		return [0]
+
+	def may_choose_one_of(self,instruction_text,player,cards,hint):
+		cards.sort(key = self.sort_by_cost)
+		print(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}", flush=True)
+		time.sleep(self.slti)
+		if len(cards) == 0:
+			return [option.NO]
+		if hint == ai_hint.BEST and cards[-1].cost >= 3:
+			print(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[-1].name}", flush=True)
+			time.sleep(self.slti)
+			return [option.OK,-1]
+		elif hint == ai_hint.WORST and cards[0].cost <= 2:
+			print(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}", flush=True)
+			time.sleep(self.slti)
+			return [option.OK,0]
+		else:
+			print(f"AI {self.player.pid}-{self.player.persona.name} choose not yo", flush=True)
+			time.sleep(self.slti)
+			return [option.NO]
+		
+
+	def may_put_on_top(self,instruction_text):
+		print(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}", flush=True)
+		time.sleep(self.slti)
+		print(f"AI {self.player.pid}-{self.player.persona.name} choose to do so", flush=True)
+		time.sleep(self.slti)
+		return option.OK
+
+	def ok_or_no(self,instruction_text,player,card,hint):
+		print(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}", flush=True)
+		time.sleep(self.slti)
+		if hint == ai_hint.ALWAYS:
+			print(f"AI {self.player.pid}-{self.player.persona.name} choose to do so", flush=True)
+			time.sleep(self.slti)
+			return [option.OK]
+		elif hint == ai_hint.IFBAD and card.cost > 1:
+			print(f"AI {self.player.pid}-{self.player.persona.name} choose NOT to do so", flush=True)
+			time.sleep(self.slti)
+			return [option.NO]
+		else:
+			print(f"AI {self.player.pid}-{self.player.persona.name} choose to do so (by default)", flush=True)
+			time.sleep(self.slti)
+			return [option.OK]
+
+	#only OK or CANNOT are accepted
+	def discard_a_card(self):
+		print(f"AI {self.player.pid}-{self.player.persona.name} told to discard a card", flush=True)
+		time.sleep(self.slti)
+		if self.player.hand.size() == 0:
+			print(f"AI {self.player.pid}-{self.player.persona.name} does not have a hand", flush=True)
+			time.sleep(self.slti)
+			return option.CANNOT
+		else:
+			lowest_cost = 20
+			lowest_position = -1
+			for i,c in enumerate(self.player.hand.contents):
+				if c.cost < lowest_cost:
+					lowest_cost = c.cost
+					lowest_position = i
+				elif c.cost == lowest_cost:
+					if c.name == "Vunerability" or c.name == "Weakness":
+						lowest_position = i
+		print(f"AI {self.player.pid}-{self.player.persona.name} choose to discard a {self.player.hand.contents[lowest_position].name}", flush=True)
+		time.sleep(self.slti)
+		return (option.OK,lowest_position)

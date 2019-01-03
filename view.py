@@ -35,7 +35,8 @@ class view_controler():
 		print("------------------------------------------------")
 		print("------------------------------------------------")
 		print("------------------------------------------------")
-		print(f"-{turn}----------------------------------------------")
+		print(f"-{turn}--{player.persona.name}--------------------------------------------")
+		print(f"-----{player.persona.text}")
 		print("------------------------------------------------")
 		print(f"#Weaknesses:{globe.boss.weakness_stack.size()}, #Kicks:{globe.boss.kick_stack.size()}")
 		print(f"#Supervillains:{globe.boss.supervillain_stack.size()}, #Deck:{globe.boss.main_deck.size()}")
@@ -131,15 +132,3 @@ class view_controler():
 		self.print_card(globe.boss.players[globe.boss.whose_turn].played.contents[-1],globe.boss.players[globe.boss.whose_turn].played.size()-1)
 		print(f"-- {player.played.power} power --")
 
-
-main_view = view_controler()
-
-
-globe.boss = model.model()
-
-globe.boss.start_game()
-
-for i, p in enumerate(globe.boss.player_score):
-	print(f"{i} got a score of {p}")
-
-#print_deck(deck)

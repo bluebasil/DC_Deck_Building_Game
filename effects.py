@@ -29,8 +29,8 @@ def attack(player,card,by_player = None):
 			assemble.append(c)
 
 	if len(assemble) > 0:
-		responce = player.controler.may_defend(assemble,card,by_player)
-		if responce[0] == option.OK:
+		result = player.controler.may_defend(assemble,card,by_player)
+		if result[0] == option.OK:
 			if not ensure_int(result[1]):
 				return attack(player,card,by_player)
 			elif result[1] < 0 or result[1] >= len(assemble):
@@ -39,13 +39,28 @@ def attack(player,card,by_player = None):
 			else:
 				assemble[result[1]].defend()
 				return False
-		elif responce[0] == option.NO:
+		elif result[0] == option.NO:
 			return True
 		else:
 			print("Err: responce")
 			return attack(player,card,by_player)
 	else:
 		return True
+
+def choose_a_player(instruction_text,player,includes_self = True):
+	assemble = []
+	for i,p in enumerate(globe.boss.players):
+		if p != player or includes_self:
+			assemble.append(p)
+	result = player.controler.choose_a_player(instruction_text,player,assemble)
+	if globe.boss.DEBUG:
+		print("choose_a_player",result)
+	if not ensure_int(result[0]):
+		return choose_a_player(instruction_text,player,includes_self)
+	elif result[0] < 0 or result[0] >= len(assemble):
+		print(f"ERR: invalid number. max:{len(assemble)-1}")
+		return choose_a_player(instruction_text,player,includes_self)
+	return assemble[result[0]]
 
 def choose_one_of(instruction_text,player,cards,hint = ai_hint.WORST):
 	result = player.controler.choose_one_of(instruction_text,player,cards,hint)
@@ -59,15 +74,18 @@ def choose_one_of(instruction_text,player,cards,hint = ai_hint.WORST):
 	return cards[result[0]]
 
 def may_choose_one_of(instruction_text,player,cards,hint = ai_hint.BEST):
-	result = player.controler.choose_one_of(instruction_text,player,card,hint)
+	result = player.controler.may_choose_one_of(instruction_text,player,cards,hint)
 	if globe.boss.DEBUG:
 		print("may_choose_one_of",result)
-	if not ensure_int(result[0]):
-		return choose_one_of(instruction_text,player,cards)
-	elif result[0] < 0 or result[0] >= len(cards):
-		print(f"ERR: invalid number. max:{len(cards)-1}")
-		return choose_one_of(instruction_text,player,cards)
-	return cards[result[0]]
+	if result[0] == option.NO:
+		return None
+	else:
+		if not ensure_int(result[1]):
+			return may_choose_one_of(instruction_text,player,cards)
+		elif result[1] < 0 or result[1] >= len(cards):
+			print(f"ERR: invalid number. max:{len(cards)-1}")
+			return choose_one_of(instruction_text,player,cards)
+		return cards[result[1]]
 
 def ok_or_no(instruction_text,player,card = None,hint = ai_hint.IFBAD):
 	result = player.controler.ok_or_no(instruction_text,player,card,hint)
@@ -82,7 +100,20 @@ def ok_or_no(instruction_text,player,card = None,hint = ai_hint.IFBAD):
 		return ok_or_no(instruction_text,player,hint)
 
 def reveal(reveal_text,player,cards):
-	player.controler.reveal(reveal_text,player,cards)
+	player.controler.reveal(player,cards)
+
+#True for even
+def choose_even_or_odd(instruction_text,player):
+	result = player.controler.choose_even_or_odd(instruction_text,player)
+	if globe.boss.DEBUG:
+		print("choose_even_or_odd",result)
+	if result[0] == option.EVEN:
+		return True
+	if result[0] == option.ODD:
+		return False
+	else:
+		return choose_even_or_odd(instruction_text,player)
+
 
 # (no/hand/disccard, if hand or discard: #)
 def may_destroy_card_in_hand_or_discard(player):
@@ -131,8 +162,8 @@ def discard_a_card(player):
 	elif result[1] < 0 or result[1] >= player.hand.size():
 		print(f"ERR: invalid number. max:{player.hand.size()-1}")
 		return discard_a_card(player)
-	card_to_discard = player.hand.pop(result[1])
-	player.discard.append(card_to_discard)
+	card_to_discard = player.hand.contents.pop(result[1])
+	player.discard.add(card_to_discard)
 	return (option.OK,card_to_discard)
 
 def x_ray_vision_reveal(player):
@@ -143,7 +174,6 @@ def x_ray_vision_reveal(player):
 			if revealed != None:
 				assemble.append(revealed)
 	if len(assemble) > 0:
-		print(assemble)
 		result = player.controler.may_play_one_of_these_cards(assemble)
 		if globe.boss.DEBUG:
 			print("x_ray_vision_reveal",result)
@@ -160,9 +190,7 @@ def x_ray_vision_reveal(player):
 
 		#This should be the card that was revealed
 		assemble[result[1]].owner.deck.contents.pop()
-		print("PLATYIONG",assemble[result[1]].owner.deck.size())
 		player.play_and_return(assemble[result[1]],assemble[result[1]].owner.deck)
-		print("RETURNED",assemble[result[1]].owner.deck.size())
 		return option.OK
 	return option.CANNOT
 
@@ -179,7 +207,7 @@ def may_destroy_card_in_discard(player):
 		elif result[1] < 0 or result[1] >= player.discard.size():
 			print(f"ERR: invalid number. max:{player.discard.size()-1}")
 			return may_destroy_card_in_discard(player)
-		#card_to_destroy = player.discard.contents.pop(result[1])
+		card_to_destroy = player.discard.contents.pop(result[1])
 		card_to_destroy.destroy()
 		return (option.OK,card_to_destroy)
 	else:

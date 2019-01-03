@@ -52,7 +52,7 @@ class card_class:
 	def first_apearance(self):
 		return
 
-	def attack_action(self):
+	def attack_action(self,by_player):
 		return
 
 	def destroy(self):
@@ -63,20 +63,29 @@ class card_class:
 
 
 	def pop_self(self):
-		if self in self.owner.hand.contents:
-			self.owner.hand.contents.remove(self)
-		elif self in self.owner.discard.contents:
-			self.owner.discard.contents.remove(self)
-		elif self in self.owner.ongoing.contents:
-			self.owner.ongoing.contents.remove(self)
-		elif self in self.owner.played.contents:
-			self.owner.played.contents.remove(self)
-		elif self in self.owner.deck.contents:
-			self.owner.deck.contents.remove(self)
-		elif self in globe.boss.lineup.contents:
+		#why am i not checking by ownership type?
+		if self in globe.boss.lineup.contents:
 			globe.boss.lineup.contents.remove(self)
-		elif self in globe.boss.destroyed_stacks.contents:
-			globe.boss.destroyed_stacks.contents.remove(self)
+			print(f"{self.name} pop from lineup")
+		elif self in globe.boss.destroyed_stack.contents:
+			globe.boss.destroyed_stack.contents.remove(self)
+			print(f"{self.name} pop from destroyed")
+		elif self.owner_type == owners.PLAYER:
+			if self in self.owner.hand.contents:
+				self.owner.hand.contents.remove(self)
+				print(f"{self.name} pop from hand")
+			elif self in self.owner.discard.contents:
+				self.owner.discard.contents.remove(self)
+				print(f"{self.name} pop from discard")
+			elif self in self.owner.ongoing.contents:
+				self.owner.ongoing.contents.remove(self)
+				print(f"{self.name} pop from ongoing")
+			elif self in self.owner.played.contents:
+				self.owner.played.contents.remove(self)
+				print(f"{self.name} pop from played")
+			elif self in self.owner.deck.contents:
+				self.owner.deck.contents.remove(self)
+				print(f"{self.name} pop from deck")
 		return self
 		
 
@@ -135,7 +144,7 @@ class aquamans_trident(card_class):
 		player.gain_redirect.append(player.deck)
 		return 2
 
-#TODO: Attack
+#Done
 class bane(card_class):
 	name = "Bane"
 	vp = 1
@@ -146,9 +155,13 @@ class bane(card_class):
 	attack_text = "Attack:: Each foe chooses and discards a card."
 
 	def play_action(self,player):
+		self.attack_action(player)
 		return 2
 
-	def attack_action(self):
+	def attack_action(self,by_player):
+		for p in globe.boss.players:
+			if p != by_player and effects.attack(p,self,by_player):
+				effects.discard_a_card(p)
 		return
 
 #done
@@ -202,7 +215,7 @@ class bizarro(card_class):
 	def calculate_vp(self):
 		return 2*self.owner.deck.get_count(cardtype.WEAKNESS) + 1
 
-#TODO: Defence
+#Done
 class blue_beetle(card_class):
 	name = "Blue Beetle"
 	vp = 2
@@ -214,7 +227,10 @@ class blue_beetle(card_class):
 	def play_action(self,player):
 		return 3
 
-#TODO: Defence
+	def defend(self):
+		return
+
+#Done
 class bulletproof(card_class):
 	name = "Bulletproof"
 	vp = 1
@@ -226,7 +242,15 @@ class bulletproof(card_class):
 	def play_action(self,player):
 		return 2
 
-#TODO: Defence
+	def defend(self):
+		self.pop_self()
+		self.owner.discard.add(self)
+		self.owner.draw_card()
+		#This effdect does it, but be carefull
+		effects.may_destroy_card_in_hand_or_discard(self.owner)
+		return
+
+#Done
 class the_cape_and_cowl(card_class):
 	name = "The Cape and Cowl"
 	vp = 1
@@ -238,6 +262,13 @@ class the_cape_and_cowl(card_class):
 	def play_action(self,player):
 		return 2
 
+	def defend(self):
+		self.pop_self()
+		self.owner.discard.add(self)
+		for i in range(2):
+			self.owner.draw_card()
+		return
+
 #done
 class catwoman(card_class):
 	name = "Catwoman"
@@ -246,10 +277,19 @@ class catwoman(card_class):
 	ctype = cardtype.HERO
 	text = "+2 Power"
 
+#The dark knight abiltiy here as well cause im lazy, (and catwoman can be played any any time according to its text)
 	def play_action(self,player):
+		activate = False
+		for c in player.played.contents:
+			if c.name == "The Dark Knight":
+				player.gain_redirect.append(player.hand)
+				for c in player.gained_this_turn:
+					if effects.ok_or_no(f"Would you like to put {c.name} into your hand?-",player,c,ai_hint.ALWAYS):
+						player.gain_redirect.remove(player.hand)
+						player.hand.add(c.pop_self())
 		return 2
 
-#TODO: Test
+#Done
 class cheetah(card_class):
 	name = "Cheetah"
 	vp = 1
@@ -269,7 +309,7 @@ class cheetah(card_class):
 			player.gain(choosen.pop_self())
 		return 0
 
-#TODO: Test
+#Done
 class clayface(card_class):
 	name = "Clayface"
 	vp = 1
@@ -281,7 +321,8 @@ class clayface(card_class):
 		instruction_text = "Choose a card that you have already played to play again"
 		assemble = []
 		for c in player.played.contents:
-			assemble.append(c)
+			if c.name != "Clayface":
+				assemble.append(c)
 		if len(assemble) > 0:
 			choosen = effects.choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			player.played.play(choosen)
@@ -290,7 +331,7 @@ class clayface(card_class):
 			player.played.contents.remove(choosen)
 		return 0
 
-#Test, especially catwoman special, but its not done its UI
+#Done
 class the_dark_knight(card_class):
 	name = "The Dark Knight"
 	vp = 1
@@ -305,13 +346,19 @@ class the_dark_knight(card_class):
 				assemble.append(c)
 		for c in assemble:
 			player.gain(c.pop_self())
+		activate = False
 		for c in player.played.contents:
 			if c.name == "Catwoman":
-				player.gain_redirect.append(player.hand)
-				for c in player.gained_this_turn:
-					if player.controler.may_put_on_top(f"Would you like to put {c.name} into your hand?",self):
-						player.gain_redirect.remove(player.hand)
-						player.hand.add(c.pop_self())
+				activate = True
+		for c in player.gained_this_turn:
+			if c.name == "Catwoman":
+				activate = True
+		if activate:
+			player.gain_redirect.append(player.hand)
+			for c in player.gained_this_turn:
+				if effects.ok_or_no(f"Would you like to put {c.name} into your hand?-",player,c,ai_hint.ALWAYS):
+					player.gain_redirect.remove(player.hand)
+					player.hand.add(c.pop_self())
 		return 2
 
 #Done
@@ -325,7 +372,7 @@ class doomsday(card_class):
 	def play_action(self,player):
 		return 4
 
-#Test
+#Done
 class the_emerald_knight(card_class):
 	name = "The Emerald Knight"
 	vp = 1
@@ -337,12 +384,13 @@ class the_emerald_knight(card_class):
 	def play_action(self,player):
 		instruction_text = "Choose one of these from the line up, play it, then return it at the end of the turn"
 		assemble = []
-		for c in globe.boss.lineup:
+		for c in globe.boss.lineup.contents:
 			if c.ctype == cardtype.EQUIPMENT or c.ctype == cardtype.HERO or c.ctype == cardtype.SUPERPOWER:
 				assemble.append(c)
 		if len(assemble) > 0:
 			choosen = effects.choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			self.played_card = choosen
+			choosen.pop_self()
 			player.played.play(choosen)
 		return 0
 
@@ -404,7 +452,7 @@ class green_arrows_bow(card_class):
 		player.discount_on_sv += 2
 		return 2
 
-#ATTACk
+#Done
 class harley_quinn(card_class):
 	name = "Harley Quinn"
 	vp = 1
@@ -415,11 +463,20 @@ class harley_quinn(card_class):
 	attack_text = "Attack: Each foe puts a Punch or Vulnerability from his discard pile on top of his deck."
 
 	def play_action(self,player):
+		self.attack_action(player)
 		return 1
 
-	def attack_action(self):
+	def attack_action(self,by_player):
+		for p in globe.boss.players:
+			if p != by_player and effects.attack(p,self,by_player):
+				assemble = []
+				for c in p.discard.contents:
+					if c.name == "Punch" or c.name == "Vunerability":
+						assemble.append(c)
+				if len(assemble) > 0:
+					result = effects.choose_one_of("Choose punch or Vunerability from your discard to put on top of your deck",p,assemble,hint = ai_hint.BEST)
+					p.deck.add(result.pop_self())
 		return
-
 #done
 class heat_vision(card_class):
 	name = "Heat Vision"
@@ -489,18 +546,25 @@ class king_of_atlantis(card_class):
 		else:
 			return 3
 
-#TODO: Defence
+#Done
 class lasso_of_truth(card_class):
 	name = "Lasso of Truth"
 	vp = 1
 	cost = 2
 	ctype = cardtype.EQUIPMENT
+	defence = True
 	text = "+1 Power\nDefence:: You may discard this card to avoid an Attack.  If you do, draw a card."
 
 	def play_action(self,player):
 		return 1
 
-#Test
+	def defend(self):
+		self.pop_self()
+		self.owner.discard.add(self)
+		self.owner.draw_card()
+		return
+
+#Done
 class lobo(card_class):
 	name = "Lobo"
 	vp = 2
@@ -513,7 +577,7 @@ class lobo(card_class):
 			effects.may_destroy_card_in_hand_or_discard(player)
 		return 3
 
-#Test
+#Done
 class the_man_of_steel(card_class):
 	name = "The Man of Steel"
 	vp = 3
@@ -528,9 +592,9 @@ class the_man_of_steel(card_class):
 				assemble.append(c)
 		for c in assemble:
 			player.hand.add(c.pop_self())
-		return 
+		return 3
 
-#Test
+#Done
 class mera(card_class):
 	name = "Mera"
 	vp = 1
@@ -543,7 +607,7 @@ class mera(card_class):
 			return 4
 		return 2
 
-#test
+#Done
 class nth_metal(card_class):
 	name = "Nth Metal"
 	vp = 1
@@ -552,10 +616,10 @@ class nth_metal(card_class):
 	text = "+1 Power.  Look at the top of your deck.  You may destroy it."
 
 	def play_action(self,player):
-		top_card = player.deck.contents[-1]
+		top_card = player.reveal_card()
 		if effects.ok_or_no(f"This card is on top of your deck, would you like to destroy it? (ok/no)",player,top_card,ai_hint.IFBAD):
 			top_card.destroy()
-		return 
+		return 0
 
 # Test
 class the_penguin(card_class):
@@ -583,8 +647,17 @@ class poison_ivy(card_class):
 	attack_text = "Attack:: Each foe discards the top card of his deck.  If its cost is 1 or greater, that player gains a Weakness."
 
 	def play_action(self,player):
+		self.attack_action(player)
 		return 1
-		#attack needed
+
+	def attack_action(self,by_player):
+		for p in globe.boss.players:
+			if p != by_player and effects.attack(p,self,by_player):
+				card_to_discard = p.reveal_card().pop_self()
+				p.discard.add(card_to_discard)
+				if card_to_discard.cost >= 1:
+					p.gain_a_weakness()
+		return
 
 
 #TODO: TEST, i dont think UI will work properly
@@ -596,7 +669,7 @@ class power_ring(card_class):
 	text = "Reveal the top card of your deck.  If its cost is 1 or greater, +3 Power.  Otherwise, +2 Power."
 
 	def play_action(self,player):
-		top_card = player.deck.contents[-1]
+		top_card = player.reveal_card()
 		effects.reveal("Top card of your deck:",player,[top_card])
 		if top_card.cost >= 1:
 			return 3
@@ -662,9 +735,13 @@ class scarecrow(card_class):
 	attack_text = "Attack: Each foe gains a Weakness."
 
 	def play_action(self,player):
+		self.attack_action(player)
 		return 2
 
-	def attack_action(self):
+	def attack_action(self,by_player):
+		for p in globe.boss.players:
+			if p != by_player and effects.attack(p,self,by_player):
+				p.gain_a_weakness()
 		return
 
 #TEst
@@ -680,8 +757,8 @@ class solomon_grundy(card_class):
 
 	def buy_action(self):
 		self.owner.gain_redirect.append(self.owner.deck)
+		return
 
-Starro
 
 #TEst
 class starro(card_class):
@@ -694,12 +771,20 @@ class starro(card_class):
 	attack_text = "Attack: Each foe discards the top card of his deck.  You may play each non-Location discarded this way this turn."
 
 	def play_action(self,player):
+		self.attack_action(player)
 		return 0
 
-	def attack_action(self):
+	def attack_action(self,by_player):
+		for p in globe.boss.players:
+			if p != by_player and effects.attack(p,self,by_player):
+				card_to_discard = p.reveal_card()
+				if card_to_discard.ctype != cardtype.LOCATION:
+					result = effects.ok_or_no(f"Would you like to play a {card_to_discard.name}?",by_player,card_to_discard,ai_hint.ALWAYS)
+					if result == option.OK:
+						player.play_and_return(card_to_discard,p.discard)
 		return
 
-#TODO: Suiside ability
+#test vp
 class suicide_squad(card_class):
 	name = "Suicide Squad"
 	vp = '*'
@@ -722,7 +807,7 @@ class suicide_squad(card_class):
 
 	def calculate_vp(self):
 		count = 0
-		for c in self.owner.deck:
+		for c in self.owner.deck.contents:
 			if c.name == "Suicide Squad":
 				count += 1
 		return count
@@ -741,6 +826,10 @@ class super_speed(card_class):
 		return 0
 
 	def defend(self):
+		self.pop_self()
+		self.owner.discard.add(self)
+		for i in range(2):
+			self.owner.draw_card()
 		return
 
 #Done
@@ -754,7 +843,78 @@ class super_strength(card_class):
 	def play_action(self,player):
 		return 5
 
-##############################
+#Test
+class super_girl(card_class):
+	name = "Super Girl"
+	vp = 1
+	cost = 4
+	ctype = cardtype.HERO
+	text = "You may put a Kick card from the Kick stack into your hand."
+
+	def play_action(self,player):
+		if globe.boss.kick_stack.size() > 0 and \
+				effects.ok_or_no("Would you like to gain a kick into your hand?",player,None,hint = ai_hint.ALWAYS):
+			new_kick = globe.boss.kick_stack.contents.pop()
+			new_kick.set_owner(player)
+			player.hand.add(new_kick)
+		return 0
+
+#Test
+class swamp_thing(card_class):
+	name = "Swamp Thing"
+	vp = 1
+	cost = 4
+	ctype = cardtype.HERO
+	text = "If you control a Location, +5 Power.  Otherwise, +2 Power."
+
+	def play_action(self,player):
+		for c in player.ongoing.contents:
+			if c.ctype == cardtype.LOCATION:
+				return 5
+		return 2
+
+#Test
+class two_face(card_class):
+	name = "Two-Face"
+	vp = 1
+	cost = 2
+	ctype = cardtype.VILLAIN
+	text = "+1 Power.  Choose even or odd, then reveal the top card of your deck.  If its cost matches your choice, draw it.  If not, discard it. (0 is even.)"
+
+	def play_action(self,player):
+		choose_even = effects.choose_even_or_odd("Choose even or odd, then reveal the top card of your deck.  If its cost matches your choice, draw it.  If not, discard it.",player)
+		
+		on_top = player.reveal_card()
+		effects.reveal("This was on top of your deck",player,on_top)
+		if on_top.cost%2 == 0:
+			card_is_even = True
+		else:
+			card_is_even = False
+		if card_is_even == choose_even:
+			player.draw_card()
+		else:
+			player.discard.add(on_top.pop_self())
+
+		return 1
+
+#TODO: need testing calculating vp
+class utility_belt(card_class):
+	name = "utility_belt"
+	vp = '*'
+	cost = 5
+	ctype = cardtype.HERO
+	text = "+2 Power\nAt the end of the game, if you have four or more other Equipment in your deck, this card is worth 5 VPs."
+
+	def play_action(self,player):
+		return 2
+
+	def calculate_vp(self):
+		count = 0
+		if self.owner.deck.get_count(cardtype.EQUIPMENT) > 4:
+			return 5
+		else:
+			return 0
+
 
 #TODO: allow to place back on top of players deck
 class x_ray_vision(card_class):
@@ -767,6 +927,23 @@ class x_ray_vision(card_class):
 	def play_action(self,player):
 		effects.x_ray_vision_reveal(player)
 		return 0
+
+#test
+class zatanna_zatara(card_class):
+	name = "Zatanna Zatara"
+	vp = 1
+	cost = 4
+	ctype = cardtype.HERO
+	text = "+1 Power.  You may put up to two cards from your discard pile on the bottom of your deck."
+
+	def play_action(self,player):
+		instruction_text = "You may choose a card from your dicard pile to go on the bottom of your deck('no' or 'ok 0')"
+		for i in range(2):
+			result = effects.may_choose_one_of(instruction_text,player,player.discard.contents,hint = ai_hint.BEST)
+			if result != None:
+				player.deck.contents.insert(0,result.pop_self())
+		return 1
+
 
 
 
@@ -787,7 +964,7 @@ class ras_al_ghul(card_class):
 
 	def end_of_turn(self):
 		self.pop_self()
-		self.owner.deck.insert(0,self)
+		self.owner.deck.contents.insert(0,self)
 		return
 
 class the_anti_monitor(card_class):
@@ -827,8 +1004,8 @@ class atrocitus(card_class):
 		return
 
 	def buy_action(self):
-		for p in globe.players:
-			affects.return_hidden_cards()
+		for p in globe.boss.players:
+			effects.return_hidden_cards(p)
 		return
 
 
@@ -904,7 +1081,7 @@ class captain_cold(card_class):
 
 	def buy_action(self):
 		for p in globe.boss.players:
-			affects.enable_superhero(p)
+			effects.enable_superhero(p)
 		return
 
 class darkseid(card_class):
@@ -937,7 +1114,7 @@ class deathstroke(card_class):
 	attack_text = "First Appearance - Attack:: Each player reveals his hand and destroys a Hero, Super Power or Equipment in his hand or discard pile."
 
 	def play_action(self,player):
-		if effects.gain_card_from_lineup() == None:
+		if effects.gain_card_from_lineup(player) == None:
 			return 3
 		return 0
 
@@ -957,8 +1134,8 @@ class the_joker(card_class):
 
 	def play_action(self,player):
 		for p in globe.boss.players:
-			if effects.may_discard_a_card() == None:
-				player.draw()
+			if effects.may_discard_a_card(p) == None:
+				player.draw_card()
 		return 2
 
 	def first_apearance(self):
