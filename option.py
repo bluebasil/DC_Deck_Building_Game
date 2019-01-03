@@ -1,0 +1,6 @@
+FAIL = 0
+NO = 1
+OK = 2
+HAND = 3
+DISCARD = 4
+CANNOT = 5

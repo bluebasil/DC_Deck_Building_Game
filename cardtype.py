@@ -1,0 +1,9 @@
+#For development purposes
+ANY = 0
+STARTER = 1
+WEAKNESS = 2
+HERO = 3
+VILLAIN = 4
+SUPERPOWER = 5
+EQUIPMENT = 6
+LOCATION = 7

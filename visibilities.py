@@ -1,0 +1,3 @@
+SECRET = 0
+PRIVATE = 1
+PUBLIC = 2
