@@ -21,11 +21,14 @@ add villains					Done
 defence logic					Done
 add heros						Done
 integration testing				ongoing...
+persona's 						Done
 add basic ai 					Done
 add locations					TODO
+add personalities 				Done
 add sv logic					TODO
 advance ai logic				TODO
 multiple ai personalities?
-strip UI from ai's (speed)		TODO
+strip UI from ai's (speed)		Done
 web ui?
 online interation
+

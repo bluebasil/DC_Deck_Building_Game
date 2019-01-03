@@ -7,6 +7,20 @@ def get_starting_deck(player):
 		assemble.append(cards.punch(player))
 	for c in range(3):
 		assemble.append(cards.vunerability(player))
+	#assemble.append(cards.kick(player))
+	#assemble.append(cards.kick(player))
+	#assemble.append(cards.kick(player))
+	#assemble.append(cards.kick(player))
+	#assemble.append(cards.kick(player))
+	#assemble.append(cards.kick(player))
+	#assemble.append(cards.catwoman(player))
+	#assemble.append(cards.catwoman(player))
+	#assemble.append(cards.the_dark_knight(player))
+	#assemble.append(cards.clayface(player))
+
+
+	random.shuffle(assemble)
+
 	return assemble
 
 

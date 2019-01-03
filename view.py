@@ -23,7 +23,7 @@ class view_controler():
 		print_board(globe.boss)
 
 	def print_card(self,card, num = 0):
-		print("\033[;7m" + self.colour[card.ctype] + f"{num:<2} {card.name:<20}vp:{card.vp:>2} cost:{card.cost:>2} {card.owner}" + self.colour[cardtype.ANY] + \
+		print("\033[;7m" + self.colour[card.ctype] + f"{num:<2} {card.name:<20}vp:{card.vp:>2} cost:{card.cost:>2}" + self.colour[cardtype.ANY] + \
 			f"\n{card.text}\n{card.attack_text}")
 		print("----------------------")
 
@@ -36,7 +36,7 @@ class view_controler():
 		print("------------------------------------------------")
 		print("------------------------------------------------")
 		print(f"-{turn}--{player.persona.name}--------------------------------------------")
-		print(f"-----{player.persona.text}")
+		print(f"----{player.persona.text}")
 		print("------------------------------------------------")
 		print(f"#Weaknesses:{globe.boss.weakness_stack.size()}, #Kicks:{globe.boss.kick_stack.size()}")
 		print(f"#Supervillains:{globe.boss.supervillain_stack.size()}, #Deck:{globe.boss.main_deck.size()}")

@@ -53,7 +53,7 @@ def choose_a_player(instruction_text,player,includes_self = True):
 		if p != player or includes_self:
 			assemble.append(p)
 	result = player.controler.choose_a_player(instruction_text,player,assemble)
-	if globe.boss.DEBUG:
+	if globe.DEBUG:
 		print("choose_a_player",result)
 	if not ensure_int(result[0]):
 		return choose_a_player(instruction_text,player,includes_self)
@@ -64,7 +64,7 @@ def choose_a_player(instruction_text,player,includes_self = True):
 
 def choose_one_of(instruction_text,player,cards,hint = ai_hint.WORST):
 	result = player.controler.choose_one_of(instruction_text,player,cards,hint)
-	if globe.boss.DEBUG:
+	if globe.DEBUG:
 		print("choose_one_of",result)
 	if not ensure_int(result[0]):
 		return choose_one_of(instruction_text,player,cards)
@@ -75,7 +75,7 @@ def choose_one_of(instruction_text,player,cards,hint = ai_hint.WORST):
 
 def may_choose_one_of(instruction_text,player,cards,hint = ai_hint.BEST):
 	result = player.controler.may_choose_one_of(instruction_text,player,cards,hint)
-	if globe.boss.DEBUG:
+	if globe.DEBUG:
 		print("may_choose_one_of",result)
 	if result[0] == option.NO:
 		return None
@@ -89,7 +89,7 @@ def may_choose_one_of(instruction_text,player,cards,hint = ai_hint.BEST):
 
 def ok_or_no(instruction_text,player,card = None,hint = ai_hint.IFBAD):
 	result = player.controler.ok_or_no(instruction_text,player,card,hint)
-	if globe.boss.DEBUG:
+	if globe.DEBUG:
 		print("ok_or_no",result)
 	if result[0] == option.OK:
 		return True
@@ -105,7 +105,7 @@ def reveal(reveal_text,player,cards):
 #True for even
 def choose_even_or_odd(instruction_text,player):
 	result = player.controler.choose_even_or_odd(instruction_text,player)
-	if globe.boss.DEBUG:
+	if globe.DEBUG:
 		print("choose_even_or_odd",result)
 	if result[0] == option.EVEN:
 		return True
@@ -118,7 +118,7 @@ def choose_even_or_odd(instruction_text,player):
 # (no/hand/disccard, if hand or discard: #)
 def may_destroy_card_in_hand_or_discard(player):
 	result = player.controler.may_destroy_card_in_hand_or_discard()
-	if globe.boss.DEBUG:
+	if globe.DEBUG:
 		print("may_destroy_card_in_hand_or_discard",result)
 	if len(result) != 2:
 		print("ERR: not 2 attributes")
@@ -149,7 +149,7 @@ def may_destroy_card_in_hand_or_discard(player):
 #(,#)
 def discard_a_card(player):
 	result = player.controler.discard_a_card()
-	if globe.boss.DEBUG:
+	if globe.DEBUG:
 		print("discard_a_card",result)
 	if result[0] == option.CANNOT:
 		if not player.hand.size() == 0:
@@ -175,7 +175,7 @@ def x_ray_vision_reveal(player):
 				assemble.append(revealed)
 	if len(assemble) > 0:
 		result = player.controler.may_play_one_of_these_cards(assemble)
-		if globe.boss.DEBUG:
+		if globe.DEBUG:
 			print("x_ray_vision_reveal",result)
 		if result[0] == option.NO:
 			return option.NO
@@ -197,7 +197,7 @@ def x_ray_vision_reveal(player):
 #(no/ok, if ok:#)
 def may_destroy_card_in_discard(player):
 	result = player.controler.may_destroy_card_in_discard()
-	if globe.boss.DEBUG:
+	if globe.DEBUG:
 		print("may_destroy_card_in_discard",result)
 	if result[0] == option.NO:
 		return (option.NO,-1)

@@ -65,7 +65,7 @@ class playing(pile):
 	double_modifier = 0
 	played_this_turn = []
 
-	def no_mod(self,card):
+	def no_mod(self,card,player):
 		return card.play_action(self.owner)
 
 	def __init__(self,owner = None,visibility = visibilities.PUBLIC):
@@ -80,7 +80,7 @@ class playing(pile):
 		self.power = 0
 		self.played_this_turn = []
 		self.card_mods = [self.no_mod]
-		self.owner.persona.set_modifiers()
+		#self.owner.persona.set_modifiers()
 		self.double_modifier = 0
 		while self.size() > 0:
 			c = self.contents.pop()
@@ -98,12 +98,13 @@ class playing(pile):
 
 
 	def play(self,card):
+		card.times_played += 1
 		self.contents.append(card)
 		modifier = 0
 
 		for mod in self.card_mods:
 
-			modifier += mod(card)
+			modifier += mod(card,self.owner)
 		#modifier = card.play_action(self.owner)
 		#modifier = post_power()
 
@@ -150,7 +151,6 @@ class player:
 		self.gained_this_turn = []
 
 		self.deck.contents = deck_builder.get_starting_deck(self)
-		#self.deck.shuffle()
 
 		for i in range(5):
 			self.hand.add(self.deck.draw())
@@ -159,7 +159,7 @@ class player:
 		self.persona = self.controler.choose_persona(persona_list)
 		persona_list.remove(self.persona)
 		self.persona = self.persona(self)
-		self.persona.set_modifiers()
+		self.persona.reset()
 
 	def draw_card(self):
 		if not self.manage_reveal():
@@ -196,6 +196,8 @@ class player:
 
 	def buy_supervillain(self):
 		if self.played.power >= globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv:
+			if globe.DEBUG:
+				print(f" {globe.boss.supervillain_stack.contents[-1].name} bought")
 			self.played.power -= globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv
 			self.gain(globe.boss.supervillain_stack.contents.pop())
 			return True
@@ -203,6 +205,9 @@ class player:
 
 	def buy_kick(self):
 		if globe.boss.kick_stack.size() > 0 and self.played.power >= globe.boss.kick_stack.contents[-1].cost:
+			if globe.DEBUG:
+				print(f"kick bought")
+			globe.boss.kick_stack.contents[-1].bought = True
 			self.played.power -= globe.boss.kick_stack.contents[-1].cost
 			self.gain(globe.boss.kick_stack.contents.pop())
 			return True
@@ -225,6 +230,9 @@ class player:
 		if cardnum < 0 or cardnum >= len(globe.boss.lineup.contents):
 			return False
 		elif self.played.power >= globe.boss.lineup.contents[cardnum].cost:
+			globe.boss.lineup.contents[cardnum].bought = True
+			if globe.DEBUG:
+				print(f"{globe.boss.lineup.contents[cardnum]} bought")
 			self.played.power -= globe.boss.lineup.contents[cardnum].cost
 			self.gain(globe.boss.lineup.contents.pop(cardnum))
 			return True
@@ -232,6 +240,9 @@ class player:
 
 	def buy_c(self,card):
 		if self.played.power >= card.cost:
+			card.bought = True
+			if globe.DEBUG:
+				print(f"{card.name} bought")
 			self.played.power -= card.cost
 			self.gain(card.pop_self())
 			return True
@@ -242,25 +253,22 @@ class player:
 		self.gained_this_turn.append(card)
 		card.buy_action()
 
+		redirected = False
 		if len(self.gain_redirect) > 0:
 			assemble = []
 			for re in self.gain_redirect:
 				assemble.append(re)
-			for re in assemble:
-				if re == self.hand and effects.ok_or_no(f"Would you like to put {card.name} into your hand?",self,card,ai_hint.ALWAYS):
-					self.gain_redirect.remove(re)
-					self.hand.add(card)
-					return
-				elif re == self.deck:
-					if effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?",self,card,ai_hint.ALWAYS):
-						self.gain_redirect.remove(re)
-						self.deck.add(card)
-						return
-					# If theres a better way to do solomun grudy with the architecture avalable...
-					elif card.name == "Solomon Grundy":
-						self.gain_redirect.remove(re)
 
-		self.discard.add(card)
+
+			for re in assemble:
+				redirect_responce = re(self,card)
+				if not redirected and redirect_responce[0]:
+					redirect_responce[1].add(card)
+					redirected = True
+
+
+		if not redirected:
+			self.discard.add(card)
 		return
 			
 
@@ -274,9 +282,8 @@ class player:
 		self.played_riddler = False
 		for c in self.played.contents:
 			c.end_of_turn()
-		self.played.turn_end()
-		print("HAND DISCARDED")
 		self.discard_hand()
+		self.played.turn_end()
 		self.persona.reset()
 		self.gained_this_turn = []
 		for i in range(5):
@@ -297,8 +304,6 @@ class player:
 
 
 class model:
-
-	DEBUG = True
 	main_deck = None
 	weakness_stack = None
 	kick_stack = None
@@ -329,27 +334,36 @@ class model:
 			self.lineup.add(self.main_deck.draw())
 
 		#2 human players for initialization
-		#for player_id in range(number_of_players):
-		#new_player = player(0,None)
-		#new_controler = controlers.human(new_player)
-		#new_player.controler = new_controler
-		#self.players.append(new_player)
+		
 
-		for i in range(4):
-			new_player = player(i,None)
-			new_controler = controlers.cpu(new_player)
+		#for i in range(4):
+		#	new_player = player(i,None)
+		#	new_controler = controlers.cpu(new_player,True)
+		#	new_player.controler = new_controler
+		#	self.players.append(new_player)
+
+		for player_id in range(2):
+			new_player = player(player_id,None)
+			new_controler = controlers.human(new_player)
 			new_player.controler = new_controler
 			self.players.append(new_player)
 
 	def choose_personas(self):
-		for p in self.players:
+		for i,p in enumerate(self.players):
 			p.choose_persona(self.persona_list)
+			print(f"{i} choose {p.persona.name}")
+			if p.persona.name == "The Flash":
+				self.whose_turn = i
+		
 
 	def start_game(self):
 		self.choose_personas()
 		while self.supervillain_stack.get_count() > 0:
 			if self.notify != None:
 				self.notify()
+			if globe.DEBUG:
+				print(f"{self.whose_turn} turn")
+
 			self.players[self.whose_turn].controler.turn()
 			self.players[self.whose_turn].end_turn()
 
@@ -364,6 +378,7 @@ class model:
 			self.whose_turn += 1
 			if self.whose_turn >= len(self.players):
 				self.whose_turn = 0
+
 
 		for p in self.players:
 			self.player_score.append(p.calculate_vp())

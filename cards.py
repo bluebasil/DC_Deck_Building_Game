@@ -19,8 +19,11 @@ class card_class:
 	owner_type = owners.MAINDECK
 	text = ""
 	attack_text = ""
-	#should i track this?
-	home = None
+
+
+	#stats
+	times_played = 0
+	bought = False
 
 	def __init__(self,owner = None):
 		self.owner = owner
@@ -28,6 +31,9 @@ class card_class:
 			self.owner_type = owners.PLAYER
 
 	def play_action(self,player):
+		return 0
+
+	def later_play(self,player,on_card):
 		return 0
 
 	def set_owner(self,player=None):
@@ -66,26 +72,33 @@ class card_class:
 		#why am i not checking by ownership type?
 		if self in globe.boss.lineup.contents:
 			globe.boss.lineup.contents.remove(self)
-			print(f"{self.name} pop from lineup")
+			if globe.DEBUG:
+				print(f"{self.name} pop from lineup")
 		elif self in globe.boss.destroyed_stack.contents:
 			globe.boss.destroyed_stack.contents.remove(self)
-			print(f"{self.name} pop from destroyed")
+			if globe.DEBUG:
+				print(f"{self.name} pop from destroyed")
 		elif self.owner_type == owners.PLAYER:
 			if self in self.owner.hand.contents:
 				self.owner.hand.contents.remove(self)
-				print(f"{self.name} pop from hand")
+				if globe.DEBUG:
+					print(f"{self.name} pop from hand")
 			elif self in self.owner.discard.contents:
 				self.owner.discard.contents.remove(self)
-				print(f"{self.name} pop from discard")
+				if globe.DEBUG:
+					print(f"{self.name} pop from discard")
 			elif self in self.owner.ongoing.contents:
 				self.owner.ongoing.contents.remove(self)
-				print(f"{self.name} pop from ongoing")
+				if globe.DEBUG:
+					print(f"{self.name} pop from ongoing")
 			elif self in self.owner.played.contents:
 				self.owner.played.contents.remove(self)
-				print(f"{self.name} pop from played")
+				if globe.DEBUG:
+					print(f"{self.name} pop from played")
 			elif self in self.owner.deck.contents:
 				self.owner.deck.contents.remove(self)
-				print(f"{self.name} pop from deck")
+				if globe.DEBUG:
+					print(f"{self.name} pop from deck")
 		return self
 		
 
@@ -140,8 +153,22 @@ class aquamans_trident(card_class):
 	ctype = cardtype.EQUIPMENT
 	text = "+2 Power\nYou may put any one card you buy or gain this turn on top of your deck."
 
+	def trident_redirect(self,player,card):
+		if effects.ok_or_no(f"Would you like to put {card.name} into your hand?",player,card,ai_hint.ALWAYS):
+			player.gain_redirect.remove(self.trident_redirect)
+			return (True,player.hand)
+		return (False,None)
+
 	def play_action(self,player):
-		player.gain_redirect.append(player.deck)
+		used = False
+		for c in player.gained_this_turn:
+			if not used and c in player.discard.contents and effects.ok_or_no(f"Would you like to put {c.name} into your hand?-",player,c,ai_hint.ALWAYS):
+				#player.gain_redirect.remove(player.hand)
+				player.hand.add(c.pop_self())
+				used = True
+		if not used:
+			player.gain_redirect.append(self.trident_redirect)
+		#player.gain_redirect.append(player.deck)
 		return 2
 
 #Done
@@ -277,16 +304,7 @@ class catwoman(card_class):
 	ctype = cardtype.HERO
 	text = "+2 Power"
 
-#The dark knight abiltiy here as well cause im lazy, (and catwoman can be played any any time according to its text)
 	def play_action(self,player):
-		activate = False
-		for c in player.played.contents:
-			if c.name == "The Dark Knight":
-				player.gain_redirect.append(player.hand)
-				for c in player.gained_this_turn:
-					if effects.ok_or_no(f"Would you like to put {c.name} into your hand?-",player,c,ai_hint.ALWAYS):
-						player.gain_redirect.remove(player.hand)
-						player.hand.add(c.pop_self())
 		return 2
 
 #Done
@@ -338,6 +356,26 @@ class the_dark_knight(card_class):
 	cost = 5
 	ctype = cardtype.HERO
 	text = "+2 Power.  Gain all Equipment in the Line-Up.  Then, if you play or have gained Catwoman this turn, you may put a card you bought or gained this turn into your hand."
+	catwoman_played = False
+
+	def the_dark_knight_redirect(self,player,card):
+		if effects.ok_or_no(f"Would you like to put {card.name} into your hand?",player,card,ai_hint.ALWAYS):
+			player.gain_redirect.remove(self.the_dark_knight_redirect)
+			return (True,player.hand)
+		return (False,None)
+
+	def the_dark_knight_mod(self,card,player):
+		if card.name == "Catwoman" and not self.catwoman_played:
+			self.catwoman_played = True
+			used = False
+			for c in player.gained_this_turn:
+				if not used and c in player.discard.contents and effects.ok_or_no(f"Would you like to put {c.name} into your hand?-",player,c,ai_hint.ALWAYS):
+					player.hand.add(c.pop_self())
+					used = True
+			if not used:
+				player.gain_redirect.append(self.the_dark_knight_redirect)
+		return 0
+
 
 	def play_action(self,player):
 		assemble = []
@@ -346,20 +384,30 @@ class the_dark_knight(card_class):
 				assemble.append(c)
 		for c in assemble:
 			player.gain(c.pop_self())
-		activate = False
+
+		can_use = False
+		used = False
 		for c in player.played.contents:
 			if c.name == "Catwoman":
-				activate = True
+				self.catwoman_played = True
 		for c in player.gained_this_turn:
 			if c.name == "Catwoman":
-				activate = True
-		if activate:
-			player.gain_redirect.append(player.hand)
-			for c in player.gained_this_turn:
-				if effects.ok_or_no(f"Would you like to put {c.name} into your hand?-",player,c,ai_hint.ALWAYS):
-					player.gain_redirect.remove(player.hand)
-					player.hand.add(c.pop_self())
+				self.catwoman_played = True
+
+		#"and c in player.discard.contents" added to avoid the clayface/darkknight/catwoman infinite loop
+		for c in player.gained_this_turn:
+			if self.catwoman_played and not used and c in player.discard.contents and effects.ok_or_no(f"Would you like to put {c.name} into your hand?.",player,c,ai_hint.ALWAYS):
+				player.hand.add(c.pop_self())
+				used = True
+		if self.catwoman_played and not used:
+			player.gain_redirect.append(self.the_dark_knight_redirect)
+		if not self.catwoman_played:
+			#set up later play
+			player.played.card_mods.append(self.the_dark_knight_mod)
 		return 2
+
+	def end_of_turn(self):
+		self.catwoman_played = False
 
 #Done
 class doomsday(card_class):
@@ -755,8 +803,13 @@ class solomon_grundy(card_class):
 	def play_action(self,player):
 		return 3
 
+	def solomon_grundy_redirect(self,player,card):
+		if card.name == "Solomon Grundy" and effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?-",player,card,ai_hint.ALWAYS):
+			return (True,player.deck)
+		return (False,None)
+
 	def buy_action(self):
-		self.owner.gain_redirect.append(self.owner.deck)
+		self.owner.gain_redirect.append(self.solomon_grundy_redirect)
 		return
 
 

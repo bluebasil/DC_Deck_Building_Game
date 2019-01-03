@@ -1,7 +1,9 @@
 import cardtype
+import effects
+import ai_hint
 
 def get_personas():
-	return [batman,cyborg,the_flash,green_lantern,hawkman,superman,wonder_woman]
+	return [auquaman,batman,cyborg,the_flash,green_lantern,hawkman,superman,wonder_woman]
 
 class persona:
 	player = None
@@ -24,23 +26,35 @@ class persona:
 	def reset(self):
 		return
 
+class auquaman(persona):
+	name = "Auqaman"
+	text = "You may put any cards with cost 5 or less you buy or gain during your turn on top of your deck."
+
+	def aquaman_redirect(self,player,card):
+		if card.cost <= 5 and effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?",player,card,ai_hint.ALWAYS):
+			return (True,player.deck)
+		return (False,None)
+
+	def reset(self):
+		self.player.gain_redirect.append(self.aquaman_redirect)
+
 class batman(persona):
 	name = "Batman"
 	text = "+1 Power for each Equipment you play during your turn."
 
-	def mod(self,card):
+	def mod(self,card,player):
 		if card.ctype == cardtype.EQUIPMENT:
 			return 1
 		return 0
 
-	def set_modifiers(self):
+	def reset(self):
 		self.player.played.card_mods.append(self.mod)
 
 class cyborg(persona):
 	name = "Cyborg"
 	text = "+1 power for first super power played, and draw a card for the first equipment played"
 
-	def mod(self,card):
+	def mod(self,card,player):
 		if card.ctype == cardtype.SUPERPOWER:
 			already_played = False
 			for c in self.player.played.played_this_turn:
@@ -59,7 +73,7 @@ class cyborg(persona):
 		return 0
 
 
-	def set_modifiers(self):
+	def reset(self):
 		self.player.played.card_mods.append(self.mod)
 
 class the_flash(persona):
@@ -79,7 +93,7 @@ class green_lantern(persona):
 	text = "If you play three or more cards with different names and cost 1 or more during your turn, +3 Power."
 	accounted_for = False
 
-	def mod(self,card):
+	def mod(self,card,player):
 		if not self.accounted_for:
 			others = [card]
 			for c in self.player.played.played_this_turn:
@@ -97,15 +111,13 @@ class green_lantern(persona):
 
 	def reset(self):
 		self.accounted_for = False
-
-	def set_modifiers(self):
 		self.player.played.card_mods.append(self.mod)
 
 class hawkman(persona):
 	name = "Hawkman"
 	text = "+1 Power for each Hero you play during your turn."
 
-	def mod(self,card):
+	def mod(self,card,player):
 		if card.ctype == cardtype.HERO:
 			return 1
 		return 0
@@ -119,7 +131,7 @@ class superman(persona):
 	name = "Superman"
 	text = "+1 Power for each different Super Power you play during your turn."
 
-	def mod(self,card):
+	def mod(self,card,player):
 		if card.ctype == cardtype.SUPERPOWER:
 			already_played = False
 			for c in self.player.played.played_this_turn:
@@ -130,7 +142,7 @@ class superman(persona):
 		return 0
 
 
-	def set_modifiers(self):
+	def reset(self):
 		self.player.played.card_mods.append(self.mod)
 		return
 

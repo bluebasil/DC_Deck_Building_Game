@@ -147,8 +147,16 @@ class human(controler):
 					result = self.player.buy_kick()
 					view.print_power()
 				else:
-					result = self.player.buy(int(x[1]))
-					view.print_board()
+					safe = True
+					intx = -1
+					try:
+						intx = int(x[1])
+					except:
+						print("?")
+						safe == False
+					if safe:
+						result = self.player.buy(int(x[1]))
+						view.print_board()
 				if not result:
 					print("COULD NOT BUY")
 			elif x[0] == "riddle":
@@ -384,7 +392,18 @@ class human(controler):
 
 class cpu(controler):
 	#sleep length between actions
-	slti = 0.0001
+	slti = 0
+	invisible = False
+
+	def __init__(self,player,invisible = False):
+		#self.boss = boss
+		self.player = player
+		self.invisible = invisible
+
+	def display_thought(self,text):
+		if not self.invisible:
+			print(text, flush = True)
+			time.sleep(self.slti)
 
 	def sort_by_cost(self,card):
 		if card.name == "Weakness":
@@ -409,25 +428,23 @@ class cpu(controler):
 	# Choose to end turn or play any cards
 	def turn(self):
 		global view
-		view.print_board()
-		print(f"Begining of AI {self.player.pid}'s turn", flush=True)
-		time.sleep(self.slti)
+		if not self.invisible:
+			view.print_board()
+		self.display_thought(f"Begining of AI {self.player.pid}'s turn")
 		self.player.hand.contents.sort(key = self.sort_by_play_order)
 		
 		while self.player.hand.size() > 0:
 			size_check = self.player.hand.size()
-			print(f"AI {self.player.pid}-{self.player.persona.name} is going to play a {self.player.hand.contents[0].name} (total power = {self.player.played.power})", flush=True)
-			time.sleep(self.slti)
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is going to play a {self.player.hand.contents[0].name} (total power = {self.player.played.power})")
 			self.player.play(0)
 			if size_check - 1 != self.player.hand.size():
-				print("(Differtent cards than expected)", flush=True)
+				self.display_thought("(Differtent cards than expected)")
 				self.player.hand.contents.sort(key = self.sort_by_play_order)
 
-		print(f"AI {self.player.pid}-{self.player.persona.name} has {self.player.played.power} power!", flush=True)
+		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} has {self.player.played.power} power!")
 		if globe.boss.supervillain_stack.size() > 0 and self.player.played.power >= globe.boss.supervillain_stack.contents[-1].cost:
 			self.player.buy_supervillain()
-			print(f"AI {self.player.pid}-{self.player.persona.name} is buying the supervillain! ({self.player.played.power} power left)", flush=True)
-			time.sleep(self.slti)
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is buying the supervillain! ({self.player.played.power} power left)")
 		assemble = []
 		for c in globe.boss.lineup.contents:
 			assemble.append(c)
@@ -436,76 +453,61 @@ class cpu(controler):
 		while len(assemble) > 0:
 			test = assemble.pop()
 			if self.player.buy_c(test):
-				print(f"AI {self.player.pid}-{self.player.persona.name} bought {test.name} ({self.player.played.power} power left)", flush=True)
+				self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought {test.name} ({self.player.played.power} power left)")
 		while self.player.played.power >= 3 and globe.boss.kick_stack.size() > 0:
 			self.player.buy_kick()
-			print(f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)", flush=True)
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)")
 
 		return
 
 
 	def choose_one_of(self,instruction_text,player,cards,hint):
 		cards.sort(key = self.sort_by_cost)
-		print(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}", flush=True)
-		time.sleep(self.slti)
+		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}")
 		if hint == ai_hint.BEST:
-			print(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[-1].name}", flush=True)
-			time.sleep(self.slti)
-			return [-1]
-		print(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}", flush=True)
-		time.sleep(self.slti)
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[-1].name}")
+			return [len(cards)-1]
+		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}")
 		return [0]
 
 	def may_choose_one_of(self,instruction_text,player,cards,hint):
 		cards.sort(key = self.sort_by_cost)
-		print(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}", flush=True)
-		time.sleep(self.slti)
+		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}")
 		if len(cards) == 0:
 			return [option.NO]
 		if hint == ai_hint.BEST and cards[-1].cost >= 3:
-			print(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[-1].name}", flush=True)
-			time.sleep(self.slti)
-			return [option.OK,-1]
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[-1].name}")
+			return [option.OK,len(cards)-1]
 		elif hint == ai_hint.WORST and cards[0].cost <= 2:
-			print(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}", flush=True)
-			time.sleep(self.slti)
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}")
 			return [option.OK,0]
 		else:
-			print(f"AI {self.player.pid}-{self.player.persona.name} choose not yo", flush=True)
-			time.sleep(self.slti)
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose not yo")
 			return [option.NO]
 		
 
 	def may_put_on_top(self,instruction_text):
-		print(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}", flush=True)
-		time.sleep(self.slti)
-		print(f"AI {self.player.pid}-{self.player.persona.name} choose to do so", flush=True)
-		time.sleep(self.slti)
+		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}")
+		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to do so")
 		return option.OK
 
 	def ok_or_no(self,instruction_text,player,card,hint):
-		print(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}", flush=True)
-		time.sleep(self.slti)
+		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}")
 		if hint == ai_hint.ALWAYS:
-			print(f"AI {self.player.pid}-{self.player.persona.name} choose to do so", flush=True)
-			time.sleep(self.slti)
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to do so")
 			return [option.OK]
 		elif hint == ai_hint.IFBAD and card.cost > 1:
-			print(f"AI {self.player.pid}-{self.player.persona.name} choose NOT to do so", flush=True)
-			time.sleep(self.slti)
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose NOT to do so")
 			return [option.NO]
 		else:
-			print(f"AI {self.player.pid}-{self.player.persona.name} choose to do so (by default)", flush=True)
-			time.sleep(self.slti)
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to do so (by default)")
 			return [option.OK]
 
 	#only OK or CANNOT are accepted
 	def discard_a_card(self):
-		print(f"AI {self.player.pid}-{self.player.persona.name} told to discard a card", flush=True)
-		time.sleep(self.slti)
+		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} told to discard a card")
 		if self.player.hand.size() == 0:
-			print(f"AI {self.player.pid}-{self.player.persona.name} does not have a hand", flush=True)
-			time.sleep(self.slti)
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} does not have a hand")
 			return option.CANNOT
 		else:
 			lowest_cost = 20
@@ -517,6 +519,5 @@ class cpu(controler):
 				elif c.cost == lowest_cost:
 					if c.name == "Vunerability" or c.name == "Weakness":
 						lowest_position = i
-		print(f"AI {self.player.pid}-{self.player.persona.name} choose to discard a {self.player.hand.contents[lowest_position].name}", flush=True)
-		time.sleep(self.slti)
+		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to discard a {self.player.hand.contents[lowest_position].name}")
 		return (option.OK,lowest_position)
