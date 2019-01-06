@@ -1,3 +1,3 @@
 boss = None
 view = None
-DEBUG = False
+DEBUG = True

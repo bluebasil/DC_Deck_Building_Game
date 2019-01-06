@@ -36,7 +36,10 @@ class view_controler():
 		print("------------------------------------------------")
 		print("------------------------------------------------")
 		print(f"-{turn}--{player.persona.name}--------------------------------------------")
-		print(f"----{player.persona.text}")
+		if player.persona.active:
+			print(f"----{player.persona.text}")
+		else:
+			print(f"----FLIPPED UPSIDE DOWN")
 		print("------------------------------------------------")
 		if player.ongoing.size() > 0:
 			print(f"Ongoing:  ")
@@ -49,7 +52,12 @@ class view_controler():
 
 		print(f"#Weaknesses:{globe.boss.weakness_stack.size()}, #Kicks:{globe.boss.kick_stack.size()}")
 		print(f"#Supervillains:{globe.boss.supervillain_stack.size()}, #Deck:{globe.boss.main_deck.size()}")
-		self.print_card(globe.boss.supervillain_stack.contents[-1])
+		if globe.boss.supervillain_stack.current_sv == globe.boss.supervillain_stack.contents[-1]:
+			self.print_card(globe.boss.supervillain_stack.current_sv)
+		else:
+			print("\033[;7m" + f"Unkown" + self.colour[cardtype.ANY] + \
+			f"\n\n", flush = True)
+		print("------------------------------------", flush = True)
 		print("------------------------------------------------")
 		print("Lineup:")
 		print("------------------------------------------------")
@@ -107,6 +115,17 @@ class view_controler():
 		print(f" {player_id}'s played cards")
 		print("------------------------------------------------")
 		for num, card in enumerate(player.played.contents):
+			self.print_card(card,num)
+
+	def print_under(self,player_id):
+		player = globe.boss.players[player_id]
+		print("------------------------------------------------")
+
+
+		
+		print(f" Under {player_id}'s superhero")
+		print("------------------------------------------------")
+		for num, card in enumerate(player.under_superhero.contents):
 			self.print_card(card,num)
 
 

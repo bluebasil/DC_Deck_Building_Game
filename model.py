@@ -134,6 +134,8 @@ class ongoing_pile(pile):
 		for c in self.contents:
 			self.owner.played.play(c,True)
 
+class supervillain_pile(pile):
+	current_sv = None
 
 class player:
 	pid = -1
@@ -144,11 +146,13 @@ class player:
 	played = None
 	controler = None
 	persona = None
+	under_superhero = None
 
 	gain_redirect = []
 	gained_this_turn = []
 	discount_on_sv = 0
 	played_riddler = False
+	sv_bought_this_turn = False
 
 	def __init__(self,pid, controler):
 		self.controler = controler
@@ -156,6 +160,7 @@ class player:
 		self.deck = pile(self, visibilities.SECRET)
 		self.hand = pile(self, visibilities.PRIVATE)
 		self.discard = pile(self)
+		self.under_superhero = pile(self)
 		self.ongoing = ongoing_pile(self)
 		self.played = playing(self)
 
@@ -164,6 +169,7 @@ class player:
 		self.gained_this_turn = []
 
 		self.deck.contents = deck_builder.get_starting_deck(self)
+		self.discard.contents = deck_builder.debug_discard(self)
 
 		for i in range(5):
 			self.hand.add(self.deck.draw())
@@ -175,6 +181,7 @@ class player:
 		self.persona.reset()
 
 	def turn(self):
+		self.persona.ready()
 		self.ongoing.begin_turn()
 		self.controler.turn()
 		self.end_turn()
@@ -213,9 +220,11 @@ class player:
 		pile.add(card)
 
 	def buy_supervillain(self):
-		if self.played.power >= globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv:
+		if globe.boss.supervillain_stack.current_sv == globe.boss.supervillain_stack.contents[-1] \
+				and self.played.power >= globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv:
 			if globe.DEBUG:
 				print(f" {globe.boss.supervillain_stack.contents[-1].name} bought")
+			self.sv_bought_this_turn = True
 			self.played.power -= globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv
 			self.gain(globe.boss.supervillain_stack.contents.pop())
 			return True
@@ -306,6 +315,8 @@ class player:
 		self.gained_this_turn = []
 		for i in range(5):
 			self.draw_card()
+		self.sv_bought_this_turn = False
+
 
 	def calculate_vp(self):
 		self.deck.contents.extend(self.discard.contents)
@@ -343,8 +354,9 @@ class model:
 		self.weakness_stack.contents = deck_builder.initialize_weaknesses()
 		self.kick_stack = pile()
 		self.kick_stack.contents = deck_builder.initialize_kicks()
-		self.supervillain_stack = pile()
+		self.supervillain_stack = supervillain_pile()
 		self.supervillain_stack.contents = deck_builder.initialize_supervillains()
+		self.supervillain_stack.current_sv = self.supervillain_stack.contents[-1]
 		self.lineup = pile()
 		self.destroyed_stack = pile()
 		self.persona_list = persona.get_personas()
@@ -354,27 +366,28 @@ class model:
 
 		#2 human players for initialization
 		
+		invisible = False
 
 		#for i in range(4):
 		new_player = player(0,None)
-		new_controler = controlers.cpu(new_player,True)
+		new_controler = controlers.human(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
 		new_player = player(1,None)
-		new_controler = controlers.cpu_greedy(new_player,True)
+		new_controler = controlers.cpu_greedy(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
 		new_player = player(2,None)
-		new_controler = controlers.cpu(new_player,True)
+		new_controler = controlers.cpu(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
-		new_player = player(3,None)
-		new_controler = controlers.cpu_greedy(new_player,True)
-		new_player.controler = new_controler
-		self.players.append(new_player)
+		#new_player = player(3,None)
+		#new_controler = controlers.cpu_greedy(new_player,invisible)
+		#new_player.controler = new_controler
+		#self.players.append(new_player)
 
 		# in range(2):
 		#	new_player = player(player_id,None)
@@ -401,12 +414,21 @@ class model:
 
 			self.players[self.whose_turn].turn()
 
+			if self.supervillain_stack.get_count() > 0 and \
+					self.supervillain_stack.current_sv != self.supervillain_stack.contents[-1]:
+				self.supervillain_stack.current_sv = self.supervillain_stack.contents[-1]
+				#first apearance attack
+				self.supervillain_stack.current_sv.first_apearance()
+				
+
 			for i in range(5 - self.lineup.size()):
 				card_to_add = self.main_deck.draw()
 				#The main deck is empty
 				if card_to_add == None:
 					print("MAIN DECK RAN OUT!")
 					return
+				else:
+					card_to_add.owner_type.LINEUP
 				self.lineup.add(card_to_add)
 
 			self.whose_turn += 1

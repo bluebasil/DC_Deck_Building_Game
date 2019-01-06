@@ -3,6 +3,12 @@ import globe
 import cardtype
 import ai_hint
 
+def new_assemble(list):
+	assemble = []
+	for i in list:
+		assemble.append(i)
+	return assemble
+
 
 def ensure_int(i):
 	if not type(i) is int:
@@ -74,6 +80,8 @@ def choose_one_of(instruction_text,player,cards,hint = ai_hint.WORST):
 	return cards[result[0]]
 
 def may_choose_one_of(instruction_text,player,cards,hint = ai_hint.BEST):
+	if len(cards) == 0:
+		return None
 	result = player.controler.may_choose_one_of(instruction_text,player,cards,hint)
 	if globe.DEBUG:
 		print("may_choose_one_of",result)
@@ -219,65 +227,24 @@ def may_destroy_card_in_discard(player):
 		return may_destroy_card_in_hand_or_discard(player)
 
 
-def replace_cards_in_lineup(player):
-	return
-
-def discard_top_of_deck(player):
-	return None
-
-def play_random_card_from_opponents_hands(player):
-	for p in globe.boss.players:
-		if p != player:
-			#since cards cants be ordered, the first card is random
-			card = p.hand.contents.pop()
-			player.play_and_return(card,p.hand)
-	return 0
-
-def may_destroy_two_cards(player):
-	return  []
-
-def gain_card_from_lineup(player):
-	return None
-
-def may_discard_a_card(player):
-	return None
-
-#This effects 1 player
-def fa_add_card_to_lineup(caused_by,player):
-	#if attack(player,caused_by):
-	#	player.
-	return
-
-def fa_hide_card_under_superhero(caused_by,player):
-	return
-
-def return_hidden_cards(player):
-	return
-
-def fa_destroy_or_discard_hand(caused_by,player,card_to_destroy):
-	return
-
-def fa_random_shuffle_two_cards(caused_by,player):
-	return []
-
-def fa_disable_superhero(caused_by,player):
-	return
-
-def enable_superhero(player):
-	return
-
-def fa_reveal_villain_or_discard_two(caused_by,player):
-	return
-
-def fa_destroy_hero_villain_superpower_in_hand_discard(caused_by,player):
-	return None
-
-def fa_card_in_discard_to_left(caused_by,player):
-	return None
-
-def fa_gain_weakness_villains_lineup(caused_by,player):
-	return None
-
-def fa_discard_two_or_less(caused_by,player):
-	return
+def choose_however_many(instruction_text,player,cards,hint):
+	result = player.controler.choose_however_many(instruction_text,player,cards,hint = ai_hint.IFBAD)
+	if globe.DEBUG:
+		print("choose_however_many",result)
+	if result[0] == option.NO:
+		return None
+	elif result[0] == option.OK:
+		assemble = []
+		for r in result[1:]:
+			if not ensure_int(r):
+				print(f"ERR: invalid symbol {r}.")
+				return choose_however_many(instruction_text,player,cards,hint)
+			elif r < 0 or r >= len(cards):
+				print(f"ERR: invalid number {r}. max:{len(cards)-1}")
+				return choose_however_many(instruction_text,player,cards,hint)
+			assemble.append(cards[r])
+			return assemble
+	else:
+		print(f"ERR: invalid responce code: {result[0]}")
+		return choose_however_many(instruction_text,player,cards,hint)
 

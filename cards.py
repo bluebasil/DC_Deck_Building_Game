@@ -4,6 +4,7 @@ import effects
 import option
 import globe
 import ai_hint
+import random
 
 #TODO: Impliment Attacks
 
@@ -78,6 +79,10 @@ class card_class:
 			globe.boss.destroyed_stack.contents.remove(self)
 			if globe.DEBUG:
 				print(f"{self.name} pop from destroyed")
+		elif self in globe.boss.main_deck.contents:
+			globe.boss.main_deck.contents.remove(self)
+			if globe.DEBUG:
+				print(f"{self.name} pop from main_deck")
 		elif self.owner_type == owners.PLAYER:
 			if self in self.owner.hand.contents:
 				self.owner.hand.contents.remove(self)
@@ -99,6 +104,10 @@ class card_class:
 				self.owner.deck.contents.remove(self)
 				if globe.DEBUG:
 					print(f"{self.name} pop from deck")
+			elif self in self.owner.under_superhero.contents:
+				self.owner.under_superhero.contents.remove(self)
+				if globe.DEBUG:
+					print(f"{self.name} pop from under_superhero")
 		return self
 		
 
@@ -668,7 +677,7 @@ class nth_metal(card_class):
 
 	def play_action(self,player):
 		top_card = player.reveal_card()
-		if effects.ok_or_no(f"This card is on top of your deck, would you like to destroy it? (ok/no)",player,top_card,ai_hint.IFBAD):
+		if effects.ok_or_no(f"A {top_card.name} is on top of your deck, would you like to destroy it? (ok/no)",player,top_card,ai_hint.IFBAD):
 			top_card.destroy()
 		return 0
 
@@ -1160,6 +1169,7 @@ class ras_al_ghul(card_class):
 		self.owner.deck.contents.insert(0,self)
 		return
 
+#test fa
 class the_anti_monitor(card_class):
 	name = "The Anti-Monitor"
 	vp = 6
@@ -1170,38 +1180,66 @@ class the_anti_monitor(card_class):
 	attack_text = "First Appearance - Attack:: Each player reveals his hand, chooses a card with cost 1 or greater from it, and adds that card to the Line-Up."
 
 	def play_action(self,player):
-		effects.replace_cards_in_lineup(player)
+		instruction_text = "Choose any number of cards in the lineup to destroy"
+		choosen = effects.choose_however_many(instruction_text,player,globe.boss.lineup.contents,ai_hint.IFBAD)
+		if choosen != None:
+			for c in choosen:
+				c.destroy()
+				card_to_add = globe.boss.main_deck.draw()
+				if card_to_add != None:
+					globe.boss.lineup.add(card_to_add)
 		return 2
 
 	def first_apearance(self):
-		for p in globe.players:
-			effects.fa_add_card_to_lineup(self,p)
+		instruction_text = "Choose a card with cost 1 or greater to add to the lineup"
+		for p in globe.boss.players:
+			if effects.attack(p,self):
+				assemble = []
+				for c in p.hand.contents:
+					if c.cost >= 1:
+						assemble.append(c)
+				if len(assemble) > 0:
+					card_to_give = effects.choose_one_of(instruction_text,p,assemble,ai_hint.WORST)
+					card_to_give.set_owner(None)
+					card_to_give.owner_type = owners.lineup
+					globe.boss.lineup.add(card_to_give.pop_self())
 		return
 
+#done
 class atrocitus(card_class):
 	name = "Atrocitus"
 	vp = 5
 	cost = 10
 	ctype = cardtype.VILLAIN
 	owner_type = owners.VILLAINDECK
-	text = "+2 Power.\n Destroy up to two cards in your discard pile.\n First Appearance - Attack:: Each player puts a random card from his hand under his Super Hero.  When this Villain is defeated, put each of those cards on top of it's owner's deck."
+	text = "+2 Power.\n Destroy up to two cards in your discard pile."
+	attack_text = "First Appearance - Attack:: Each player puts a random card from his hand under his Super Hero.  When this Villain is defeated, put each of those cards on top of it's owner's deck."
 
 	def play_action(self,player):
+		card_to_destroy = True
 		for i in range(2):
-			effects.may_destroy_card_in_discard(player)
+			#This way we only ask the seccond time if the first was ok
+			if card_to_destroy:
+				instruction_text = f"You may destroy a card from your discard pile ({i+1}/2)"
+				card_to_destroy = effects.may_choose_one_of(instruction_text,player,player.discard.contents,ai_hint.IFBAD)
+				if card_to_destroy != None:
+					card_to_destroy.destroy()
 		return 2
 
 	def first_apearance(self):
-		for p in globe.players:
-			effects.fa_hide_card_under_superhero(self,p)
+		for p in globe.boss.players:
+			if effects.attack(p,self) and p.hand.size() > 0:
+				selected_card = random.choice(p.hand.contents)
+				p.under_superhero.add(selected_card.pop_self())
 		return
 
 	def buy_action(self):
 		for p in globe.boss.players:
-			effects.return_hidden_cards(p)
+			for c in p.under_superhero.contents:
+				p.deck.add(c.pop_self())
 		return
 
-
+#done
 class black_manta(card_class):
 	name = "Black Manta"
 	vp = 4
@@ -1217,39 +1255,55 @@ class black_manta(card_class):
 
 	def first_apearance(self):
 		for p in globe.boss.players:
-			card = effects.discard_top_of_deck(p)
-			if card != None:
-				effects.fa_destroy_or_discard_hand(self,p,card)
+			if effects.attack(p,self):
+				discarded = p.reveal_card()
+				p.discard.add(discarded.pop_self())
+				if discarded.cost >= 1:
+					instruction_text = f"Would you like to destroy this card?  If not, you hand will be discarded."
+					if effects.ok_or_no(instruction_text,p,card = discarded,hint = ai_hint.IFBAD):
+						discarded.destroy()
+					else:
+						p.discard_hand()
 		return
 
+#done
 class brainiac(card_class):
 	name = "Brainiac"
 	vp = 6
 	cost = 11
 	ctype = cardtype.VILLAIN
 	owner_type = owners.VILLAINDECK
-	text = "Each player reveals a random card from his hand."
-	attack_text = "Play each revealed non-Location.\n First Appearance - Attack:: Each player chooses two cards from his hand and puts them on the table face down.  Shuffle all of the chosen cards face down, then deal two back to each player at random."
+	text = "Each player reveals a random card from his hand. Play each revealed non-Location."
+	attack_text = "First Appearance - Attack:: Each player chooses two cards from his hand and puts them on the table face down.  Shuffle all of the chosen cards face down, then deal two back to each player at random."
 
 	def play_action(self,player):
-		effects.play_random_card_from_opponents_hands(player)
+		for p in globe.boss.players:
+			if p.hand.size() > 0:
+				card_to_play = random.choice(p.hand.contents)
+				effects.reveal(f"This was on top of {p.pid}-{p.persona.name}'s deck",player,[card_to_play])
+				if card_to_play.ctype != cardtype.LOCATION:
+					player.play_and_return(card_to_play.pop_self(), p.hand)
 		return 0
 
 	def first_apearance(self):
 		cards_to_shuffle = []
 		participating_players = []
 		for p in globe.boss.players:
-			cards_to_add = effects.fa_random_shuffle_two_cards(self,p)
-			if len(cards_to_add) > 0:
-				participating_players.append(p)	
-				cards_to_shuffle.extend(cards_to_add)
-		random.Shuffle(cards_to_shuffle)
+			participating_players.append(p)	
+			for i in range(2):
+				instruction_text = f"Choose a card from your hand to be dealt to each player. ({i+1}/2)"
+				if p.hand.size() > 0:
+					cards_to_shuffle.append(effects.choose_one_of(instruction_text,p,p.hand.contents,ai_hint.WORST).pop_self())
+		random.shuffle(cards_to_shuffle)
 		for i in range(2):
 			for p in participating_players:
 				if len(cards_to_shuffle) > 0:
-					p.hand.add(cards_to_shuffle.pop())
+					added_card = cards_to_shuffle.pop()
+					added_card.set_owner(p)
+					p.hand.add(added_card)
 		return
 
+#done
 class captain_cold(card_class):
 	name = "Captain Cold"
 	vp = 5
@@ -1269,14 +1323,16 @@ class captain_cold(card_class):
 
 	def first_apearance(self):
 		for p in globe.boss.players:
-			affects.fa_disable_superhero(self,p)
+			if effects.attack(p,self):
+				p.persona.active = False
 		return
 
 	def buy_action(self):
 		for p in globe.boss.players:
-			effects.enable_superhero(p)
+			p.persona.active = True
 		return
 
+#done
 class darkseid(card_class):
 	name = "Darkseid"
 	vp = 6
@@ -1287,16 +1343,37 @@ class darkseid(card_class):
 	attack_text = "First Appearance - Attack:: Each player discards two cards unless he reveals a Villain from his hand."
 
 	def play_action(self,player):
-		power = 3
-		if len(effects.may_destroy_two_cards(player)):
-			power = 5
-		return power
+		instruction_text = f"You may destroy 2 cards in your hand, if you do, +5 Power, +3 power otherwise (1/2)"
+		card1 = effects.may_choose_one_of(instruction_text,player,player.hand.contents,hint = ai_hint.IFBAD)
+		if card1 != None:
+			instruction_text = f"You may destroy 2 cards in your hand, if you do, +5 Power, +3 power otherwise (2/2).  If you do not choose a second card, no cards will be destroyed."
+			card1.pop_self()
+			card2 = effects.may_choose_one_of(instruction_text,player,player.hand.contents,hint = ai_hint.IFBAD)
+			if card2 != None:
+				card1.destroy()
+				card2.destroy()
+				return 5
+			else:
+				player.hand.add(card1)
+		return 3
 
 	def first_apearance(self):
 		for p in globe.boss.players:
-			effects.fa_reveal_villain_or_discard_two(self,player)
+			if effects.attack(p,self):
+				has_villain = False
+				for c in p.hand.contents:
+					if c.ctype == cardtype.VILLAIN:
+						#Reveal card
+						has_villain = True
+				if not has_villain:
+					for i in range(2):
+						instruction_text = f"Discard 2 cards from your hand ({i+1}/2)"
+						if p.hand.size() > 0:
+							card_to_discard = effects.choose_one_of(instruction_text,p,p.hand.contents,hint = ai_hint.WORST)
+							p.discard.add(card_to_discard.pop_self())
 		return
 
+#done
 class deathstroke(card_class):
 	name = "Deathstroke"
 	vp = 5
@@ -1307,15 +1384,37 @@ class deathstroke(card_class):
 	attack_text = "First Appearance - Attack:: Each player reveals his hand and destroys a Hero, Super Power or Equipment in his hand or discard pile."
 
 	def play_action(self,player):
-		if effects.gain_card_from_lineup(player) == None:
-			return 3
-		return 0
+		instruction_text = f"You may choose to gain a hero or villain from the lineup.  If you choose not to, +3 Power"
+		assemble = []
+		for c in globe.boss.lineup.contents:
+			if c.ctype == cardtype.VILLAIN or c.ctype == cardtype.HERO:
+				assemble.append(c)
+		if len(assemble) > 0:
+			choosen = effects.may_choose_one_of(instruction_text,player,assemble,hint = ai_hint.BEST)
+			if choosen != None:
+				choosen.set_owner(player)
+				player.discard.add(choosen.pop_self())
+				return 0
+		return 3
+			
 
 	def first_apearance(self):
+		instruction_text = "destroy a hero, superpower, or equipment in your hand or discard pile"
 		for p in globe.boss.players:
-			effects.fa_destroy_hero_villain_superpower_in_hand_discard(self,p)
-		return
-		
+			if effects.attack(p,self):
+				assemble = []
+				for c in p.hand.contents:
+					if c.ctype == cardtype.HERO or c.ctype == cardtype.SUPERPOWER or c.ctype == cardtype.EQUIPMENT:
+						assemble.append(c)
+				for c in p.discard.contents:
+					if c.ctype == cardtype.HERO or c.ctype == cardtype.SUPERPOWER or c.ctype == cardtype.EQUIPMENT:
+						assemble.append(c)
+				if len(assemble) > 0:
+					card_to_destroy = effects.choose_one_of(instruction_text,p,assemble,hint = ai_hint.WORST)
+					card_to_destroy.destroy()
+
+
+
 class the_joker(card_class):
 	name = "The Joker"
 	vp = 5
@@ -1326,22 +1425,29 @@ class the_joker(card_class):
 	attack_text = "First Appearance - Attack:: Each player puts a card from his hand into the discard pile of the player on his left.  If the card you received has a cost of 1 or greater, gain a Weakness"
 
 	def play_action(self,player):
+		instruction_text = f"You may choose to discard a card, if you do not, {player.pid}-{player.persona.name} will draw a card."
 		for p in globe.boss.players:
-			if effects.may_discard_a_card(p) == None:
-				player.draw_card()
+			if p != player:
+				choosen = effects.may_choose_one_of(instruction_text,p,p.hand.contents,hint = ai_hint.IFBAD)
+				if choosen == None:
+					player.draw_card()
+				else:
+					p.discard.add(choosen.pop_self())
 		return 2
 
 	def first_apearance(self):
+		instruction_text = "Choose a card to go into the discard pile of the player on your left"
 		cards_to_shuffle = []
 		participating_players = []
 		for p in globe.boss.players:
-			card_to_give = effects.fa_card_in_discard_to_left(self,p)
-			if card_to_give != None:
+			if effects.attack(p,self):
+				if p.hand.size() > 0:
+					card_to_give = effects.choose_one_of(instruction_text,p,p.hand.contents,hint = ai_hint.WORST)
+					cards_to_shuffle.append(card_to_give)
 				participating_players.append(p)
-				cards_to_shuffle.append(card_to_give)
 		for i,p in enumerate(participating_players):
 			card_recived = cards_to_shuffle[i-1]
-			p.discard.add(card_recived)
+			p.discard.add(card_recived.pop_self())
 			if card_recived.cost > 0:
 				p.gain_a_weakness()
 		return
@@ -1361,8 +1467,11 @@ class lex_luther(card_class):
 		return 0
 
 	def first_apearance(self):
+		villains_in_lineup = globe.boss.lineup.get_count(cardtype.VILLAIN)
 		for p in globe.boss.players:
-			effects.fa_gain_weakness_villains_lineup(self,p)
+			if effects.attack(p,self):
+				for i in range(villains_in_lineup):
+					p.gain_a_weakness()
 		return
 
 class parallax(card_class):
@@ -1380,7 +1489,11 @@ class parallax(card_class):
 
 	def first_apearance(self):
 		for p in globe.boss.players:
-			effects.fa_discard_two_or_less(self,p)
+			if effects.attack(p,self):
+				assemble = effects.new_assemble(p.hand.contents)
+				for c in assemble:
+					if c.cost <= 2:
+						p.discard.add(c.pop_self())
 		return
 
 class sinestro(card_class):
@@ -1393,22 +1506,27 @@ class sinestro(card_class):
 	attack_text = "First Appearance - Attack: Each player reveals his hand and discards a card for each Hero revealed this way."
 
 	def play_action(self,player):
+		effects.reveal("This was on top of the main deck",player,[globe.boss.main_deck.contents[-1]])
 		if len(globe.boss.main_deck.contents) > 0 and globe.boss.main_deck.contents[-1].ctype == cardtype.HERO:
 			globe.boss.main_deck.contents.pop().destroy()
 			return 3
 		else:
 			new_card = globe.boss.main_deck.contents.pop()
 			#ownership change
-			new_card.owner = player
-			new_card.owner_type = owners.PLAYER
+			new_card.set_owner(player)
 			player.hand.add(new_card)
 			return 0
 
 	def first_apearance(self):
 		for p in globe.boss.players:
-			effects.fa_discard_based_on_heros(self,p)
+			if effects.attack(p,self):
+				num_heros = p.hand.get_count(cardtype.HERO)
+				for i in range(num_heros):
+					instruction_text = f"You had {num_heros} heros in you hand.  Choose a card to discard ({i+1}/{num_heros})"
+					if p.hand.size() > 0:
+						choose = effects.choose_one_of(instruction_text,p,p.hand.contents,ai_hint.WORST)
+						p.discard.add(choose.pop_self())
 		return
-
 
 
 

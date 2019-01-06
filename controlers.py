@@ -16,7 +16,7 @@ class controler:
 	#boss = None
 	player = None
 
-	def __init__(self,player):
+	def __init__(self,player,invisible = None):
 		#self.boss = boss
 		self.player = player
 
@@ -71,6 +71,9 @@ class controler:
 	def may_destroy_card_in_discard(self):
 		return (option.NO,-1)
 
+	def choose_however_many(self,instruction_text,player,cards,hint = None):
+		return [option.NO]
+
 
 
 
@@ -118,6 +121,15 @@ def get_input():
 			try:
 				intx = int(x[1])
 				view.print_played(intx)
+			except:
+				print("?")
+	elif x[0] == "under":
+		if len(x) == 1:
+			print("?")
+		else:
+			try:
+				intx = int(x[1])
+				view.print_under(intx)
 			except:
 				print("?")
 	else:
@@ -226,7 +238,7 @@ class human(controler):
 	def choose_one_of(self,instruction_text,player,cards,hint):
 		self.state_name()
 		global view
-		print(instruction_text)
+		print(f"{instruction_text}  ( '0' / '2' )")
 		view.print_custom(cards)
 		print(instruction_text)
 		x = get_input()
@@ -241,7 +253,7 @@ class human(controler):
 	def may_choose_one_of(self,instruction_text,player,cards,hint):
 		self.state_name()
 		global view
-		print(instruction_text)
+		print(f"{instruction_text} ('no' / 'ok 2')")
 		view.print_custom(cards)
 		print(instruction_text)
 		x = get_input()
@@ -263,7 +275,7 @@ class human(controler):
 	def ok_or_no(self,instruction_text,player,card,hint):
 		self.state_name()
 		global view
-		print(instruction_text)
+		print(f"{instruction_text} ('ok / 'no')")
 		if card != None:
 			view.print_card(card)
 			print(instruction_text)
@@ -286,7 +298,7 @@ class human(controler):
 
 	def choose_even_or_odd(self,instruction_text,player):
 		self.state_name()
-		print(f"{instruction_text} (even/odd)")
+		print(f"{instruction_text} ('even'/'odd')")
 		x = get_input()
 		if x[0] == "even":
 			return [option.EVEN]
@@ -390,13 +402,36 @@ class human(controler):
 				return (option.OK,intx)
 
 		print("?")
-		return may_destroy_card_in_discard()
+		return self.may_destroy_card_in_discard()
+
+	def choose_however_many(self,instruction_text,player,cards,hint = None):
+		print(f"{instruction_text} (Example: 'no', or 'ok 0 2 3')")
+		x = get_input()
+		if x[0] == "no":
+			return [option.NO]
+		elif x[0] == "ok":
+			assemble = [option.OK]
+			for r in x[1:]:
+				safe = True
+				intx = -1
+				try:
+					intx = int(r)
+				except:
+					print("?")
+					safe = False
+				if not safe:
+					print(f"Unknown # {r}")
+					return self.choose_however_many(self,instruction_text,player,cards,hint)
+				assemble.append(intx)
+			return assemble
+		print("?")
+		return self.choose_however_many(self,instruction_text,player,cards,hint)
 
 
 
 class cpu(controler):
 	#sleep length between actions
-	slti = 0
+	slti = 1
 	invisible = False
 
 	def __init__(self,player,invisible = False):
@@ -404,10 +439,12 @@ class cpu(controler):
 		self.player = player
 		self.invisible = invisible
 
-	def display_thought(self,text):
+	def display_thought(self,text,long = False):
 		if not self.invisible:
 			print(text, flush = True)
 			time.sleep(self.slti)
+			if long:
+				time.sleep(self.slti)
 
 	def sort_by_cost(self,card):
 		if card.name == "Weakness":
@@ -415,7 +452,7 @@ class cpu(controler):
 		if card.name == "Vunerability":
 			return -1
 		#if card.name == "Punch":
-		return card.cost
+		return card.cost + self.player.persona.ai_overvalue(card)
 
 	def sort_by_play_order(self,card):
 		if card.name == "Weakness":
@@ -448,9 +485,8 @@ class cpu(controler):
 				self.player.hand.contents.sort(key = self.sort_by_play_order)
 
 		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} has {self.player.played.power} power!")
-		if globe.boss.supervillain_stack.size() > 0 and self.player.played.power >= globe.boss.supervillain_stack.contents[-1].cost:
-			self.player.buy_supervillain()
-			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is buying the supervillain! ({self.player.played.power} power left)")
+		if globe.boss.supervillain_stack.size() > 0 and self.player.buy_supervillain():
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is buying the supervillain! ({self.player.played.power} power left)",True)
 		assemble = []
 		for c in globe.boss.lineup.contents:
 			assemble.append(c)
@@ -459,12 +495,16 @@ class cpu(controler):
 		while len(assemble) > 0:
 			test = assemble.pop()
 			if self.player.buy_c(test):
-				self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought {test.name} ({self.player.played.power} power left)")
+				self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought {test.name} ({self.player.played.power} power left)",True)
 		while self.player.played.power >= 3 and globe.boss.kick_stack.size() > 0:
 			self.player.buy_kick()
-			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)")
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)",True)
 
 		return
+
+	def may_defend(self, options, attacking_card, attacking_player = None):
+		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to defend with {options[0]}")
+		return (option.OK,0)
 
 
 	def choose_one_of(self,instruction_text,player,cards,hint):
@@ -487,8 +527,11 @@ class cpu(controler):
 		elif hint == ai_hint.WORST and cards[0].cost <= 2:
 			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}")
 			return [option.OK,0]
+		elif hint == ai_hint.IFBAD and cards[0].cost <= 3:
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}")
+			return [option.OK,0]
 		else:
-			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose not yo")
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose not to so")
 			return [option.NO]
 		
 
@@ -527,6 +570,17 @@ class cpu(controler):
 						lowest_position = i
 		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to discard a {self.player.hand.contents[lowest_position].name}")
 		return (option.OK,lowest_position)
+
+
+	def choose_however_many(self,instruction_text,player,cards,hint):
+		if hint == ai_hint.IFBAD:
+			choose = [option.OK]
+			for i,c in enumerate(cards):
+				if c.cost <= 4:
+					choose.append(i)
+			if len(choose) > 1:
+				return choose
+		return [option.NO]
 
 
 

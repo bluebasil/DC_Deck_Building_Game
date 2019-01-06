@@ -12,6 +12,16 @@ def get_starting_deck(player):
 
 	return assemble
 
+def debug_discard(player):
+	assemble = []
+	#assemble.append(cards.vunerability(player))
+	#assemble.append(cards.punch(player))
+	#assemble.append(cards.kick(player))
+
+	#random.shuffle(assemble)
+
+	return assemble
+
 
 """assemble.append(cards.punch(player))
 	assemble.append(cards.lasso_of_truth(player))
