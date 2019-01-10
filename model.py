@@ -7,7 +7,6 @@ import controlers
 import effects
 import deck_builder
 import globe
-import persona
 import ai_hint
 
 
@@ -66,7 +65,7 @@ class playing(pile):
 	played_this_turn = []
 
 	def no_mod(self,card,player):
-		return card.play_action(self.owner)
+		return card.play_action(player)
 
 	def __init__(self,owner = None,visibility = visibilities.PUBLIC):
 		self.owner = owner
@@ -104,13 +103,12 @@ class playing(pile):
 			self.contents.append(card)
 		modifier = 0
 
-		# SO tht the mods can delete themselves afterwards
+		# SO that the mods can delete themselves afterwards
 		assemble = []
 		for mod in self.card_mods:
 			assemble.append(mod)
 
 		for mod in assemble:
-
 			modifier += mod(card,self.owner)
 		#modifier = card.play_action(self.owner)
 		#modifier = post_power()
@@ -127,6 +125,12 @@ class playing(pile):
 	def parallax_double(self):
 		self.power *= 2
 		self.double_modifier += 1
+
+	def plus_power(self,power):
+		for i in range(self.double_modifier):
+			power *= 2
+		self.power += power
+
 
 class ongoing_pile(pile):
 
@@ -359,7 +363,7 @@ class model:
 		self.supervillain_stack.current_sv = self.supervillain_stack.contents[-1]
 		self.lineup = pile()
 		self.destroyed_stack = pile()
-		self.persona_list = persona.get_personas()
+		self.persona_list = deck_builder.get_personas()
 
 		for c in range(5):
 			self.lineup.add(self.main_deck.draw())
@@ -369,25 +373,42 @@ class model:
 		invisible = False
 
 		#for i in range(4):
+		#	new_player = player(i,None)
+		#	new_controler = controlers.cpu(new_player,invisible)
+		#	new_player.controler = new_controler
+		#	self.players.append(new_player)
+
 		new_player = player(0,None)
-		new_controler = controlers.human(new_player,invisible)
-		new_player.controler = new_controler
-		self.players.append(new_player)
-
-		new_player = player(1,None)
-		new_controler = controlers.cpu_greedy(new_player,invisible)
-		new_player.controler = new_controler
-		self.players.append(new_player)
-
-		new_player = player(2,None)
 		new_controler = controlers.cpu(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
-		#new_player = player(3,None)
-		#new_controler = controlers.cpu_greedy(new_player,invisible)
-		#new_player.controler = new_controler
-		#self.players.append(new_player)
+		new_player = player(1,None)
+		new_controler = controlers.cpu(new_player,invisible)
+		new_player.controler = new_controler
+		self.players.append(new_player)
+
+		new_player = player(2,None)
+		new_controler = controlers.cpu_greedy(new_player,invisible)
+		new_player.controler = new_controler
+		self.players.append(new_player)
+
+		new_player = player(3,None)
+		new_controler = controlers.cpu_greedy(new_player,invisible)
+		new_player.controler = new_controler
+		self.players.append(new_player)
+
+		new_player = player(4,None)
+		new_controler = controlers.cpu_greedy(new_player,invisible)
+		new_player.controler = new_controler
+		self.players.append(new_player)
+
+
+		new_player = player(5,None)
+		new_controler = controlers.cpu_greedy(new_player,invisible)
+		new_player.controler = new_controler
+		self.players.append(new_player)
+
 
 		# in range(2):
 		#	new_player = player(player_id,None)
@@ -428,7 +449,7 @@ class model:
 					print("MAIN DECK RAN OUT!")
 					return
 				else:
-					card_to_add.owner_type.LINEUP
+					card_to_add.owner_type = owners.LINEUP
 				self.lineup.add(card_to_add)
 
 			self.whose_turn += 1

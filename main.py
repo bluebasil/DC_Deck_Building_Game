@@ -1,6 +1,7 @@
 import model
 import globe
 import view
+import window
 
 
 globe.view = view.view_controler()

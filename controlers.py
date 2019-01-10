@@ -179,7 +179,8 @@ class human(controler):
 						print("COULD NOT BUY")
 				else:
 					print("You have not played the riddler this turn")
-
+			elif x[0] == "sh":
+				result = self.player.persona.any_time()
 			else:
 				safe = True
 				intx = -1
@@ -475,6 +476,8 @@ class cpu(controler):
 			view.print_board()
 		self.display_thought(f"Begining of AI {self.player.pid}'s turn")
 		self.player.hand.contents.sort(key = self.sort_by_play_order)
+
+		self.player.persona.ai_is_now_a_good_time()
 		
 		while self.player.hand.size() > 0:
 			size_check = self.player.hand.size()
@@ -483,6 +486,7 @@ class cpu(controler):
 			if size_check - 1 != self.player.hand.size():
 				self.display_thought("(Differtent cards than expected)")
 				self.player.hand.contents.sort(key = self.sort_by_play_order)
+			self.player.persona.ai_is_now_a_good_time()
 
 		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} has {self.player.played.power} power!")
 		if globe.boss.supervillain_stack.size() > 0 and self.player.buy_supervillain():

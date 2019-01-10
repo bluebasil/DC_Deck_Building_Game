@@ -44,6 +44,7 @@ def attack(player,card,by_player = None):
 				return attack(player,card,by_player)
 			else:
 				assemble[result[1]].defend()
+				player.persona.avoided_attack()
 				return False
 		elif result[0] == option.NO:
 			return True

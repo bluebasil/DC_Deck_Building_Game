@@ -1,12 +1,12 @@
 import model
 import time
-import cards
 import cardtype
 import controlers
 import globe
 
 
 class view_controler():
+	window = None
 	colour = {cardtype.STARTER: '\033[93m', \
 			cardtype.WEAKNESS: '\033[92m', \
 			cardtype.HERO: '\033[94m', \
@@ -16,7 +16,8 @@ class view_controler():
 			cardtype.LOCATION: '\033[95m', \
 			cardtype.ANY: '\033[0m'}
 
-	def __init__(self):
+	def __init__(self,window = None):
+		self.window = window
 		controlers.set_view(self)
 
 	def updated(self):
@@ -28,6 +29,8 @@ class view_controler():
 		print("------------------------------------", flush = True)
 
 	def print_board(self,turn = -1):
+		if self.window != None:
+			self.window.render()
 		if turn == -1:
 			turn = globe.boss.whose_turn
 		player = globe.boss.players[turn]
