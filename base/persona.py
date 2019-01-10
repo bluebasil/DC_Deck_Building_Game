@@ -5,13 +5,13 @@ import globe
 import persona_frame
 
 def get_personas():
-	return [auquaman,batman,cyborg,the_flash,green_lantern,hawkman,superman,wonder_woman,martian_manhunter]
+	return [auquaman,batman,cyborg,the_flash,green_lantern,superman,wonder_woman,martian_manhunter]
 
 
 class auquaman(persona_frame.persona):
 	name = "Aquaman"
 	text = "You may put any cards with cost 5 or less you buy or gain during your turn on top of your deck."
-	#image = "base/images/personas/Aquaman MC.jpg"
+	image = "base/images/personas/Aquaman MC.jpg"
 
 	def aquaman_redirect(self,player,card):
 		if globe.boss.whose_turn == self.player.pid and card.cost <= 5 and effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?",player,card,ai_hint.ALWAYS):
@@ -25,7 +25,7 @@ class auquaman(persona_frame.persona):
 class batman(persona_frame.persona):
 	name = "Batman"
 	text = "+1 Power for each Equipment you play during your turn."
-	#image = "base/images/personas/Aquaman MC.jpg"
+	image = "base/images/personas/Batman MC.jpg"
 
 	def ai_overvalue(self,card):
 		if card.ctype == cardtype.EQUIPMENT:
@@ -44,7 +44,7 @@ class batman(persona_frame.persona):
 class cyborg(persona_frame.persona):
 	name = "Cyborg"
 	text = "+1 power for first super power played, and draw a card for the first equipment played"
-	#image = "base/images/personas/Aquaman MC.jpg"
+	image = "base/images/personas/Cyborg MC.jpg"
 
 	def ai_overvalue(self,card):
 		if card.ctype == cardtype.SUPERPOWER or card.ctype == cardtype.EQUIPMENT:
@@ -77,7 +77,7 @@ class cyborg(persona_frame.persona):
 class the_flash(persona_frame.persona):
 	name = "The Flash"
 	text = "You go first.  The first time a card tells you to draw one or more cards during each of your turns, draw an additional card."
-	#image = "base/images/personas/Aquaman MC.jpg"
+	image = "base/images/personas/The Flash MC.jpg"
 	accounted_for = False
 
 	def ai_overvalue(self,card):
@@ -98,7 +98,7 @@ class the_flash(persona_frame.persona):
 class green_lantern(persona_frame.persona):
 	name = "Green Lantern"
 	text = "If you play three or more cards with different names and cost 1 or more during your turn, +3 Power."
-	#image = "base/images/personas/Aquaman MC.jpg"
+	image = "base/images/personas/Green Lantern MC.jpg"
 	#accounted_for = False
 
 	def mod(self,card,player):
@@ -147,7 +147,7 @@ class hawkman(persona_frame.persona):
 class superman(persona_frame.persona):
 	name = "Superman"
 	text = "+1 Power for each different Super Power you play during your turn."
-	#image = "base/images/personas/Aquaman MC.jpg"
+	image = "base/images/personas/Superman MC.jpg"
 	
 	def ai_overvalue(self,card):
 		if card.ctype == cardtype.SUPERPOWER:
@@ -172,7 +172,7 @@ class superman(persona_frame.persona):
 class wonder_woman(persona_frame.persona):
 	name = "Wonder Woman"
 	text = "For each Villain you buy or gain during your turn, draw an extra card at the end of your turn."
-	#image = "base/images/personas/Aquaman MC.jpg"
+	image = "base/images/personas/Wonder Woman MC.jpg"
 
 	def ai_overvalue(self,card):
 		if card.ctype == cardtype.VILLAIN:
@@ -189,7 +189,7 @@ class wonder_woman(persona_frame.persona):
 class martian_manhunter(persona_frame.persona):
 	name = "Martian Manhunter"
 	text = "If you play two or more Villains during your turn, +3 Power.\nIf you play two or more Heros during your turn, +3 Power."
-	#image = "base/images/personas/Aquaman MC.jpg"
+	image = "base/images/personas/Martian Manhunter MC.jpg"
 
 	def ai_overvalue(self,card):
 		if card.ctype == cardtype.VILLAIN or card.ctype == cardtype.HERO:

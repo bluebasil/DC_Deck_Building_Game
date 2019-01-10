@@ -14,13 +14,13 @@ def get_personas():
 
 def get_starting_deck(player):
 	assemble = []
-	#for c in range(7):
-	#	assemble.append(base_card.punch(player))
-	#for c in range(3):
-	#	assemble.append(base_card.vunerability(player))
+	for c in range(7):
+		assemble.append(base_card.punch(player))
+	for c in range(3):
+		assemble.append(base_card.vunerability(player))
 
-	for c in range(10):
-		assemble.append(base_card.weakness(player))
+	#for c in range(10):
+	#	assemble.append(base_card.weakness(player))
 
 	random.shuffle(assemble)
 	load_textures(assemble)

@@ -8,12 +8,12 @@ class persona:
 	name = ""
 	text = ""
 	active = True
-	#image = "base/images/cards/back.jepg"
-	#texture = None
+	image = "base/images/personas/Aquaman MC.jpg"
+	texture = None
 
 	def __init__(self,player):
 		self.player = player
-		#self.texture = arcade.load_texture(self.image)
+
 
 	def ai_overvalue(self,card):
 		return 0
