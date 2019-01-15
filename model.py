@@ -175,7 +175,7 @@ class player:
 		self.deck.contents = deck_builder.get_starting_deck(self)
 		self.discard.contents = deck_builder.debug_discard(self)
 
-		for i in range(5):
+		for i in range(8):
 			self.hand.add(self.deck.draw())
 
 	def choose_persona(self,persona_list):
@@ -365,7 +365,7 @@ class model:
 		self.destroyed_stack = pile()
 		self.persona_list = deck_builder.get_personas()
 
-		for c in range(5):
+		for c in range(8):
 			self.lineup.add(self.main_deck.draw())
 
 		#2 human players for initialization
@@ -379,7 +379,7 @@ class model:
 		#	self.players.append(new_player)
 
 		new_player = player(0,None)
-		new_controler = controlers.cpu(new_player,invisible)
+		new_controler = controlers.human(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
