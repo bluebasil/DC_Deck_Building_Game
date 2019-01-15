@@ -8,6 +8,8 @@ import view
 import model
 import random
 import time
+import event_bus
+import actions
 
 # --- Constants ---
 SPRITE_SCALING_PLAYER = 0.5
@@ -331,10 +333,11 @@ class boss(drawable):
 		svstack = self.get_drawable(card,"sv")
 		x = SCREEN_WIDTH/2
 		y = SCREEN_HEIGHT/2+2.125*(BASE_TEXTURE.height*CARD_SCALE + 15)
-		if globe.boss.supervillain_stack.current_sv == globe.boss.supervillain_stack.contents[-1]: 
-			svstack.draw(globe.boss.supervillain_stack.current_sv,x,y,1.25)
-		else:
-			svstack.draw_down(x,y,1.25)
+		if len(globe.boss.supervillain_stack.contents) > 0:
+			if globe.boss.supervillain_stack.current_sv == globe.boss.supervillain_stack.contents[-1]: 
+				svstack.draw(globe.boss.supervillain_stack.current_sv,x,y,1.25)
+			else:
+				svstack.draw_down(x,y,1.25)
 		draw_stack_size(globe.boss.supervillain_stack,x,y,1.25)
 
 		if len(globe.boss.main_deck.contents) > 0:
@@ -448,6 +451,11 @@ class player(drawable):
 			y = 1.5*(BASE_TEXTURE.height*CARD_SCALE+15)
 			hand.draw_down(x,y)
 			draw_stack_size(player.deck,x,y)
+
+		end_turn_button = self.get_drawable(button,"end_turn")
+		x = buffx+CARD_SCALE*BASE_TEXTURE.width/2
+		y = 1.5*(BASE_TEXTURE.height*CARD_SCALE+15)
+		end_turn_button.draw(actions.ENDTURN,"End turn",x,y)
 
 
 		ongoing = self.get_drawable(pile,"ongoing")
@@ -645,8 +653,10 @@ class pile(drawable):
 """
 
 class card(drawable):
+	card = None
 	def draw(self,card,x,y,scale = 1):
 		super().draw()
+		self.card = card
 		#print(card.name)
 		width = card.texture.width*CARD_SCALE*scale
 		height = card.texture.height*CARD_SCALE*scale
@@ -666,6 +676,12 @@ class card(drawable):
 		self.set_juristiction(x-width/2,y-height/2,x+width/2,y+height/2)
 
 
+	def mouse_up(self, mouse, x, y):
+		if not mouse.consumed and self.check_collision(x,y):
+			mouse.consumed = True
+			globe.bus.card_clicked(self.card)
+
+
 class personas(drawable):
 	def draw(self,persona,x,y,scale = 1):
 		super().draw()
@@ -677,14 +693,41 @@ class personas(drawable):
 		self.set_juristiction(x-width/2,y-height/2,x+width/2,y+height/2)
 
 
+class button(drawable):
+	action = None
+	depth = -100
+	def draw(self,action,text,x,y):
+		super().draw()
+		self.action = action
+		#print(card.name)
+		width = BASE_TEXTURE.width*CARD_SCALE*0.75
+		#golden ratio
+		height = width/1.61
+		arcade.draw_rectangle_filled(x, y, width, height,arcade.color.BLACK, 0)
+		arcade.draw_text(f"{text}", x, y, arcade.color.WHITE, 15)
+
+		self.set_juristiction(x-width/2,y-height/2,x+width/2,y+height/2)
+		#print(self.name,self.jminx,self.jminy,self.jmaxx,self.jmaxy,self)
+		#arcade.draw_point(x, y, arcade.color.RED, 10)
+
+
+	def mouse_up(self, mouse, x, y):
+		if not mouse.consumed and self.check_collision(x,y):
+			mouse.consumed = True
+			globe.bus.button_clicked(self.action)
+
+
 ##############################################
 
 def thread_game(thread_name,delay):
 	globe.boss.start_game()
+	#time.sleep(1)
+	#arcade.run()
 	
 	
 
 def main():
+	globe.bus = event_bus.event_bus()
 	globe.view = view.view_controler()
 	globe.boss = model.model()
 	""" Main method """
@@ -696,6 +739,7 @@ def main():
 	print("GHsewrGH")
 	time.sleep(1)
 	arcade.run()
+	#globe.boss.start_game()
 	
 	#_thread.start_new_thread(,("View", 2, ))
 	

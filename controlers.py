@@ -4,6 +4,7 @@ import time
 import random
 import globe
 import cardtype
+import actions
 
 view = None
 def set_view(vi):
@@ -75,6 +76,56 @@ class controler:
 		return [option.NO]
 
 
+class human_view(controler):
+	def turn(self):
+		try:
+			print("START OF TURN",flush = True)
+			globe.bus.clear()
+			print("LISTENING",flush = True)
+			while True:
+				print(len(globe.bus.on_bus),flush = True)
+				if len(globe.bus.on_bus) > 0:
+					current = globe.bus.read()
+					print("ITEM ON BUS:",current.header,current.content,flush = True)
+					if current.header == "card":
+						print("ITEM IS CARD",flush = True)
+
+						#hand to play
+						if current.content in self.player.hand.contents:
+							print("CARD IN HAND",flush = True)
+							self.player.play_c(current.content)
+							globe.bus.clear()
+
+						#lineup to buy
+						if current.content in globe.boss.lineup.contents:
+							print("CARD IN LINEUP",flush = True)
+							self.player.buy_c(current.content)
+							globe.bus.clear()
+
+						#kick to buy
+						if current.content in globe.boss.kick_stack.contents:
+							print("CARD IN LINEUP",flush = True)
+							self.player.buy_kick()
+							globe.bus.clear()
+
+						#sv to buy
+						if current.content in globe.boss.supervillain_stack.contents:
+							print("CARD IN LINEUP",flush = True)
+							self.player.buy_supervillain()
+							globe.bus.clear()
+
+					if current.header == "button":
+						print("ITEM IS BUTTON",flush = True)
+
+						#hand to play
+						if current.content == actions.ENDTURN:
+							print("END TURN BUTTON FOUND",flush = True)
+							return
+
+				time.sleep(0.5)
+		except Exception as e:
+			print("?", e)
+
 
 
 def get_input():
@@ -135,6 +186,12 @@ def get_input():
 	else:
 		return x
 	return get_input()
+
+
+
+
+
+
 
 
 class human(controler):

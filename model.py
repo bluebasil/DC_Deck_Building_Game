@@ -218,6 +218,11 @@ class player:
 	def play(self, cardnum):
 		self.played.play(self.hand.contents.pop(cardnum))
 
+	def play_c(self, card):
+		if card in self.hand.contents:
+			self.hand.contents.remove(card)
+			self.played.play(card)
+
 	def play_and_return(self, card, pile):
 		self.played.play(card)
 		self.played.contents.remove(card)
@@ -379,7 +384,7 @@ class model:
 		#	self.players.append(new_player)
 
 		new_player = player(0,None)
-		new_controler = controlers.human(new_player,invisible)
+		new_controler = controlers.human_view(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
@@ -393,7 +398,7 @@ class model:
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
-		new_player = player(3,None)
+		"""new_player = player(3,None)
 		new_controler = controlers.cpu_greedy(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
@@ -407,7 +412,7 @@ class model:
 		new_player = player(5,None)
 		new_controler = controlers.cpu_greedy(new_player,invisible)
 		new_player.controler = new_controler
-		self.players.append(new_player)
+		self.players.append(new_player)"""
 
 
 		# in range(2):
