@@ -92,6 +92,9 @@ class the_flash(persona_frame.persona):
 		return
 
 	def reset(self):
+		self.accounted_for = True
+
+	def ready(self):
 		self.accounted_for = False
 
 
