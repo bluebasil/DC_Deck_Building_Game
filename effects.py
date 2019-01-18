@@ -3,6 +3,7 @@ import globe
 import cardtype
 import ai_hint
 
+
 def new_assemble(list):
 	assemble = []
 	for i in list:

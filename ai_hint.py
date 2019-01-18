@@ -3,3 +3,4 @@ WORST = 1
 IFBAD = 2
 ALWAYS = 3
 IFGOOD = 4
+NEVER = 5

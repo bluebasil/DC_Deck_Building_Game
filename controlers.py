@@ -134,6 +134,13 @@ class human_view(controler):
 					globe.bus.clear()
 					return True
 
+				print(type(current.content),"HAHAHAHAH THE TYPE IS THAT!!",flush = True)
+				if type(current.content) == actions.special_action:
+					print("GOTT HERE",flush = True)
+					current.content.click_action(self.player)
+					print("Also GOTT HERE",flush = True)
+					globe.bus.clear()
+
 		self.await(process)
 
 	def choose_persona(self,persona_list):
@@ -871,6 +878,9 @@ class cpu(controler):
 			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to do so")
 			return [option.OK]
 		elif hint == ai_hint.IFBAD and card.cost > 1:
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose NOT to do so")
+			return [option.NO]
+		elif hint == ai_hint.NEVER:
 			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose NOT to do so")
 			return [option.NO]
 		else:

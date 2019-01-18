@@ -64,6 +64,8 @@ class playing(pile):
 	double_modifier = 0
 	played_this_turn = []
 
+	special_options = []
+
 	def no_mod(self,card,player):
 		return card.play_action(player)
 
@@ -78,6 +80,7 @@ class playing(pile):
 	def turn_end(self):
 		self.power = 0
 		self.played_this_turn = []
+		self.special_options = []
 		self.card_mods = [self.no_mod]
 
 		#self.owner.persona.set_modifiers()
@@ -155,8 +158,11 @@ class player:
 	gain_redirect = []
 	gained_this_turn = []
 	discount_on_sv = 0
-	played_riddler = False
+	
 	sv_bought_this_turn = False
+	# For cards like the riddler
+
+	played_riddler = False
 
 	def __init__(self,pid, controler):
 		self.controler = controler

@@ -6,6 +6,7 @@ import globe
 import ai_hint
 import random
 import arcade
+import actions
 
 #TODO: Impliment Attacks
 
@@ -839,9 +840,20 @@ class the_riddler(card_class):
 	text = "type 'riddle' to pay 3 Power.  If you do, gain the top card of the main deck.  Use this ability any number of times this turn.  If you choose not to, +1 Power instead"
 	image = "base/images/cards/The_Riddler.jpeg"
 	
+	def special_action_click(self,player):
+		if globe.boss.main_deck.size() > 0 and player.played.power >= 3:
+			player.played.power -= 3
+			player.gain(globe.boss.main_deck.contents.pop())
+
 	def play_action(self,player):
-		player.played_riddler = True
-		return 1
+		#player.played_riddler = True
+		if effects.ok_or_no(f"Would you like to use the riddler ability?",player,self,ai_hint.NEVER):
+			player.played.special_options.append(actions.special_action("Riddle",self.special_action_click))
+			return 0
+		else:
+			return 1
+
+
 
 #done
 class robin(card_class):

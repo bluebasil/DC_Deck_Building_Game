@@ -370,6 +370,10 @@ class boss(drawable):
 
 		#Power display
 		arcade.draw_text(f"{globe.boss.players[globe.boss.whose_turn].played.power} Power", SCREEN_WIDTH*0.8,SCREEN_HEIGHT*0.9 , arcade.color.WHITE, 86)
+
+		for i,special_option in enumerate(globe.boss.players[globe.boss.whose_turn].played.special_options):
+			option = self.get_drawable(button,f"special_action_{i}")
+			option.draw(special_option,special_option.button_text,SCREEN_WIDTH*0.9,SCREEN_HEIGHT*0.8 - i*(option.jmaxy-option.jminy +15))
 		
 		query = self.get_drawable(question,f"question")
 		if globe.bus.display != None:
