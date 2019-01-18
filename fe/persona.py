@@ -4,6 +4,7 @@ import ai_hint
 import globe
 import persona_frame
 import actions
+import owners
 
 
 
@@ -46,15 +47,48 @@ class bizarro(persona_frame.persona):
 	action = None
 
 	def special_action_click(self,player):
-		self.player.played.played_this_turn[0].destroy(player)
-		self.player.played.plus_power(2)
-		self.player.played.special_options.remove(self.action)
-		return True
+		to_remove = []
+		for c in self.player.discard.contents:
+			if c.ctype == cardtype.WEAKNESS:
+				to_remove.append(c)
+				if len(to_remove) == 2:
+					for w in to_remove:
+						w.pop_self()
+						w.set_owner(owners.WEAKNESS)
+						globe.boss.weakness_stack.add(w)
+					self.player.draw_card()
+					self.player.played.special_options.remove(self.action)
+					return True
+		return False
+
+	def ready(self):
+		if self.active:
+			self.action = actions.special_action("Bizarro",self.special_action_click)
+			self.player.played.special_options.append(self.action)
+
+	def ai_is_now_a_good_time(self):
+		if self.action in self.player.played.special_options:
+			return self.special_action_click(self.player)
+
+	def destory_power(self):
+		if self.active:
+			self.player.gain_a_weakness()
+		return
+
+
+class black_adam(persona_frame.persona):
+	name = "Black Adam"
+	text = "The first time you play a super power during each of your turns, you may destroy it.  If you do, draw a card and gain 1 VP."
+	image = "fe/images/personas/Black Adam MC.jpg"
 
 	def mod(self,card,player):
-		if len(player.played.played_this_turn) > 0 and player.played.played_this_turn[0].cost >= 1:
-			self.action = actions.special_action("Bane",self.special_action_click)
-			self.player.played.special_options.append(self.action)
+		if card.ctype == SUPERPOWER: # and len(player.played.played_this_turn) == 0:
+			instruction_text = "Would you like to destory it? If you do, draw a card and gain 1 VP."
+			result = effects.ok_or_no(instruction_text,player,card,ai_hint.IFBAD)
+			if result:
+				card.destory(player)
+				player.draw_card()
+				player.vp += 1
 			self.player.played.card_mods.remove(self.mod)
 		return 0
 
@@ -62,8 +96,33 @@ class bizarro(persona_frame.persona):
 		if self.active:
 			self.player.played.card_mods.append(self.mod)
 
-	def ai_is_now_a_good_time(self):
-		return False
+class black_manta(persona_frame.persona):
+	name = "Black Manta"
+	text = "You may put any cards you buy or gain from the lineup on the bottom of your deck."
+	image = "base/images/personas/Black Manta MC.jpg"
+
+	def aquaman_redirect(self,player,card):
+		if globe.boss.whose_turn == self.player.pid and effects.ok_or_no(f"Would you like to put {card.name} on the bottom of your deck?",player,card,ai_hint.ALWAYS):
+			return [True,player.deck,"bottom"]
+		return (False,None)
+
+	def ready(self):
+		if self.active:
+			self.player.gain_redirect.append(self.aquaman_redirect)
+
+class deathstroke(persona_frame.persona):
+	name = "Deathstroke"
+	text = "+1 Power for each card you destroy during your turn."
+	image = "fe/images/personas/Deathstroke MC.jpg"
+
+
+	def destory_power(self):
+		if self.active and globe.boss.whose_turn == self.player.pid:
+			self.player.played.plus_power(1)
+		return
+
+
+
 """
 class black_canary(persona_frame.persona):
 	name = "Black Canary"

@@ -36,8 +36,17 @@ class card:
 		return 0
 
 	def set_owner(self,player=None):
-		self.owner = player
-		self.owner_type = owners.PLAYER
+		if player == owners.WEAKNESS \
+				or player == owners.MAINDECK \
+				or player == owners.KICK \
+				or player == owners.DESTROYED \
+				or player == owners.VILLAINDECK 
+				or player == owners.LINEUP:
+			self.owner = None
+			self.owner_type = player
+		else:
+			self.owner = player
+			self.owner_type = owners.PLAYER
 
 	def calculate_vp(self,all_cards):
 		return self.vp

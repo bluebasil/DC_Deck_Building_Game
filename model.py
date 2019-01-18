@@ -149,6 +149,7 @@ class supervillain_pile(pile):
 class player:
 	pid = -1
 	score = 0
+	vp = 0
 	deck = None
 	hand = None
 	discard = None
@@ -311,7 +312,10 @@ class player:
 			for re in assemble:
 				redirect_responce = re(self,card)
 				if not redirected and redirect_responce[0]:
-					redirect_responce[1].add(card)
+					if len(redirect_responce) == 3:
+						redirect_responce[1].contents.insert(0,card)
+					else:
+						redirect_responce[1].add(card)
 					redirected = True
 
 
@@ -350,8 +354,8 @@ class player:
 		vp = 0
 		for c in assemble:
 			vp += c.calculate_vp(assemble)
-		self.score = vp
-		return vp
+		self.score = vp + self.vp
+		return self.score
 
 
 
