@@ -10,6 +10,7 @@ import random
 import time
 import event_bus
 import actions
+import option
 
 # --- Constants ---
 SPRITE_SCALING_PLAYER = 0.5
@@ -19,16 +20,25 @@ COIN_COUNT = 50
 SCREEN_WIDTH = 3000
 SCREEN_HEIGHT = 2000
 CARD_SCALE = 0.5
-BASE_TEXTURE = arcade.load_texture("base/images/cards/back.jpeg")
+BASE_TEXTURE = arcade.load_texture("images/back.png")
 BACKGROUND_TEXTURE = arcade.load_texture("images/blue_background2.png")
 CPU_TEXTURE = arcade.load_texture("images/cpu_frame.png")
 POINT_TEXTURE = arcade.load_texture("images/pointer.png")
+BUTTON_TEXTURE = arcade.load_texture("images/button.png")
+CARD_BUTTON_TEXTURE = arcade.load_texture("images/largebutton.png")
+CARD_BUTTON_GREEN = [86,197,1]
+SCROLL_TEXTURE = arcade.load_texture("images/scroll.png")
+QUESTION_TEXTURE = arcade.load_texture("images/question.png")
+
 SCROLL_SPEED = 1
+
+display_special = None
 
 class mouse_obj():
 	consumed = False
 	x = 0
 	y = 0
+	silent = False
 
 	def __init__(self,x,y):
 		self.x = x
@@ -65,7 +75,7 @@ class MyGame(arcade.Window):
 		arcade.set_background_color(arcade.color.AMAZON)
 
 	def setup(self):
-		self.game_board = boss("boss")
+		self.game_board = boss("boss",0)
 		
 		""" Set up the game and initialize the variables. """
 
@@ -141,35 +151,7 @@ class MyGame(arcade.Window):
 		# example though.)
 		pass
 
-	def draw_card(self,card,x,y,angle,i):
-		arcade.draw_texture_rectangle(x, y, card.texture.width*CARD_SCALE, \
-							  card.texture.height*CARD_SCALE, card.texture, angle)
 
-	def draw_back(self,x,y,angle):
-		arcade.draw_texture_rectangle(x, y, BASE_TEXTURE.width*CARD_SCALE, \
-							  BASE_TEXTURE.height*CARD_SCALE, BASE_TEXTURE, angle)
-
-	
-
-	def draw_deck(self,pile,x,y,angle,visible):
-		self.draw_back(x,y,angle)
-
-	def draw_player(self,player,x,y,angle):
-		
-
-		
-		siz = len(pile.contents)
-		start_horizontal = -(siz/2)*(BASE_TEXTURE.width)*CARD_SCALE
-
-
-		for i,c in enumerate(pile.contents):
-			cx = x + start_horizontal*math.sin((angle+90)/180*math.pi)
-			cy = y + start_horizontal*math.cos((angle+90)/180*math.pi)
-			if visible:
-				self.draw_card(c,cx,cy,angle,i)
-			else:
-				self.draw_back(cx,cy,angle)
-			start_horizontal += (BASE_TEXTURE.width-15)*CARD_SCALE
 
 
 def sort_by_depth(drawn):
@@ -185,9 +167,10 @@ class drawable:
 	gone = True
 	depth = 0
 
-	def __init__(self,name):
+	def __init__(self,name,depth):
 		self.children = {}
 		self.name = name
+		self.depth = depth
 
 	def draw(self):
 		#self.children = []
@@ -238,7 +221,7 @@ class drawable:
 		if name in self.children:
 			return self.children[name]
 		else:
-			new_drawable = type(name)
+			new_drawable = type(name,self.depth)
 			self.children[name] = new_drawable
 			return new_drawable
 
@@ -248,12 +231,16 @@ class drawable:
 		self.jminy = math.inf
 		self.jmaxx = -math.inf
 		self.jmaxy = -math.inf
+		for c in self.children.values():
+			c.set_gone()
 
 	def mouse_up(self,mouse,x,y):
+		print(f"CLICK PASS {x} {y} {mouse.silent}, {display_special}",flush = True)
 		if mouse.consumed == False and self.check_collision(x,y):
 			vals = list(self.children.values())
 			vals.sort(key = sort_by_depth)
 			for c in vals:
+				print(c,flush = True)
 				if not c.gone:
 					c.mouse_up(mouse,x,y)
 
@@ -278,6 +265,7 @@ def draw_stack_size(stack,x,y,scale = 1):
 
 class boss(drawable):
 	def draw(self,x,y):
+		global display_special
 		super().draw()
 		"""play_num = len(globe.boss.players)
 		progress = math.pi*2/play_num
@@ -328,7 +316,7 @@ class boss(drawable):
 
 
 		lineup = self.get_drawable(pile,"linup")
-		lineup.draw(globe.boss.lineup,SCREEN_WIDTH/2,SCREEN_HEIGHT/2+BASE_TEXTURE.height*CARD_SCALE + 15,True)
+		lineup.draw(globe.boss.lineup.contents,SCREEN_WIDTH/2,SCREEN_HEIGHT/2+BASE_TEXTURE.height*CARD_SCALE + 15,True)
 
 		svstack = self.get_drawable(card,"sv")
 		x = SCREEN_WIDTH/2
@@ -347,36 +335,71 @@ class boss(drawable):
 			deck.draw_down(x,y)
 			draw_stack_size(globe.boss.main_deck,x,y)
 
+		weaknesses = self.get_drawable(card,"weakness")
 		if len(globe.boss.weakness_stack.contents) > 0:
-			weaknesses = self.get_drawable(card,"weakness")
 			x = SCREEN_WIDTH/2-(BASE_TEXTURE.width*CARD_SCALE + 15)-50
 			y = SCREEN_HEIGHT/2+2*(BASE_TEXTURE.height*CARD_SCALE + 15)
 			weaknesses.draw(globe.boss.weakness_stack.contents[-1],x,y)
 			draw_stack_size(globe.boss.weakness_stack,x,y)
+		weaknesses.set_gone()
 
+		kicks = self.get_drawable(card,"kicks")
 		if len(globe.boss.kick_stack.contents) > 0:
-			kicks = self.get_drawable(card,"kicks")
 			x = SCREEN_WIDTH/2-2*(BASE_TEXTURE.width*CARD_SCALE + 15)-50
 			y = SCREEN_HEIGHT/2+2*(BASE_TEXTURE.height*CARD_SCALE + 15)
 			kicks.draw(globe.boss.kick_stack.contents[-1],x,y)
 			draw_stack_size(globe.boss.kick_stack,x,y)
+		else:
+			kick.set_gone()
 
+
+		destroyed = self.get_drawable(pile,"destroyed")
 		if len(globe.boss.destroyed_stack.contents) > 0:
-			destroyed = self.get_drawable(card,"destroyed")
 			x = SCREEN_WIDTH/2+(BASE_TEXTURE.width*CARD_SCALE + 15)+50
 			y = SCREEN_HEIGHT/2+2*(BASE_TEXTURE.height*CARD_SCALE + 15)
-			destroyed.draw(globe.boss.destroyed_stack.contents[-1],x,y)
+			destroyed.draw_single(globe.boss.destroyed_stack.contents,x,y)
 			draw_stack_size(globe.boss.destroyed_stack,x,y)
+		else:
+			destroyed.set_gone()
 
 
 		#play area
 		for i,p in enumerate(globe.boss.players):
 			play = self.get_drawable(pile,f"play{i}")
-			play.draw(p.played,SCREEN_WIDTH/2,SCREEN_HEIGHT/2,True)
+			play.draw(p.played.contents,SCREEN_WIDTH/2,SCREEN_HEIGHT/2,True)
 
 		#Power display
 		arcade.draw_text(f"{globe.boss.players[globe.boss.whose_turn].played.power} Power", SCREEN_WIDTH*0.8,SCREEN_HEIGHT*0.9 , arcade.color.WHITE, 86)
+		
+		query = self.get_drawable(question,f"question")
+		if globe.bus.display != None:
+			query.draw(globe.bus.display,SCREEN_WIDTH/2,SCREEN_HEIGHT/2)
+		else:
+			query.set_gone()
+
+		#print(f"display special {display_special}",flush = True)
+		if display_special != None:
+			custom = self.get_drawable(question,f"over_display")
+			custom_dialog = event_bus.question("",None,display_special.last_contents)
+			custom.depth = -100
+			custom.draw(custom_dialog,SCREEN_WIDTH/2,SCREEN_HEIGHT/2)
+
+
+
 		self.assemble_juristiction()
+
+
+	def mouse_up(self,mouse,x,y):
+		global display_special
+		query = self.get_drawable(question,f"question")
+		if not query.gone and not query.check_collision(x,y):
+			mouse.silent = True
+		custom = self.get_drawable(question,f"over_display")
+		print(f"ANALYZE {custom.gone} {custom.check_collision(x,y)}",flush=True)
+		if not custom.gone and not custom.check_collision(x,y):
+			display_special = None
+			custom.gone = True
+		super().mouse_up(mouse,x,y)
 
 
 class player_icon(drawable): 
@@ -399,22 +422,24 @@ class player_icon(drawable):
 			MC = self.get_drawable(personas,f"{self.name}-persona")
 			MC.draw(player.persona,x+player.persona.texture.width*0.2/2,y-player.persona.texture.height*0.2/2,0.2)
 
-		if len(player.discard.contents) > 0:
-			discard = self.get_drawable(card,f"{self.name}-discard")
-			discard.draw(player.discard.contents[-1],x+player.persona.texture.width*0.2*1.25,y-BASE_TEXTURE.height*0.2*0.25,0.2)
+			discard = self.get_drawable(pile,f"{self.name}-discard")
+			if len(player.discard.contents) > 0:
+				discard.draw_single(player.discard.contents,x+player.persona.texture.width*0.2*1.25,y-BASE_TEXTURE.height*0.2*0.25,0.2)
+			else:
+				discard.set_gone()
 
-		if len(player.deck.contents) > 0:
-			deck = self.get_drawable(card,f"{self.name}-deck")
-			deck.draw_down(x+player.persona.texture.width*0.2*1.25,y-player.persona.texture.height*0.2+BASE_TEXTURE.height*0.2*0.25,0.2)
+			if len(player.deck.contents) > 0:
+				deck = self.get_drawable(card,f"{self.name}-deck")
+				deck.draw_down(x+player.persona.texture.width*0.2*1.25,y-player.persona.texture.height*0.2+BASE_TEXTURE.height*0.2*0.25,0.2)
 
 
-		if len(player.ongoing.contents) > 0:
-			ongoing = self.get_drawable(pile,f"{self.name}-ongoing")
-			ongoing.draw_squished(player.ongoing,x+player.persona.texture.width*0.2*1.75,y-BASE_TEXTURE.height*0.2*0.25,150,True,0.2)
+			if len(player.ongoing.contents) > 0:
+				ongoing = self.get_drawable(pile,f"{self.name}-ongoing")
+				ongoing.draw_squished(player.ongoing.contents,x+player.persona.texture.width*0.2*1.75,y-BASE_TEXTURE.height*0.2*0.25,150,True,0.2)
 
-		if len(player.hand.contents) > 0:
-			hand = self.get_drawable(pile,f"{self.name}-hand")
-			hand.draw_squished(player.hand,x+player.persona.texture.width*0.2*1.75,y-player.persona.texture.height*0.2+BASE_TEXTURE.height*0.2*0.25,150,False,0.2)
+			if len(player.hand.contents) > 0:
+				hand = self.get_drawable(pile,f"{self.name}-hand")
+				hand.draw_squished(player.hand.contents,x+player.persona.texture.width*0.2*1.75,y-player.persona.texture.height*0.2+BASE_TEXTURE.height*0.2*0.25,150,False,0.2)
 
 		self.assemble_juristiction()
 
@@ -438,12 +463,14 @@ class player(drawable):
 			MC.draw(player.persona,x+player.persona.texture.width/2,self.maxy/2,0.75)
 			buffx += player.persona.texture.width
 
+		discard = self.get_drawable(pile,"discard")
 		if len(player.discard.contents) > 0:
-			discard = self.get_drawable(card,"discard")
 			x = buffx+CARD_SCALE*BASE_TEXTURE.width/2
 			y = BASE_TEXTURE.height*CARD_SCALE/2
-			discard.draw(player.discard.contents[-1],x,y)
+			discard.draw_single(player.discard.contents,x,y)
 			draw_stack_size(player.discard,x,y)
+		else:
+			discard.set_gone()
 
 		if len(player.deck.contents) > 0:
 			hand = self.get_drawable(card,"deck")
@@ -455,14 +482,14 @@ class player(drawable):
 		end_turn_button = self.get_drawable(button,"end_turn")
 		x = buffx+CARD_SCALE*BASE_TEXTURE.width/2
 		y = 1.5*(BASE_TEXTURE.height*CARD_SCALE+15)
-		end_turn_button.draw(actions.ENDTURN,"End turn",x,y)
+		end_turn_button.draw(actions.ENDTURN,"End Turn",x,y)
 
 
 		ongoing = self.get_drawable(pile,"ongoing")
-		ongoing.draw(player.ongoing,SCREEN_WIDTH-BASE_TEXTURE.width*CARD_SCALE/2,1.5*(BASE_TEXTURE.height*CARD_SCALE+15))
+		ongoing.draw(player.ongoing.contents,SCREEN_WIDTH-BASE_TEXTURE.width*CARD_SCALE/2,1.5*(BASE_TEXTURE.height*CARD_SCALE+15))
 
 		hand = self.get_drawable(pile,"hand")
-		hand.draw(player.hand,SCREEN_WIDTH-BASE_TEXTURE.width*CARD_SCALE/2,BASE_TEXTURE.height*CARD_SCALE/2)
+		hand.draw(player.hand.contents,SCREEN_WIDTH-BASE_TEXTURE.width*CARD_SCALE/2,BASE_TEXTURE.height*CARD_SCALE/2)
 
 		self.assemble_juristiction()
 
@@ -476,11 +503,13 @@ class scroller_left(drawable):
 			self.parent = pile_parent
 		width = BASE_TEXTURE.width*CARD_SCALE
 		height = BASE_TEXTURE.height*CARD_SCALE
-		arcade.draw_rectangle_filled(x-width*0.25, y, width/2,height,arcade.color.RED)
+		#arcade.draw_rectangle_filled(x-width*0.25, y, width/2,height,arcade.color.RED)
+		arcade.draw_texture_rectangle(x-width*0.25, y, width/2,height,SCROLL_TEXTURE,0)
 		
 		self.set_juristiction(x-width/2,y-height/2,x,y+height/2)
 
 	def mouse_up(self, mouse, x, y):
+		print("AM I REGISTEREING SCROLL CLICKS",flush=True)
 		if not mouse.consumed and self.check_collision(x,y):
 			
 			mouse.consumed = True
@@ -497,7 +526,8 @@ class scroller_right(drawable):
 			self.parent = pile_parent
 		width = BASE_TEXTURE.width*CARD_SCALE
 		height = BASE_TEXTURE.height*CARD_SCALE
-		arcade.draw_rectangle_filled(x+width*0.75, y, width/2+15,height,arcade.color.GREEN)
+		#arcade.draw_rectangle_filled(x+width*0.75, y, width/2+15,height,arcade.color.GREEN)
+		arcade.draw_texture_rectangle(x+width*0.75, y, width/2+15,height,SCROLL_TEXTURE,180)
 		#arcade.draw_point(x+width/2-15/2,y-height/2,arcade.color.BLUE,10)
 		#arcade.draw_point(x+width+15/2,y+height/2,arcade.color.BLUE,10)
 
@@ -512,39 +542,69 @@ class scroller_right(drawable):
 			#print(pos,self.scroll_offset,(BASE_TEXTURE.width*CARD_SCALE + 15)/2,flush=True)
 
 
+
 class pile(drawable):
 	scroll_offset = 0
 	max_offset = 0
+	last_contents = []
+	depth = -1
+	single = False
 
-	def draw(self,pile,x,y,center = False):
+	def __init__(self,name,depth):
+		self.last_contents = []
+		super().__init__(name,depth)
+
+	def ready_card(self,c,x,y,i):
+		#print(type(c),"IS THE TYPE",flush = True)
+		if c == option.OK or c == option.NO or c == option.DONE or c == option.EVEN or c == option.ODD:
+			new_option = self.get_drawable(button,f"option {c}")
+			text = "No"
+			if c == option.OK:
+				text = "OK"
+			elif c == option.DONE:
+				text = "Done"
+			elif c == option.EVEN:
+				text = "Even"
+			elif c == option.ODD:
+				text = "Odd"
+			new_option.draw(c,text,x,y,True)
+		else:
+			new_card = self.get_drawable(card,f"{i}")
+			new_card.draw(c,x,y)
+
+	def draw(self,pile_contents,x,y,center = False):
 		super().draw()
 		self.children = {}
 
 		pos = x - BASE_TEXTURE.width*CARD_SCALE/2
 		if center:
-			pos = x + min(len(pile.contents),7)/2*(BASE_TEXTURE.width*CARD_SCALE + 15) 
+			pos = x + min(len(pile_contents),7)/2*(BASE_TEXTURE.width*CARD_SCALE + 15) 
 		seperation = BASE_TEXTURE.width*CARD_SCALE + 15
 
-		if len(pile.contents) > 6:
-			self.max_offset = 1 + 2*(len(pile.contents)-7)
+		if len(pile_contents) > 6:
+			self.max_offset = 1 + 2*(len(pile_contents)-7)
 			left = self.get_drawable(scroller_left,f"{self.name}-left")
 			right = self.get_drawable(scroller_right,f"{self.name}-right")
 			start_pos = pos
 			pos += (self.scroll_offset%2)*(BASE_TEXTURE.width*CARD_SCALE + 15)/2 #- (BASE_TEXTURE.width*CARD_SCALE + 15)/2
 			#print(pos,self.scroll_offset,(BASE_TEXTURE.width*CARD_SCALE + 15)/2,flush=True)
-			for i,c in enumerate(pile.contents):
-				if i >= self.scroll_offset - 1 - (self.scroll_offset%2) and i <= self.scroll_offset + 6 - (self.scroll_offset%2):
-					new_card = self.get_drawable(card,f"{i}")
-					new_card.draw(c,pos,y)
-					arcade.draw_text(f"{i}",pos,y,arcade.color.WHITE,14)
+			for i,c in enumerate(pile_contents):
+				#if i >= self.scroll_offset - 1 - (self.scroll_offset%2) and i <= self.scroll_offset + 6 - (self.scroll_offset%2):
+				if i >= int(self.scroll_offset/2) and i <= int(self.scroll_offset/2) + 6:
+					self.ready_card(c,pos,y,i)
+					
+					#new_card = self.get_drawable(card,f"{i}")
+					#new_card.draw(c,pos,y)
+					#arcade.draw_text(f"{i}",pos,y,arcade.color.WHITE,14)
 					pos -= seperation
 			left.draw(self,start_pos-6*(BASE_TEXTURE.width*CARD_SCALE + 15),y)
 			right.draw(self,start_pos,y)
 		else:
 			self.scroll_offset = 0
-			for i,c in enumerate(pile.contents):
-				new_card = self.get_drawable(card,f"{i}")
-				new_card.draw(c,pos,y)
+			for i,c in enumerate(pile_contents):
+				#new_card = self.get_drawable(card,f"{i}")
+				#new_card.draw(c,pos,y)
+				self.ready_card(c,pos,y,i)
 				pos -= seperation
 		#print(self.name,f"{len(self.children)} children")
 		#for c in self.children.values():
@@ -556,13 +616,13 @@ class pile(drawable):
 
 
 
-	def draw_squished(self,pile,x,y,width,visible,scale = 1):
+	def draw_squished(self,pile_contents,x,y,width,visible,scale = 1):
 		super().draw()
 		self.children = {}
 
-		seperation = width/len(pile.contents)
+		seperation = width/len(pile_contents)
 		pos = x
-		for i,c in enumerate(pile.contents):
+		for i,c in enumerate(pile_contents):
 			new_card = self.get_drawable(card,f"{i}")
 			
 			if visible:
@@ -574,10 +634,32 @@ class pile(drawable):
 		self.assemble_juristiction()
 
 
+	def draw_single(self,pile_contents,x,y,scale = 1):
+		self.single = True
+		super().draw()
+		self.last_contents.clear()
+		for c in pile_contents:
+			self.last_contents.append(c)
 
-	
+		if len(pile_contents) > 0:
+			top = self.get_drawable(card,f"top_card")
+			top.draw(pile_contents[-1],x,y,scale)
+		else:
+			display_special = None
+
+		self.assemble_juristiction()
 
 
+	def mouse_up(self, mouse, x, y):
+		global display_special
+		print(f"{self.single}I GOT TO A PILE, {len(self.last_contents)}   {self.check_collision(x,y)}",flush = True)
+		if not self.single:
+			super().mouse_up(mouse,x,y)
+		elif not self.gone and self.check_collision(x,y) and len(self.last_contents) > 0 and not mouse.consumed:
+			print(f"{self.single} BUT DID I GET HERE {self}",flush = True)
+			mouse.consumed = True
+			display_special = self
+			
 
 
 		
@@ -654,19 +736,22 @@ class pile(drawable):
 
 class card(drawable):
 	card = None
+	depth = -2
 	def draw(self,card,x,y,scale = 1):
 		super().draw()
 		self.card = card
 		#print(card.name)
-		width = card.texture.width*CARD_SCALE*scale
-		height = card.texture.height*CARD_SCALE*scale
+		width = BASE_TEXTURE.width*CARD_SCALE*scale
+		height = BASE_TEXTURE.height*CARD_SCALE*scale
 		arcade.draw_texture_rectangle(x, y, width, height, card.texture, 0)
 
 		self.set_juristiction(x-width/2,y-height/2,x+width/2,y+height/2)
 		#print(self.name,self.jminx,self.jminy,self.jmaxx,self.jmaxy,self)
-		#arcade.draw_point(x, y, arcade.color.RED, 10)
+		arcade.draw_point(x-width/2, y-height/2, arcade.color.RED, 10)
+		arcade.draw_point(x+width/2, y+height/2, arcade.color.RED, 10)
 	def draw_down(self,x,y,scale = 1):
 		super().draw()
+		self.card = None
 		width = BASE_TEXTURE.width*CARD_SCALE*scale
 		height = BASE_TEXTURE.height*CARD_SCALE*scale
 
@@ -677,9 +762,14 @@ class card(drawable):
 
 
 	def mouse_up(self, mouse, x, y):
-		if not mouse.consumed and self.check_collision(x,y):
+		print("DID I GET HERE",flush = True)
+		if not mouse.consumed and self.check_collision(x,y) and self.card != None:
 			mouse.consumed = True
-			globe.bus.card_clicked(self.card)
+
+			print("DID I GET HERE2",flush = True)
+			if not mouse.silent:
+				print("DID I GET HERE3",flush = True)
+				globe.bus.card_clicked(self.card)
 
 
 class personas(drawable):
@@ -688,39 +778,102 @@ class personas(drawable):
 		#print(card.name)
 		width = persona.texture.width*scale
 		height = persona.texture.height*scale
-		arcade.draw_texture_rectangle(x, y, width, height, persona.texture, 0)
+		if persona.active:
+			arcade.draw_texture_rectangle(x, y, width, height, persona.texture, 0)
+		else:
+			arcade.draw_texture_rectangle(x, y, width, height, BASE_TEXTURE, 0)
 		#arcade.draw_point(x, y, arcade.color.RED, 10)
 		self.set_juristiction(x-width/2,y-height/2,x+width/2,y+height/2)
+
 
 
 class button(drawable):
 	action = None
 	depth = -100
-	def draw(self,action,text,x,y):
+	silent = False
+	def draw(self,action,text,x,y,card_size = False):
 		super().draw()
 		self.action = action
 		#print(card.name)
 		width = BASE_TEXTURE.width*CARD_SCALE*0.75
 		#golden ratio
 		height = width/1.61
-		arcade.draw_rectangle_filled(x, y, width, height,arcade.color.BLACK, 0)
-		arcade.draw_text(f"{text}", x, y, arcade.color.WHITE, 15)
+		text_offset = len(text)*6+4
+		text_size = 22
+		if card_size:
+			width = BASE_TEXTURE.width*CARD_SCALE
+			height = BASE_TEXTURE.height*CARD_SCALE
+			arcade.draw_texture_rectangle(x, y, width,height,CARD_BUTTON_TEXTURE,0)
+			arcade.draw_text(f"{text}", x-text_offset, y-text_size/3, CARD_BUTTON_GREEN, text_size)
+		else:
+			#arcade.draw_rectangle_filled(x, y, width, height,[0,0,100], 0)
+			arcade.draw_texture_rectangle(x, y, width,height,BUTTON_TEXTURE,0)
+			arcade.draw_text(f"{text}", x-text_offset, y-text_size/3, arcade.color.WHITE, text_size)
+		
+		
 
 		self.set_juristiction(x-width/2,y-height/2,x+width/2,y+height/2)
 		#print(self.name,self.jminx,self.jminy,self.jmaxx,self.jmaxy,self)
-		#arcade.draw_point(x, y, arcade.color.RED, 10)
+		#arcade.draw_point(x-width/2, y-height/2, arcade.color.RED, 10)
+		#arcade.draw_point(x+width/2, y+height/2, arcade.color.RED, 10)
+
 
 
 	def mouse_up(self, mouse, x, y):
 		if not mouse.consumed and self.check_collision(x,y):
 			mouse.consumed = True
-			globe.bus.button_clicked(self.action)
+			if not mouse.silent and not self.silent:
+				globe.bus.button_clicked(self.action)
+
+class question(drawable):
+	depth = -50
+	question = None
+	def draw(self,question,x,y):
+		super().draw()
+		self.question = question
+
+
+
+		width = SCREEN_WIDTH
+		height = SCREEN_HEIGHT*0.5
+
+		arcade.draw_rectangle_filled(x, y, width, height,[0,0,0,225])
+		arcade.draw_texture_rectangle(x,y,width,height,QUESTION_TEXTURE,alpha = 0.8)
+
+
+		text_size = 22
+		#text_offset = len(question.text)*6+4
+		arcade.draw_text(f"{question.text}", x, y+height*0.25, arcade.color.WHITE, text_size)
+		if question.card != None:
+			choices = self.get_drawable(card,"explain")
+			choices.draw(question.card,x-BASE_TEXTURE.width*CARD_SCALE,y+height*0.25)
+
+
+		choices = self.get_drawable(pile,"choices")
+		choices.draw(question.options,x,y-height*0.25,True)
+
+
+
+		self.set_juristiction(x-width/2,y-height/2,x+width/2,y+height/2)
+		#print(self.name,self.jminx,self.jminy,self.jmaxx,self.jmaxy,self)
+		#arcade.draw_point(x-width/2, y-height/2, arcade.color.RED, 10)
+		#arcade.draw_point(x+width/2, y+height/2, arcade.color.RED, 10)
+
 
 
 ##############################################
 
 def thread_game(thread_name,delay):
-	globe.boss.start_game()
+	try:
+		globe.boss.start_game()
+	except Exception as e:
+		print("ERR:", e)
+
+
+	for i, p in enumerate(globe.boss.player_score):
+		print(f"{i}-{globe.boss.players[i].persona.name} got a score of {p}")
+	print(f"Completed in {globe.boss.turn_number} turns")
+	
 	#time.sleep(1)
 	#arcade.run()
 	

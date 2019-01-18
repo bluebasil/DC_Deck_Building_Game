@@ -8,13 +8,34 @@ class coach:
 		self.header = header
 		self.content = content
 
+class question:
+	text = ""
+	card = None
+	options = []
+
+	def __init__(self,text,card,options):
+		self.text = text
+		self.card = card
+		self.options = options
+
+
 class event_bus:
 	on_bus = []
+	display = None
 
 	def __init__(self):
 		self.lock = threading.Lock()
 		self.on_bus = []
 		print("CREATED?",flush = True)
+
+	def query(self,text,card,options):
+		new_question = question(text,card,options)
+		print("settingDisplay",options,flush=True)
+		self.display = new_question
+
+	def satisfy_query(self):
+		self.display = None
+		
 
 	def card_clicked(self,c):
 		print("try click",flush = True)
@@ -46,6 +67,7 @@ class event_bus:
 		self.lock.acquire()
 		try:
 			self.on_bus = []
+			self.display = None
 		finally:
 			print('Released a lock',flush = True)
 			self.lock.release()
@@ -55,9 +77,10 @@ class event_bus:
 		self.lock.acquire()
 		to_return = None
 		try:
-			print('Acquired a lock',flush = True)
+			print('Acquired a lock',len(self.on_bus),flush = True)
 			to_return = self.on_bus.pop(0)
 		finally:
 			print('Released a lock',flush = True)
 			self.lock.release()
 		return to_return
+

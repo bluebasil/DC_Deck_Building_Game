@@ -22,6 +22,9 @@ def get_starting_deck(player):
 	#for c in range(10):
 	#	assemble.append(base_card.weakness(player))
 
+	#assemble.append(base_card.x_ray_vision(player))
+	assemble.append(base_card.lobo(player))
+
 	random.shuffle(assemble)
 	load_textures(assemble)
 	return assemble

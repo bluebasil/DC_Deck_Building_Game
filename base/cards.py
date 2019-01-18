@@ -208,8 +208,13 @@ class bane(card_class):
 	def attack_action(self,by_player):
 		for p in globe.boss.players:
 			if p != by_player and effects.attack(p,self,by_player):
-				effects.discard_a_card(p)
+				#effects.discard_a_card(p)
+				if len(p.hand.contents) > 0:
+					result = effects.choose_one_of("Choose a card to discard.",p,p.hand.contents,ai_hint.WORST)
+					result.pop_self()
+					p.discard.add(result)
 		return
+
 
 #done
 class the_batmobile(card_class):
@@ -299,7 +304,13 @@ class bulletproof(card_class):
 		self.owner.discard.add(self)
 		self.owner.draw_card()
 		#This effdect does it, but be carefull
-		effects.may_destroy_card_in_hand_or_discard(self.owner)
+		#effects.may_destroy_card_in_hand_or_discard(self.owner)
+
+
+		instruction_text = f"You may destroy a card in your discard pile"
+		card_to_destroy = effects.may_choose_one_of(instruction_text,self.owner,self.owner.discard.contents,ai_hint.IFBAD)
+		if card_to_destroy != None:
+			card_to_destroy.destroy()
 		return
 
 #Done
@@ -576,7 +587,13 @@ class heat_vision(card_class):
 	image = "base/images/cards/Heat_Vision.jpeg"
 	
 	def play_action(self,player):
-		effects.may_destroy_card_in_hand_or_discard(player)
+		#effects.may_destroy_card_in_hand_or_discard(player)
+		collection = self.owner.hand.contents
+		collection.extend(self.owner.discard.contents)
+		instruction_text = f"You may destroy a card in your hand or discard pile"
+		card_to_destroy = effects.may_choose_one_of(instruction_text,self.owner,collection,ai_hint.IFBAD)
+		if card_to_destroy != None:
+			card_to_destroy.destroy()
 		return 3
 
 #Done
@@ -634,10 +651,15 @@ class king_of_atlantis(card_class):
 	image = "base/images/cards/King_of_Atlantis.jpeg"
 	
 	def play_action(self,player):
-		choice = effects.may_destroy_card_in_discard(player)
-		if choice[0] == option.NO:
+		#choice = effects.may_destroy_card_in_discard(player)
+
+		instruction_text = f"You may destroy a card in your hand or discard pile"
+		card_to_destroy = effects.may_choose_one_of(instruction_text,player,player.discard.contents,ai_hint.IFBAD)
+
+		if card_to_destroy == None:
 			return 1
 		else:
+			card_to_destroy.destroy()
 			return 3
 
 #Done
@@ -669,8 +691,18 @@ class lobo(card_class):
 	image = "base/images/cards/Lobo.jpeg"
 	
 	def play_action(self,player):
-		for i in range(2):
-			effects.may_destroy_card_in_hand_or_discard(player)
+		collection = player.hand.contents
+		collection.extend(player.discard.contents)
+		instruction_text = f"You may destroy a card in your hand or discard pile (1/2)"
+		card_to_destroy = effects.may_choose_one_of(instruction_text,player,collection,ai_hint.IFBAD)
+		if card_to_destroy != None:
+			card_to_destroy.destroy()
+			collection = player.hand.contents
+			collection.extend(player.discard.contents)
+			instruction_text = f"You may destroy a card in your hand or discard pile (2/2)"
+			card_to_destroy = effects.may_choose_one_of(instruction_text,player,collection,ai_hint.IFBAD)
+			if card_to_destroy != None:
+				card_to_destroy.destroy()
 		return 3
 
 #Done
@@ -733,7 +765,10 @@ class the_penguin(card_class):
 		for i in range(2):
 			player.draw_card()
 		for i in range(2):
-			effects.discard_a_card(player)
+			if len(player.hand.contents) > 0:
+				result = effects.choose_one_of("Choose a card to discard.",player,player.hand.contents,ai_hint.WORST)
+				result.pop_self()
+				player.discard.add(result)
 		return 0
 
 #Done
@@ -1004,7 +1039,7 @@ class two_face(card_class):
 		choose_even = effects.choose_even_or_odd("Choose even or odd, then reveal the top card of your deck.  If its cost matches your choice, draw it.  If not, discard it.",player)
 		
 		on_top = player.reveal_card()
-		effects.reveal("This was on top of your deck",player,[on_top])
+		effects.reveal(f"This was on top of {player.persona.name}'s deck",player,[on_top])
 		if on_top.cost%2 == 0:
 			card_is_even = True
 		else:
@@ -1046,7 +1081,19 @@ class x_ray_vision(card_class):
 	image = "base/images/cards/Xray_Vision.jpeg"
 	
 	def play_action(self,player):
-		effects.x_ray_vision_reveal(player)
+		#effects.x_ray_vision_reveal(player)
+		assemble = []
+		for p in globe.boss.players:
+			if p != player:
+				top_card = p.reveal_card()
+				if top_card != None:
+					effects.reveal(f"{top_card.name} is on the top of {p.persona.name}'s deck.",p,[top_card])
+					assemble.append(top_card)
+		if len(assemble) > 0:
+			result = effects.may_choose_one_of("You may play of of the revealed cards.\nIt will then go back ontop of the players deck.",player,assemble,ai_hint.BEST)
+			if result != None:
+				result.pop_self()
+				player.play_and_return(result,result.owner.deck)
 		return 0
 
 #test
@@ -1499,7 +1546,7 @@ class the_joker(card_class):
 	ctype = cardtype.VILLAIN
 	owner_type = owners.VILLAINDECK
 	text = "+2 Power and each foe chooses: He discards a random card, or you draw a card."
-	attack_text = "First Appearance - Attack:: Each player puts a card from his hand into the discard pile of the player on his left.  If the card you received has a cost of 1 or greater, gain a Weakness"
+	attack_text = "First Appearance - Attack:: Each player puts a card from his hand into the discard pile of the player on\nhis left.  If the card you received has a cost of 1 or greater, gain a Weakness"
 	image = "base/images/cards/The Joker 10.jpg"
 	
 	def play_action(self,player):

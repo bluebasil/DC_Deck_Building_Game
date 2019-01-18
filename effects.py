@@ -113,7 +113,8 @@ def ok_or_no(instruction_text,player,card = None,hint = ai_hint.IFBAD):
 		return ok_or_no(instruction_text,player,hint)
 
 def reveal(reveal_text,player,cards):
-	player.controler.reveal(reveal_text,player,cards)
+	for p in globe.boss.players:
+		p.controler.reveal(reveal_text,player,cards)
 
 #True for even
 def choose_even_or_odd(instruction_text,player):
@@ -160,7 +161,7 @@ def may_destroy_card_in_hand_or_discard(player):
 
 
 #(,#)
-def discard_a_card(player):
+"""def discard_a_card(player):
 	result = player.controler.discard_a_card()
 	if globe.DEBUG:
 		print("discard_a_card",result)
@@ -177,7 +178,7 @@ def discard_a_card(player):
 		return discard_a_card(player)
 	card_to_discard = player.hand.contents.pop(result[1])
 	player.discard.add(card_to_discard)
-	return (option.OK,card_to_discard)
+	return (option.OK,card_to_discard)"""
 
 def x_ray_vision_reveal(player):
 	assemble = []
@@ -208,7 +209,7 @@ def x_ray_vision_reveal(player):
 	return option.CANNOT
 
 #(no/ok, if ok:#)
-def may_destroy_card_in_discard(player):
+"""def may_destroy_card_in_discard(player):
 	result = player.controler.may_destroy_card_in_discard()
 	if globe.DEBUG:
 		print("may_destroy_card_in_discard",result)
@@ -225,7 +226,7 @@ def may_destroy_card_in_discard(player):
 		return (option.OK,card_to_destroy)
 	else:
 		print(f"ERR: invalid responce code: {result[0]}")
-		return may_destroy_card_in_hand_or_discard(player)
+		return may_destroy_card_in_discard(player)"""
 
 
 def choose_however_many(instruction_text,player,cards,hint):

@@ -11,7 +11,12 @@ class persona:
 	image = "base/images/personas/Aquaman MC.jpg"
 	texture = None
 
-	def __init__(self,player):
+	def __init__(self,player = None):
+		self.texture = arcade.load_texture(self.image)
+		if player != None:
+			self.set_owner(player)
+
+	def set_owner(self,player):
 		self.player = player
 
 

@@ -6,3 +6,4 @@ DISCARD = 4
 CANNOT = 5
 EVEN = 6
 ODD = 7
+DONE = 8

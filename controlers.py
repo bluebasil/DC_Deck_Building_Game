@@ -40,8 +40,8 @@ class controler:
 		#base on hint
 		return [option.NO]
 
-	def may_put_on_top(self,instruction_text):
-		return [option.OK]
+	#def may_put_on_top(self,instruction_text):
+	#	return [option.OK]
 
 	def ok_or_no(self,instruction_text,player,card,hint):
 		return [option.NO]
@@ -57,75 +57,338 @@ class controler:
 		return options[0]
 
 	#NO,HAND,DISCARD
-	def may_destroy_card_in_hand_or_discard(self):
-		return (option.NO,-1)
+	#def may_destroy_card_in_hand_or_discard(self):
+	#	return (option.NO,-1)
 
 	#only OK or CANNOT are accepted
-	def discard_a_card(self):
-		return (option.OK,0)
+	#def discard_a_card(self):
+	#	return (option.OK,0)
 
 	#NO,OK
-	def may_play_one_of_these_cards(self,cards):
-		return (option.NO,-1)
+	#def may_play_one_of_these_cards(self,cards):
+	#	return (option.NO,-1)
 
 	#NO,OK
-	def may_destroy_card_in_discard(self):
-		return (option.NO,-1)
+	#def may_destroy_card_in_discard(self):
+	#	return (option.NO,-1)
 
 	def choose_however_many(self,instruction_text,player,cards,hint = None):
 		return [option.NO]
 
 
 class human_view(controler):
-	def turn(self):
+
+	def await(self,process):
+		print(globe.bus.display,flush=True)
 		try:
-			print("START OF TURN",flush = True)
-			globe.bus.clear()
+			print("START OF PROCESS",flush = True)
 			print("LISTENING",flush = True)
 			while True:
-				print(len(globe.bus.on_bus),flush = True)
+				#print(len(globe.bus.on_bus),flush = True)
 				if len(globe.bus.on_bus) > 0:
-					current = globe.bus.read()
-					print("ITEM ON BUS:",current.header,current.content,flush = True)
-					if current.header == "card":
-						print("ITEM IS CARD",flush = True)
-
-						#hand to play
-						if current.content in self.player.hand.contents:
-							print("CARD IN HAND",flush = True)
-							self.player.play_c(current.content)
-							globe.bus.clear()
-
-						#lineup to buy
-						if current.content in globe.boss.lineup.contents:
-							print("CARD IN LINEUP",flush = True)
-							self.player.buy_c(current.content)
-							globe.bus.clear()
-
-						#kick to buy
-						if current.content in globe.boss.kick_stack.contents:
-							print("CARD IN LINEUP",flush = True)
-							self.player.buy_kick()
-							globe.bus.clear()
-
-						#sv to buy
-						if current.content in globe.boss.supervillain_stack.contents:
-							print("CARD IN LINEUP",flush = True)
-							self.player.buy_supervillain()
-							globe.bus.clear()
-
-					if current.header == "button":
-						print("ITEM IS BUTTON",flush = True)
-
-						#hand to play
-						if current.content == actions.ENDTURN:
-							print("END TURN BUTTON FOUND",flush = True)
-							return
-
-				time.sleep(0.5)
+					result = process()
+					if result != None:
+						return result
+				time.sleep(0.1)
 		except Exception as e:
-			print("?", e)
+			print("ERRROROROROR:", e)
 
+	def turn(self):
+		globe.bus.clear()
+		def process():
+			current = globe.bus.read()
+			print("ITEM ON BUS:",current.header,current.content,flush = True)
+			if current.header == "card":
+				print("ITEM IS CARD",current.content.name,flush = True)
+
+				#hand to play
+				if current.content in self.player.hand.contents:
+					print("CARD IN HAND",flush = True)
+					self.player.play_c(current.content)
+					globe.bus.clear()
+
+				#lineup to buy
+				if current.content in globe.boss.lineup.contents:
+					print("CARD IN LINEUP",flush = True)
+					self.player.buy_c(current.content)
+					globe.bus.clear()
+
+				#kick to buy
+				if current.content in globe.boss.kick_stack.contents:
+					print("CARD IS KICK",flush = True)
+					self.player.buy_kick()
+					globe.bus.clear()
+
+				#sv to buy
+				if current.content in globe.boss.supervillain_stack.contents:
+					print("CARD IS SV",flush = True)
+					self.player.buy_supervillain()
+					globe.bus.clear()
+
+			if current.header == "button":
+				print("ITEM IS BUTTON",flush = True)
+
+				#hand to play
+				if current.content == actions.ENDTURN:
+					print("END TURN BUTTON FOUND",flush = True)
+					globe.bus.clear()
+					return True
+
+		self.await(process)
+
+	def choose_persona(self,persona_list):
+		globe.bus.clear()
+		text = f"Who would you like to play as?"
+		options = []
+		for i in persona_list:
+			options.append(i)
+		try:
+			globe.bus.query(text,None,options)
+		except Exception as e:
+			print("ERROR", e)
+		def process():
+			current = globe.bus.read()
+			print("ITEM ON BUS:",current.header,current.content,flush = True)
+			if current.header == "card":
+				print("ITEM IS CARD",current.content.name,flush = True)
+
+				#hand to play
+				if current.content in persona_list:
+					return current.content
+
+
+		choosen = self.await(process)
+		return choosen
+
+	def may_defend(self, options, attacking_card, attacking_player = None):
+		globe.bus.clear()
+		text = f"You are getting attacked by {attacking_card.name}\n{attacking_card.attack_text}.\nWould you like to defend?"
+		try:
+			print("OPTION TO DEFEND",globe.bus.display,flush=True)
+			options.insert(0,option.NO)
+			globe.bus.query(text,attacking_card,options)
+			print("QUERRY SET",globe.bus.display,flush=True)
+		except Exception as e:
+			print("ERROR", e)
+
+		
+		def process():
+			current = globe.bus.read()
+			print("ITEM ON BUS:",current.header,current.content,flush = True)
+			if current.header == "card":
+				print("ITEM IS CARD",flush = True)
+				#hand to play
+				if current.content in options:
+					print("CARD IN OPTIONS",flush = True)
+					globe.bus.clear()
+					return (option.OK,options.index(current.content))
+
+			if current.header == "button":
+				print("ITEM IS BUTTON",current.content,flush = True)
+
+				#hand to play
+				if current.content == option.NO:
+					globe.bus.clear()
+					return (option.NO,-1)
+		
+		return self.await(process)
+
+	def choose_one_of(self,instruction_text,player,cards,hint):
+		print("DO I GET TO CHOOSE",flush=True)
+		options = cards
+		globe.bus.clear()
+		text = instruction_text
+		try:
+			globe.bus.query(text,None,cards)
+		except Exception as e:
+			print("ERRORR", e)
+
+		
+		def process():
+			current = globe.bus.read()
+			print("ITEM ON BUS:",current.header,current.content,flush = True)
+			if current.header == "card":
+				print("ITEM IS CARD",flush = True)
+				#hand to play
+				if current.content in options:
+					print("CARD IN OPTIONS",flush = True)
+					globe.bus.clear()
+					return [options.index(current.content)]
+
+
+		
+		return self.await(process)
+		#base on hint
+		#return [0]
+
+	def may_choose_one_of(self,instruction_text,player,cards,hint):
+		print("DO I GET TO CHOOSE",flush=True)
+		options = [option.NO]
+		options.extend(cards)
+		globe.bus.clear()
+		text = instruction_text
+		try:
+			print("OPTION TO DEFEND",globe.bus.display,flush=True)
+			globe.bus.query(text,None,options)
+			print("QUERRY SET",globe.bus.display,flush=True)
+		except Exception as e:
+			print("ERROR", e)
+
+		
+		def process():
+			current = globe.bus.read()
+			print("ITEM ON BUS:",current.header,current.content,flush = True)
+			if current.header == "card":
+				print("ITEM IS CARD",flush = True)
+				#hand to play
+				if current.content in options:
+					print("CARD IN OPTIONS",flush = True)
+					globe.bus.clear()
+					return [option.OK,cards.index(current.content)]
+
+			if current.header == "button":
+				print("ITEM IS BUTTON",current.content,flush = True)
+
+				#hand to play
+				if current.content == option.NO:
+					globe.bus.clear()
+					return [option.NO]
+		
+		return self.await(process)
+
+	def ok_or_no(self,instruction_text,player,card,hint):
+		options = [option.NO,option.OK]
+		globe.bus.clear()
+		text = instruction_text
+		try:
+			globe.bus.query(text,card,options)
+		except Exception as e:
+			print("ERROR", e)
+
+		
+		def process():
+			current = globe.bus.read()
+			print("ITEM ON BUS:",current.header,current.content,flush = True)
+			if current.header == "button":
+				print("ITEM IS BUTTON",current.content,flush = True)
+				if current.content == option.NO or current.content == option.OK:
+					globe.bus.clear()
+					return [current.content]
+
+		return self.await(process)
+
+
+	#No responce needed
+	def reveal(self,instruction_text,player,cards):
+		print("REVEALING",flush = True)
+		options = [option.DONE]
+		options.extend(cards)
+		globe.bus.clear()
+		text = instruction_text
+		try:
+			globe.bus.query(text,None,options)
+		except Exception as e:
+			print("ERROR", e)
+
+		def process():
+			current = globe.bus.read()
+			print("ITEM ON BUS:",current.header,current.content,flush = True)
+			if current.header == "button":
+				print("ITEM IS BUTTON",current.content,flush = True)
+				if current.content == option.DONE:
+					globe.bus.clear()
+					return [current.content]
+
+		return self.await(process)
+
+
+	def choose_even_or_odd(self,instruction_text,player):
+		options = [option.ODD,option.EVEN]
+		globe.bus.clear()
+		text = instruction_text
+		try:
+			globe.bus.query(text,None,options)
+		except Exception as e:
+			print("ERROR", e)
+
+		def process():
+			current = globe.bus.read()
+			print("ITEM ON BUS:",current.header,current.content,flush = True)
+			if current.header == "button":
+				print("ITEM IS BUTTON",current.content,flush = True)
+				if current.content == option.EVEN or current.content == option.ODD:
+					globe.bus.clear()
+					return [current.content]
+
+		return self.await(process)
+
+	"""def choose_a_player(self,player,options):
+		options = [option.ODD,option.EVEN]
+		globe.bus.clear()
+		text = instruction_text
+		options
+		try:
+			globe.bus.query(text,card,options)
+		except Exception as e:
+			print("ERROR", e)
+
+		def process():
+			current = globe.bus.read()
+			print("ITEM ON BUS:",current.header,current.content,flush = True)
+			if current.header == "button":
+				print("ITEM IS BUTTON",current.content,flush = True)
+				return [current.content]
+		return options[0]"""
+
+
+	def choose_however_many(self,instruction_text,player,cards,hint = None):
+		assemble = [option.OK]
+		assemble_started = False
+		while True:
+			options = [option.DONE]
+			for c in cards:
+				if c not in assemble:
+					options.append(c)
+			globe.bus.clear()
+			text = instruction_text
+			try:
+				print("OPTION TO DEFEND",globe.bus.display,flush=True)
+				globe.bus.query(text,None,options)
+				print("QUERRY SET",globe.bus.display,flush=True)
+			except Exception as e:
+				print("ERROR", e)
+
+			
+			def process():
+				current = globe.bus.read()
+				print("ITEM ON BUS:",current.header,current.content,flush = True)
+				if current.header == "card":
+					print("ITEM IS CARD",flush = True)
+					#hand to play
+					if current.content in options:
+						print("CARD IN OPTIONS",flush = True)
+						globe.bus.clear()
+						return current.content
+
+				if current.header == "button":
+					print("ITEM IS BUTTON",current.content,flush = True)
+
+					#hand to play
+					if current.content == option.DONE:
+						globe.bus.clear()
+						return option.DONE
+			
+			result = self.await(process)
+			if result == option.DONE and not assemble_started:
+				return [option.NO]
+			elif result == option.DONE:
+				return assemble
+			else:
+				assemble_started = True
+				assemble.append(result)
+
+
+		#return [option.NO]
 
 
 def get_input():
@@ -381,7 +644,7 @@ class human(controler):
 
 
 	# card number, 0 is none
-	def may_destroy_card_in_hand_or_discard(self):
+	"""def may_destroy_card_in_hand_or_discard(self):
 		self.state_name()
 		print("may_destroy_card_in_hand_or_discard (Example: 'ok hand 2', or 'no')")
 		x = get_input()
@@ -405,10 +668,10 @@ class human(controler):
 					return self.may_destroy_card_in_hand_or_discard()
 				return (option.DISCARD,intx)
 		print("?")
-		return self.may_destroy_card_in_hand_or_discard()
+		return self.may_destroy_card_in_hand_or_discard()"""
 
 	#card number
-	def discard_a_card(self):
+	"""def discard_a_card(self):
 		self.state_name()
 
 		print("discard_a_card")
@@ -419,11 +682,11 @@ class human(controler):
 		except:
 			print("?")
 			return self.discard_a_card()
-		return (option.OK,intx)
+		return (option.OK,intx)"""
 		
 			
 
-	def may_play_one_of_these_cards(self,cards):
+	"""def may_play_one_of_these_cards(self,cards):
 		self.state_name()
 		global view
 		print("may_play_one_of_these_cards:")
@@ -443,9 +706,9 @@ class human(controler):
 				
 		
 		print("?")
-		return self.may_play_one_of_these_cards(cards)
+		return self.may_play_one_of_these_cards(cards)"""
 
-	def may_destroy_card_in_discard(self):
+	"""def may_destroy_card_in_discard(self):
 		self.state_name()
 		print("may_destroy_card_in_discard (Example: 'ok 2', or 'no')")
 		x = get_input()
@@ -460,7 +723,7 @@ class human(controler):
 				return (option.OK,intx)
 
 		print("?")
-		return self.may_destroy_card_in_discard()
+		return self.may_destroy_card_in_discard()"""
 
 	def choose_however_many(self,instruction_text,player,cards,hint = None):
 		print(f"{instruction_text} (Example: 'no', or 'ok 0 2 3')")
@@ -497,12 +760,13 @@ class cpu(controler):
 		self.player = player
 		self.invisible = invisible
 
-	def display_thought(self,text,long = False):
+	def display_thought(self,text,long = False,quick = True):
 		if not self.invisible:
 			print(text, flush = True)
-			time.sleep(self.slti)
-			if long:
+			if not quick:
 				time.sleep(self.slti)
+				if long:
+					time.sleep(self.slti)
 
 	def sort_by_cost(self,card):
 		if card.name == "Weakness":
@@ -531,23 +795,23 @@ class cpu(controler):
 		global view
 		if not self.invisible:
 			view.print_board()
-		self.display_thought(f"Begining of AI {self.player.pid}'s turn")
+		self.display_thought(f"Begining of AI {self.player.pid}'s turn",quick = False)
 		self.player.hand.contents.sort(key = self.sort_by_play_order)
 
 		self.player.persona.ai_is_now_a_good_time()
 		
 		while self.player.hand.size() > 0:
 			size_check = self.player.hand.size()
-			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is going to play a {self.player.hand.contents[0].name} (total power = {self.player.played.power})")
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is going to play a {self.player.hand.contents[0].name} (total power = {self.player.played.power})",quick = False)
 			self.player.play(0)
 			if size_check - 1 != self.player.hand.size():
-				self.display_thought("(Differtent cards than expected)")
+				self.display_thought("(Differtent cards than expected)",quick = False)
 				self.player.hand.contents.sort(key = self.sort_by_play_order)
 			self.player.persona.ai_is_now_a_good_time()
 
-		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} has {self.player.played.power} power!")
+		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} has {self.player.played.power} power!",quick = False)
 		if globe.boss.supervillain_stack.size() > 0 and self.player.buy_supervillain():
-			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is buying the supervillain! ({self.player.played.power} power left)",True)
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is buying the supervillain! ({self.player.played.power} power left)",True,quick = False)
 		assemble = []
 		for c in globe.boss.lineup.contents:
 			assemble.append(c)
@@ -556,10 +820,10 @@ class cpu(controler):
 		while len(assemble) > 0:
 			test = assemble.pop()
 			if self.player.buy_c(test):
-				self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought {test.name} ({self.player.played.power} power left)",True)
+				self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought {test.name} ({self.player.played.power} power left)",True,quick = False)
 		while self.player.played.power >= 3 and globe.boss.kick_stack.size() > 0:
 			self.player.buy_kick()
-			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)",True)
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)",True,quick = False)
 
 		return
 
@@ -596,10 +860,10 @@ class cpu(controler):
 			return [option.NO]
 		
 
-	def may_put_on_top(self,instruction_text):
-		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}")
-		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to do so")
-		return option.OK
+	#def may_put_on_top(self,instruction_text):
+	#	self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}")
+	#	self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to do so")
+	#	return option.OK
 
 	def ok_or_no(self,instruction_text,player,card,hint):
 		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}")
@@ -614,7 +878,7 @@ class cpu(controler):
 			return [option.OK]
 
 	#only OK or CANNOT are accepted
-	def discard_a_card(self):
+	"""def discard_a_card(self):
 		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} told to discard a card")
 		if self.player.hand.size() == 0:
 			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} does not have a hand")
@@ -631,7 +895,7 @@ class cpu(controler):
 						lowest_position = i
 		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to discard a {self.player.hand.contents[lowest_position].name}")
 		return (option.OK,lowest_position)
-
+"""
 
 	def choose_however_many(self,instruction_text,player,cards,hint):
 		if hint == ai_hint.IFBAD:
@@ -653,7 +917,7 @@ class cpu_greedy(cpu):
 		global view
 		if not self.invisible:
 			view.print_board()
-		self.display_thought(f"Begining of AI {self.player.pid}'s turn")
+		self.display_thought(f"Begining of AI {self.player.pid}'s turn",quick = False)
 		self.player.hand.contents.sort(key = self.sort_by_play_order)
 		
 		while self.player.hand.size() > 0:
@@ -661,13 +925,13 @@ class cpu_greedy(cpu):
 			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is going to play a {self.player.hand.contents[0].name} (total power = {self.player.played.power})")
 			self.player.play(0)
 			if size_check - 1 != self.player.hand.size():
-				self.display_thought("(Differtent cards than expected)")
+				self.display_thought("(Differtent cards than expected)",quick = False)
 				self.player.hand.contents.sort(key = self.sort_by_play_order)
 
-		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} has {self.player.played.power} power!")
+		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} has {self.player.played.power} power!",quick = False)
 		if globe.boss.supervillain_stack.size() > 0 and self.player.played.power >= globe.boss.supervillain_stack.contents[-1].cost:
 			self.player.buy_supervillain()
-			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is buying the supervillain! ({self.player.played.power} power left)")
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is buying the supervillain! ({self.player.played.power} power left)",quick = False)
 		assemble = []
 		for c in globe.boss.lineup.contents:
 			assemble.append(c)
@@ -676,10 +940,10 @@ class cpu_greedy(cpu):
 		while len(assemble) > 0:
 			test = assemble.pop()
 			if self.player.buy_c(test):
-				self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought {test.name} ({self.player.played.power} power left)")
+				self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought {test.name} ({self.player.played.power} power left)",quick = False)
 		while self.player.played.power >= 3 and globe.boss.kick_stack.size() > 0:
 			self.player.buy_kick()
-			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)")
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)",quick = False)
 
 		return
 

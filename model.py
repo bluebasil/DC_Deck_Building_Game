@@ -175,13 +175,17 @@ class player:
 		self.deck.contents = deck_builder.get_starting_deck(self)
 		self.discard.contents = deck_builder.debug_discard(self)
 
-		for i in range(8):
+		for i in range(5):
 			self.hand.add(self.deck.draw())
 
 	def choose_persona(self,persona_list):
+		print("attempting persona choice",flush = True)
 		self.persona = self.controler.choose_persona(persona_list)
+		print("choice made",flush = True)
 		persona_list.remove(self.persona)
-		self.persona = self.persona(self)
+		self.persona.set_owner(self)
+
+		#self.persona = self.persona(self)
 		self.persona.reset()
 
 	def turn(self):
@@ -370,7 +374,7 @@ class model:
 		self.destroyed_stack = pile()
 		self.persona_list = deck_builder.get_personas()
 
-		for c in range(8):
+		for c in range(5):
 			self.lineup.add(self.main_deck.draw())
 
 		#2 human players for initialization
@@ -422,6 +426,7 @@ class model:
 		#	self.players.append(new_player)
 
 	def choose_personas(self):
+		print("start persona choosing",flush = True)
 		for i,p in enumerate(self.players):
 			p.choose_persona(self.persona_list)
 			print(f"{i} choose {p.persona.name}")
@@ -439,6 +444,7 @@ class model:
 				print(f"{self.whose_turn} turn")
 
 			self.players[self.whose_turn].turn()
+			print(f"SUPER STACK:{len(self.supervillain_stack.contents)}")
 
 			if self.supervillain_stack.get_count() > 0 and \
 					self.supervillain_stack.current_sv != self.supervillain_stack.contents[-1]:

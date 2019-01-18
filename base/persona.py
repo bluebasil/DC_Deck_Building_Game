@@ -5,7 +5,8 @@ import globe
 import persona_frame
 
 def get_personas():
-	return [auquaman,batman,cyborg,the_flash,green_lantern,superman,wonder_woman,martian_manhunter]
+	#return [auquaman(),batman(),the_flash()]
+	return [auquaman(),batman(),cyborg(),the_flash(),green_lantern(),superman(),wonder_woman(),martian_manhunter()]
 
 
 class auquaman(persona_frame.persona):
