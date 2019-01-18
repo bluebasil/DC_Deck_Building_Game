@@ -80,17 +80,17 @@ class human_view(controler):
 
 	def await(self,process):
 		#print(globe.bus.display,flush=True)
-		try:
-			print("Waiting for player input...",flush = True)
-			while True:
-				#print(len(globe.bus.on_bus),flush = True)
-				if len(globe.bus.on_bus) > 0:
-					result = process()
-					if result != None:
-						return result
-				time.sleep(0.1)
-		except Exception as e:
-			print("ERRROROROROR:", e)
+		#try:
+		print("Waiting for player input...",flush = True)
+		while True:
+			#print(len(globe.bus.on_bus),flush = True)
+			if len(globe.bus.on_bus) > 0:
+				result = process()
+				if result != None:
+					return result
+			time.sleep(0.1)
+		#except Exception as e:
+		#	print("ERRROROROROR:", e)
 
 	def turn(self):
 		globe.bus.clear()
@@ -137,10 +137,10 @@ class human_view(controler):
 		options = []
 		for i in persona_list:
 			options.append(i)
-		try:
-			globe.bus.query(text,None,options)
-		except Exception as e:
-			print("ERROR", e)
+		#try:
+		globe.bus.query(text,None,options)
+		#except Exception as e:
+		#	print("ERROR", e)
 		def process():
 			current = globe.bus.read()
 			if current.header == "card":
@@ -156,11 +156,11 @@ class human_view(controler):
 	def may_defend(self, options, attacking_card, attacking_player = None):
 		globe.bus.clear()
 		text = f"You are getting attacked by {attacking_card.name}\n{attacking_card.attack_text}.\nWould you like to defend?"
-		try:
-			options.insert(0,option.NO)
-			globe.bus.query(text,attacking_card,options)
-		except Exception as e:
-			print("ERROR", e)
+		#try:
+		options.insert(0,option.NO)
+		globe.bus.query(text,attacking_card,options)
+		#except Exception as e:
+		#	print("ERROR", e)
 
 		
 		def process():
@@ -184,10 +184,10 @@ class human_view(controler):
 		options = cards
 		globe.bus.clear()
 		text = instruction_text
-		try:
-			globe.bus.query(text,None,cards)
-		except Exception as e:
-			print("ERRORR", e)
+		#try:
+		globe.bus.query(text,None,cards)
+		#except Exception as e:
+		#	print("ERRORR", e)
 
 		
 		def process():
@@ -209,10 +209,10 @@ class human_view(controler):
 		options.extend(cards)
 		globe.bus.clear()
 		text = instruction_text
-		try:
-			globe.bus.query(text,None,options)
-		except Exception as e:
-			print("ERROR", e)
+		#try:
+		globe.bus.query(text,None,options)
+		#except Exception as e:
+		#	print("ERROR", e)
 
 		
 		def process():
@@ -236,10 +236,10 @@ class human_view(controler):
 		options = [option.NO,option.OK]
 		globe.bus.clear()
 		text = instruction_text
-		try:
-			globe.bus.query(text,card,options)
-		except Exception as e:
-			print("ERROR", e)
+		#try:
+		globe.bus.query(text,card,options)
+		#except Exception as e:
+		#	print("ERROR", e)
 
 		
 		def process():
@@ -258,10 +258,10 @@ class human_view(controler):
 		options.extend(cards)
 		globe.bus.clear()
 		text = instruction_text
-		try:
-			globe.bus.query(text,None,options)
-		except Exception as e:
-			print("ERROR", e)
+		#try:
+		globe.bus.query(text,None,options)
+		#except Exception as e:
+		#	print("ERROR", e)
 
 		def process():
 			current = globe.bus.read()
@@ -277,10 +277,10 @@ class human_view(controler):
 		options = [option.ODD,option.EVEN]
 		globe.bus.clear()
 		text = instruction_text
-		try:
-			globe.bus.query(text,None,options)
-		except Exception as e:
-			print("ERROR", e)
+		#try:
+		globe.bus.query(text,None,options)
+		#except Exception as e:
+		#	print("ERROR", e)
 
 		def process():
 			current = globe.bus.read()
@@ -320,10 +320,10 @@ class human_view(controler):
 					options.append(c)
 			globe.bus.clear()
 			text = instruction_text
-			try:
-				globe.bus.query(text,None,options)
-			except Exception as e:
-				print("ERROR", e)
+			#try:
+			globe.bus.query(text,None,options)
+			#except Exception as e:
+			#	print("ERROR", e)
 
 			
 			def process():
@@ -345,6 +345,8 @@ class human_view(controler):
 			if result == option.DONE and not assemble_started:
 				return [option.NO]
 			elif result == option.DONE:
+				for i in range(1,len(assemble)):
+					assemble[i] = cards.index(assemble[i])
 				return assemble
 			else:
 				assemble_started = True
@@ -409,6 +411,8 @@ def get_input():
 				view.print_under(intx)
 			except:
 				print("?")
+	elif x[0] == "actions":
+		view.print_actions()
 	else:
 		return x
 	return get_input()
@@ -449,19 +453,24 @@ class human(controler):
 						intx = int(x[1])
 					except:
 						print("?")
-						safe == False
+						safe = False
 					if safe:
 						result = self.player.buy(int(x[1]))
 						view.print_board()
 				if not result:
 					print("COULD NOT BUY")
-			elif x[0] == "riddle":
-				if self.player.played_riddler:
-					result = self.player.riddle()
-					if not result:
-						print("COULD NOT BUY")
-				else:
-					print("You have not played the riddler this turn")
+			elif x[0] == "action":
+				safe = True
+				intx = -1
+				try:
+					intx = int(x[1])
+				except:
+					safe = False
+					print("?")
+				if safe:
+					self.player.played.special_options[intx].click_action(self.player)
+					print("clicked")
+
 			elif x[0] == "sh":
 				result = self.player.persona.any_time()
 			else:
@@ -471,7 +480,7 @@ class human(controler):
 					intx = int(x[0])
 				except:
 					print("?")
-					safe == False
+					safe = False
 				if safe:
 					if intx < 0 or intx >= self.player.hand.size():
 						print("Err: Not a valid card")

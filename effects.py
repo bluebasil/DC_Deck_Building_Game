@@ -239,6 +239,7 @@ def choose_however_many(instruction_text,player,cards,hint):
 	elif result[0] == option.OK:
 		assemble = []
 		for r in result[1:]:
+			#print("FJFHJFHFHFHF",r)
 			if not ensure_int(r):
 				print(f"ERR: invalid symbol {r}.")
 				return choose_however_many(instruction_text,player,cards,hint)
@@ -246,7 +247,7 @@ def choose_however_many(instruction_text,player,cards,hint):
 				print(f"ERR: invalid number {r}. max:{len(cards)-1}")
 				return choose_however_many(instruction_text,player,cards,hint)
 			assemble.append(cards[r])
-			return assemble
+		return assemble
 	else:
 		print(f"ERR: invalid responce code: {result[0]}")
 		return choose_however_many(instruction_text,player,cards,hint)

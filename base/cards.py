@@ -7,164 +7,12 @@ import ai_hint
 import random
 import arcade
 import actions
-
-#TODO: Impliment Attacks
-
-class card_class:
-	name = ""
-	vp = 0
-	cost = 0
-	ctype = cardtype.ANY
-	#All cards must manually set these
-	defence = False
-	attack = False
-	owner = None
-	owner_type = owners.MAINDECK
-	text = ""
-	attack_text = ""
-	image = "base/images/cards/back.jpeg"
-	texture = None
+import card_frame
 
 
-	#stats
-	times_played = 0
-	bought = False
-
-	def __init__(self,owner = None):
-		self.owner = owner
-		if owner != None:
-			self.owner_type = owners.PLAYER
-		self.texture = arcade.load_texture(self.image)
-	
-	def play_action(self,player):
-		return 0
-
-	def later_play(self,player,on_card):
-		return 0
-
-	def set_owner(self,player=None):
-		self.owner = player
-		self.owner_type = owners.PLAYER
-
-	def calculate_vp(self):
-		return self.vp
-
-	def end_of_turn(self):
-		return
-
-	def buy_action(self):
-		return
-
-	#defence = True must be set or this will not be an option
-	#pop_self will come in handy
-	def defend(self):
-		return
-
-	#Only used for cards in the supervilalin stack
-	def first_apearance(self):
-		return
-
-	def attack_action(self,by_player):
-		return
-
-	def destroy(self):
-		self.pop_self()
-		self.owner = None
-		self.owner_type = owners.DESTROYED
-		globe.boss.destroyed_stack.add(self)
-
-
-	def pop_self(self):
-		#why am i not checking by ownership type?
-		if self in globe.boss.lineup.contents:
-			globe.boss.lineup.contents.remove(self)
-			if globe.DEBUG:
-				print(f"{self.name} pop from lineup")
-		elif self in globe.boss.destroyed_stack.contents:
-			globe.boss.destroyed_stack.contents.remove(self)
-			if globe.DEBUG:
-				print(f"{self.name} pop from destroyed")
-		elif self in globe.boss.main_deck.contents:
-			globe.boss.main_deck.contents.remove(self)
-			if globe.DEBUG:
-				print(f"{self.name} pop from main_deck")
-		elif self.owner_type == owners.PLAYER:
-			if self in self.owner.hand.contents:
-				self.owner.hand.contents.remove(self)
-				if globe.DEBUG:
-					print(f"{self.name} pop from hand")
-			elif self in self.owner.discard.contents:
-				self.owner.discard.contents.remove(self)
-				if globe.DEBUG:
-					print(f"{self.name} pop from discard")
-			elif self in self.owner.ongoing.contents:
-				self.owner.ongoing.contents.remove(self)
-				if globe.DEBUG:
-					print(f"{self.name} pop from ongoing")
-			elif self in self.owner.played.contents:
-				self.owner.played.contents.remove(self)
-				if globe.DEBUG:
-					print(f"{self.name} pop from played")
-			elif self in self.owner.deck.contents:
-				self.owner.deck.contents.remove(self)
-				if globe.DEBUG:
-					print(f"{self.name} pop from deck")
-			elif self in self.owner.under_superhero.contents:
-				self.owner.under_superhero.contents.remove(self)
-				if globe.DEBUG:
-					print(f"{self.name} pop from under_superhero")
-		return self
-		
-
-
-#	def check_defence(self):
-#		if self.defence == None:
-#			return False
-#		else:
-#			return True
-
-#	def defence_action(self):
-#		if self.defence != None:
-#			return defence()
-
-
-class weakness(card_class):
-	name = "Weakness"
-	vp = -1
-	ctype = cardtype.WEAKNESS
-	owner_type = owners.WEAKNESS
-	image = "base/images/cards/weakness.jpeg"
-
-class vunerability(card_class):
-	name = "Vunerability"
-	vp = 0
-	ctype = cardtype.STARTER
-	image = "base/images/cards/Vulnerability.jpg"
-
-class punch(card_class):
-	name = "Punch"
-	vp = 0
-	ctype = cardtype.STARTER
-	text = "+1 Power"
-	image = "base/images/cards/Punch.jpg"
-	
-	def play_action(self,player):
-		return 1
-
-class kick(card_class):
-	name = "Kick"
-	vp = 1
-	cost = 3
-	ctype = cardtype.SUPERPOWER
-	owner_type = owners.KICK
-	text = "+2 Power"
-	image = "base/images/cards/Kick.jpeg"
-	
-	def play_action(self,player):
-		return 2
 
 #DOne
-class aquamans_trident(card_class):
+class aquamans_trident(card_frame.card):
 	name = "Auquaman's Trident"
 	vp = 1
 	cost = 3
@@ -192,7 +40,7 @@ class aquamans_trident(card_class):
 		return 2
 
 #Done
-class bane(card_class):
+class bane(card_frame.card):
 	name = "Bane"
 	vp = 1
 	cost = 4
@@ -218,7 +66,7 @@ class bane(card_class):
 
 
 #done
-class the_batmobile(card_class):
+class the_batmobile(card_frame.card):
 	name = "The Batmobile"
 	vp = 1
 	cost = 2
@@ -236,7 +84,7 @@ class the_batmobile(card_class):
 			return 1
 
 #done
-class the_bat_signal(card_class):
+class the_bat_signal(card_frame.card):
 	name = "The Bat-Signal"
 	vp = 1
 	cost = 5
@@ -257,7 +105,7 @@ class the_bat_signal(card_class):
 		return 1
 
 #TODO: test vp
-class bizarro(card_class):
+class bizarro(card_frame.card):
 	name = "Bizzaro"
 	vp = 1
 	cost = 7
@@ -268,11 +116,15 @@ class bizarro(card_class):
 	def play_action(self,player):
 		return 3
 
-	def calculate_vp(self):
-		return 2*self.owner.deck.get_count(cardtype.WEAKNESS) + 1
+	def calculate_vp(self,all_cards):
+		count = 0
+		for c in all_cards:
+			if c.ctype == cardtype.WEAKNESS:
+				count += 1
+		return 2*count + 1
 
 #Done
-class blue_beetle(card_class):
+class blue_beetle(card_frame.card):
 	name = "Blue Beetle"
 	vp = 2
 	cost = 6
@@ -288,7 +140,7 @@ class blue_beetle(card_class):
 		return
 
 #Done
-class bulletproof(card_class):
+class bulletproof(card_frame.card):
 	name = "Bulletproof"
 	vp = 1
 	cost = 4
@@ -311,11 +163,11 @@ class bulletproof(card_class):
 		instruction_text = f"You may destroy a card in your discard pile"
 		card_to_destroy = effects.may_choose_one_of(instruction_text,self.owner,self.owner.discard.contents,ai_hint.IFBAD)
 		if card_to_destroy != None:
-			card_to_destroy.destroy()
+			card_to_destroy.destroy(self.owner)
 		return
 
 #Done
-class the_cape_and_cowl(card_class):
+class the_cape_and_cowl(card_frame.card):
 	name = "The Cape and Cowl"
 	vp = 1
 	cost = 4
@@ -335,7 +187,7 @@ class the_cape_and_cowl(card_class):
 		return
 
 #done
-class catwoman(card_class):
+class catwoman(card_frame.card):
 	name = "Catwoman"
 	vp = 1
 	cost = 2
@@ -347,7 +199,7 @@ class catwoman(card_class):
 		return 2
 
 #Done
-class cheetah(card_class):
+class cheetah(card_frame.card):
 	name = "Cheetah"
 	vp = 1
 	cost = 2
@@ -368,7 +220,7 @@ class cheetah(card_class):
 		return 0
 
 #Done
-class clayface(card_class):
+class clayface(card_frame.card):
 	name = "Clayface"
 	vp = 1
 	cost = 4
@@ -391,7 +243,7 @@ class clayface(card_class):
 		return 0
 
 #Done
-class the_dark_knight(card_class):
+class the_dark_knight(card_frame.card):
 	name = "The Dark Knight"
 	vp = 1
 	cost = 5
@@ -427,6 +279,7 @@ class the_dark_knight(card_class):
 		for c in globe.boss.lineup.contents:
 			if c.ctype == cardtype.EQUIPMENT:
 				assemble.append(c)
+		print(len(assemble)," was ASSEMBELED",flush=True)
 		for c in assemble:
 			player.gain(c.pop_self())
 
@@ -455,7 +308,7 @@ class the_dark_knight(card_class):
 		self.catwoman_played = False
 
 #Done
-class doomsday(card_class):
+class doomsday(card_frame.card):
 	name = "Doomsday"
 	vp = 2
 	cost = 6
@@ -467,7 +320,7 @@ class doomsday(card_class):
 		return 4
 
 #Done
-class the_emerald_knight(card_class):
+class the_emerald_knight(card_frame.card):
 	name = "The Emerald Knight"
 	vp = 1
 	cost = 5
@@ -495,7 +348,7 @@ class the_emerald_knight(card_class):
 	#	return
 
 #Done
-class fastest_man_alive(card_class):
+class fastest_man_alive(card_frame.card):
 	name = "The Fastest Man Alive"
 	vp = 1
 	cost = 5
@@ -509,7 +362,7 @@ class fastest_man_alive(card_class):
 		return 0
 
 #Done
-class gorilla_grodd(card_class):
+class gorilla_grodd(card_frame.card):
 	name = "Grorilla Grodd"
 	vp = 2
 	cost = 5
@@ -521,7 +374,7 @@ class gorilla_grodd(card_class):
 		return 3
 
 #TODO: need testing calculating vp
-class green_arrow(card_class):
+class green_arrow(card_frame.card):
 	name = "Green Arrow"
 	vp = '*'
 	cost = 5
@@ -532,15 +385,18 @@ class green_arrow(card_class):
 	def play_action(self,player):
 		return 2
 
-	def calculate_vp(self):
+	def calculate_vp(self,all_cards):
 		count = 0
-		if self.owner.deck.get_count(cardtype.HERO) > 4:
+		for c in all_cards:
+			if c.ctype == cardtype.HERO:
+				count += 1
+		if count > 4:
 			return 5
 		else:
 			return 0
 
 #Done
-class green_arrows_bow(card_class):
+class green_arrows_bow(card_frame.card):
 	name = "Green Arrow's Bow"
 	vp = 1
 	cost = 4
@@ -553,7 +409,7 @@ class green_arrows_bow(card_class):
 		return 2
 
 #Done
-class harley_quinn(card_class):
+class harley_quinn(card_frame.card):
 	name = "Harley Quinn"
 	vp = 1
 	cost = 2 
@@ -579,7 +435,7 @@ class harley_quinn(card_class):
 					p.deck.add(result.pop_self())
 		return
 #done
-class heat_vision(card_class):
+class heat_vision(card_frame.card):
 	name = "Heat Vision"
 	vp = 2
 	cost = 6
@@ -594,12 +450,12 @@ class heat_vision(card_class):
 		instruction_text = f"You may destroy a card in your hand or discard pile"
 		card_to_destroy = effects.may_choose_one_of(instruction_text,player,collection,ai_hint.IFBAD)
 		if card_to_destroy != None:
-			card_to_destroy.destroy()
+			card_to_destroy.destroy(player)
 
 		return 3
 
 #Done
-class high_tech_hero(card_class):
+class high_tech_hero(card_frame.card):
 	name = "High-Tech HERO"
 	vp = 1
 	cost = 3
@@ -615,7 +471,7 @@ class high_tech_hero(card_class):
 			return 1
 
 #Done
-class jonn_jonzz(card_class):
+class jonn_jonzz(card_frame.card):
 	name = "J'onn J'onzz"
 	vp = 2
 	cost = 6
@@ -631,7 +487,7 @@ class jonn_jonzz(card_class):
 		return 0
 
 #Done
-class kid_flash(card_class):
+class kid_flash(card_frame.card):
 	name = "Kid Flash"
 	vp = 1
 	cost = 2
@@ -644,7 +500,7 @@ class kid_flash(card_class):
 		return 0
 
 #done
-class king_of_atlantis(card_class):
+class king_of_atlantis(card_frame.card):
 	name = "King of Atlantis"
 	vp = 1
 	cost = 5
@@ -661,11 +517,11 @@ class king_of_atlantis(card_class):
 		if card_to_destroy == None:
 			return 1
 		else:
-			card_to_destroy.destroy()
+			card_to_destroy.destroy(player)
 			return 3
 
 #Done
-class lasso_of_truth(card_class):
+class lasso_of_truth(card_frame.card):
 	name = "Lasso of Truth"
 	vp = 1
 	cost = 2
@@ -684,7 +540,7 @@ class lasso_of_truth(card_class):
 		return
 
 #Done
-class lobo(card_class):
+class lobo(card_frame.card):
 	name = "Lobo"
 	vp = 2
 	cost = 7
@@ -698,17 +554,17 @@ class lobo(card_class):
 		instruction_text = f"You may destroy a card in your hand or discard pile (1/2)"
 		card_to_destroy = effects.may_choose_one_of(instruction_text,player,collection,ai_hint.IFBAD)
 		if card_to_destroy != None:
-			card_to_destroy.destroy()
+			card_to_destroy.destroy(player)
 			collection = player.hand.contents.copy()
 			collection.extend(player.discard.contents)
 			instruction_text = f"You may destroy a card in your hand or discard pile (2/2)"
 			card_to_destroy = effects.may_choose_one_of(instruction_text,player,collection,ai_hint.IFBAD)
 			if card_to_destroy != None:
-				card_to_destroy.destroy()
+				card_to_destroy.destroy(player)
 		return 3
 
 #Done
-class the_man_of_steel(card_class):
+class the_man_of_steel(card_frame.card):
 	name = "The Man of Steel"
 	vp = 3
 	cost = 8
@@ -726,7 +582,7 @@ class the_man_of_steel(card_class):
 		return 3
 
 #Done
-class mera(card_class):
+class mera(card_frame.card):
 	name = "Mera"
 	vp = 1
 	cost = 3
@@ -740,7 +596,7 @@ class mera(card_class):
 		return 2
 
 #Done
-class nth_metal(card_class):
+class nth_metal(card_frame.card):
 	name = "Nth Metal"
 	vp = 1
 	cost = 3
@@ -751,11 +607,11 @@ class nth_metal(card_class):
 	def play_action(self,player):
 		top_card = player.reveal_card()
 		if effects.ok_or_no(f"A {top_card.name} is on top of your deck, would you like to destroy it? (ok/no)",player,top_card,ai_hint.IFBAD):
-			top_card.destroy()
+			top_card.destroy(player)
 		return 0
 
 #DOne
-class the_penguin(card_class):
+class the_penguin(card_frame.card):
 	name = "The Penguin"
 	vp = 1
 	cost = 3
@@ -774,7 +630,7 @@ class the_penguin(card_class):
 		return 0
 
 #Done
-class poison_ivy(card_class):
+class poison_ivy(card_frame.card):
 	name = "Poison Ivy"
 	vp = 1
 	cost = 3
@@ -799,7 +655,7 @@ class poison_ivy(card_class):
 
 
 #Done
-class power_ring(card_class):
+class power_ring(card_frame.card):
 	name = "Power Ring"
 	vp = 1
 	cost = 3
@@ -815,7 +671,7 @@ class power_ring(card_class):
 		return 2
 
 #Done
-class princess_diana_of_themyscira(card_class):
+class princess_diana_of_themyscira(card_frame.card):
 	name = "Princess Diana of Themyscira"
 	vp = 2
 	cost = 7
@@ -833,7 +689,7 @@ class princess_diana_of_themyscira(card_class):
 		return 0
 
 #done
-class the_riddler(card_class):
+class the_riddler(card_frame.card):
 	name = "The Riddler"
 	vp = 1
 	cost = 3
@@ -857,7 +713,7 @@ class the_riddler(card_class):
 
 
 #done
-class robin(card_class):
+class robin(card_frame.card):
 	name = "Robin"
 	vp = 1
 	cost = 3
@@ -878,7 +734,7 @@ class robin(card_class):
 		return 1
 
 #Attack
-class scarecrow(card_class):
+class scarecrow(card_frame.card):
 	name = "Scarecrow"
 	vp = 1
 	cost = 5
@@ -899,7 +755,7 @@ class scarecrow(card_class):
 		return
 
 #done
-class solomon_grundy(card_class):
+class solomon_grundy(card_frame.card):
 	name = "Solomon Grundy"
 	vp = 2
 	cost = 6
@@ -921,7 +777,7 @@ class solomon_grundy(card_class):
 
 
 #done
-class starro(card_class):
+class starro(card_frame.card):
 	name = "Starro"
 	vp = 2
 	cost = 7
@@ -946,7 +802,7 @@ class starro(card_class):
 		return
 
 #test vp
-class suicide_squad(card_class):
+class suicide_squad(card_frame.card):
 	name = "Suicide Squad"
 	vp = '*'
 	cost = 4
@@ -967,15 +823,15 @@ class suicide_squad(card_class):
 		return 2
 		# Suidide ability needed
 
-	def calculate_vp(self):
+	def calculate_vp(self,all_cards):
 		count = 0
-		for c in self.owner.deck.contents:
+		for c in all_cards:
 			if c.name == "Suicide Squad":
 				count += 1
 		return count
 
 #done
-class super_speed(card_class):
+class super_speed(card_frame.card):
 	name = "Super Speed"
 	vp = 1
 	cost = 3
@@ -996,7 +852,7 @@ class super_speed(card_class):
 		return
 
 #Done
-class super_strength(card_class):
+class super_strength(card_frame.card):
 	name = "Super Strength"
 	vp = 2
 	cost = 7
@@ -1008,7 +864,7 @@ class super_strength(card_class):
 		return 5
 
 #done
-class super_girl(card_class):
+class super_girl(card_frame.card):
 	name = "Super Girl"
 	vp = 1
 	cost = 4
@@ -1025,7 +881,7 @@ class super_girl(card_class):
 		return 0
 
 #done
-class swamp_thing(card_class):
+class swamp_thing(card_frame.card):
 	name = "Swamp Thing"
 	vp = 1
 	cost = 4
@@ -1040,7 +896,7 @@ class swamp_thing(card_class):
 		return 2
 
 #Test
-class two_face(card_class):
+class two_face(card_frame.card):
 	name = "Two-Face"
 	vp = 1
 	cost = 2
@@ -1065,7 +921,7 @@ class two_face(card_class):
 		return 1
 
 #TODO: need testing calculating vp
-class utility_belt(card_class):
+class utility_belt(card_frame.card):
 	name = "utility_belt"
 	vp = '*'
 	cost = 5
@@ -1076,16 +932,19 @@ class utility_belt(card_class):
 	def play_action(self,player):
 		return 2
 
-	def calculate_vp(self):
+	def calculate_vp(self,all_cards):
 		count = 0
-		if self.owner.deck.get_count(cardtype.EQUIPMENT) > 4:
+		for c in all_cards:
+			if c.ctype == cardtype.EQUIPMENT:
+				count += 1
+		if count > 4:
 			return 5
 		else:
 			return 0
 
 
 #TODO: allow to place back on top of players deck
-class x_ray_vision(card_class):
+class x_ray_vision(card_frame.card):
 	name = "X-Ray Vision"
 	vp = 1
 	cost = 3
@@ -1110,7 +969,7 @@ class x_ray_vision(card_class):
 		return 0
 
 #test
-class zatanna_zatara(card_class):
+class zatanna_zatara(card_frame.card):
 	name = "Zatanna Zatara"
 	vp = 1
 	cost = 4
@@ -1127,7 +986,7 @@ class zatanna_zatara(card_class):
 		return 1
 
 #Locations
-class arkham_asylum(card_class):
+class arkham_asylum(card_frame.card):
 	name = "Arkham Asylum"
 	vp = 1
 	cost = 5
@@ -1157,7 +1016,7 @@ class arkham_asylum(card_class):
 				player.played.card_mods.append(self.arkham_mod)
 		return 0
 
-class the_batcave(card_class):
+class the_batcave(card_frame.card):
 	name = "The Batcave"
 	vp = 1
 	cost = 5
@@ -1187,7 +1046,7 @@ class the_batcave(card_class):
 				player.played.card_mods.append(self.batcave_mod)
 		return 0
 
-class fortress_of_solitude(card_class):
+class fortress_of_solitude(card_frame.card):
 	name = "Fortress of Solitude"
 	vp = 1
 	cost = 5
@@ -1217,7 +1076,7 @@ class fortress_of_solitude(card_class):
 				player.played.card_mods.append(self.solitude_mod)
 		return 0
 
-class titans_tower(card_class):
+class titans_tower(card_frame.card):
 	name = "Titans Tower"
 	vp = 1
 	cost = 5
@@ -1247,7 +1106,7 @@ class titans_tower(card_class):
 				player.played.card_mods.append(self.titan_mod)
 		return 0
 
-class the_watchtower(card_class):
+class the_watchtower(card_frame.card):
 	name = "The Watchtower"
 	vp = 1
 	cost = 5
@@ -1281,7 +1140,7 @@ class the_watchtower(card_class):
 
 
 #SuperVillains
-class ras_al_ghul(card_class):
+class ras_al_ghul(card_frame.card):
 	name = "Ra's Al Ghul"
 	vp = 4
 	cost = 8
@@ -1299,7 +1158,7 @@ class ras_al_ghul(card_class):
 		return
 
 #test fa
-class the_anti_monitor(card_class):
+class the_anti_monitor(card_frame.card):
 	name = "The Anti-Monitor"
 	vp = 6
 	cost = 12
@@ -1313,8 +1172,9 @@ class the_anti_monitor(card_class):
 		instruction_text = "Choose any number of cards in the lineup to destroy"
 		choosen = effects.choose_however_many(instruction_text,player,globe.boss.lineup.contents,ai_hint.IFBAD)
 		if choosen != None:
+			#print(len(choosen),"FHGFGFHFGHFH")
 			for c in choosen:
-				c.destroy()
+				c.destroy(player)
 				card_to_add = globe.boss.main_deck.draw()
 				if card_to_add != None:
 					globe.boss.lineup.add(card_to_add)
@@ -1337,7 +1197,7 @@ class the_anti_monitor(card_class):
 		return
 
 #done
-class atrocitus(card_class):
+class atrocitus(card_frame.card):
 	name = "Atrocitus"
 	vp = 5
 	cost = 10
@@ -1355,7 +1215,7 @@ class atrocitus(card_class):
 				instruction_text = f"You may destroy a card from your discard pile ({i+1}/2)"
 				card_to_destroy = effects.may_choose_one_of(instruction_text,player,player.discard.contents,ai_hint.IFBAD)
 				if card_to_destroy != None:
-					card_to_destroy.destroy()
+					card_to_destroy.destroy(player)
 		return 2
 
 	def first_apearance(self):
@@ -1372,7 +1232,7 @@ class atrocitus(card_class):
 		return
 
 #done
-class black_manta(card_class):
+class black_manta(card_frame.card):
 	name = "Black Manta"
 	vp = 4
 	cost = 8
@@ -1394,13 +1254,13 @@ class black_manta(card_class):
 				if discarded.cost >= 1:
 					instruction_text = f"Would you like to destroy this card?  If not, you hand will be discarded."
 					if effects.ok_or_no(instruction_text,p,card = discarded,hint = ai_hint.IFBAD):
-						discarded.destroy()
+						discarded.destroy(p)
 					else:
 						p.discard_hand()
 		return
 
 #done
-class brainiac(card_class):
+class brainiac(card_frame.card):
 	name = "Brainiac"
 	vp = 6
 	cost = 11
@@ -1438,7 +1298,7 @@ class brainiac(card_class):
 		return
 
 #done
-class captain_cold(card_class):
+class captain_cold(card_frame.card):
 	name = "Captain Cold"
 	vp = 5
 	cost = 9
@@ -1468,7 +1328,7 @@ class captain_cold(card_class):
 		return
 
 #done
-class darkseid(card_class):
+class darkseid(card_frame.card):
 	name = "Darkseid"
 	vp = 6
 	cost = 11
@@ -1486,8 +1346,8 @@ class darkseid(card_class):
 			card1.pop_self()
 			card2 = effects.may_choose_one_of(instruction_text,player,player.hand.contents,hint = ai_hint.IFBAD)
 			if card2 != None:
-				card1.destroy()
-				card2.destroy()
+				card1.destroy(player)
+				card2.destroy(player)
 				return 5
 			else:
 				player.hand.add(card1)
@@ -1510,7 +1370,7 @@ class darkseid(card_class):
 		return
 
 #done
-class deathstroke(card_class):
+class deathstroke(card_frame.card):
 	name = "Deathstroke"
 	vp = 5
 	cost = 9
@@ -1548,11 +1408,11 @@ class deathstroke(card_class):
 						assemble.append(c)
 				if len(assemble) > 0:
 					card_to_destroy = effects.choose_one_of(instruction_text,p,assemble,hint = ai_hint.WORST)
-					card_to_destroy.destroy()
+					card_to_destroy.destroy(p)
 
 
 
-class the_joker(card_class):
+class the_joker(card_frame.card):
 	name = "The Joker"
 	vp = 5
 	cost = 10
@@ -1583,16 +1443,17 @@ class the_joker(card_class):
 					card_to_give = effects.choose_one_of(instruction_text,p,p.hand.contents,hint = ai_hint.WORST)
 					cards_to_shuffle.append(card_to_give)
 				participating_players.append(p)
-		for i,p in enumerate(participating_players):
-			card_recived = cards_to_shuffle[i-1]
-			p.discard.add(card_recived.pop_self())
-			card_recived.set_owner(p)
-			if card_recived.cost > 0:
-				p.gain_a_weakness()
+		if len(cards_to_shuffle) > 0:
+			for i,p in enumerate(participating_players):
+				card_recived = cards_to_shuffle[i-1]
+				p.discard.add(card_recived.pop_self())
+				card_recived.set_owner(p)
+				if card_recived.cost > 0:
+					p.gain_a_weakness()
 				
 		return
 
-class lex_luther(card_class):
+class lex_luther(card_frame.card):
 	name = "Lex Luther"
 	vp = 5
 	cost = 10
@@ -1615,7 +1476,7 @@ class lex_luther(card_class):
 					p.gain_a_weakness()
 		return
 
-class parallax(card_class):
+class parallax(card_frame.card):
 	name = "Parallax"
 	vp = 6
 	cost = 12
@@ -1638,7 +1499,7 @@ class parallax(card_class):
 						p.discard.add(c.pop_self())
 		return
 
-class sinestro(card_class):
+class sinestro(card_frame.card):
 	name = "Sinestro"
 	vp = 5
 	cost = 10
@@ -1651,7 +1512,7 @@ class sinestro(card_class):
 	def play_action(self,player):
 		effects.reveal("This was on top of the main deck",player,[globe.boss.main_deck.contents[-1]])
 		if len(globe.boss.main_deck.contents) > 0 and globe.boss.main_deck.contents[-1].ctype == cardtype.HERO:
-			globe.boss.main_deck.contents.pop().destroy()
+			globe.boss.main_deck.contents.pop().destroy(player)
 			return 3
 		else:
 			new_card = globe.boss.main_deck.contents.pop()

@@ -1,7 +1,8 @@
 import random
-from base import persona as base_personas
+from hu import persona as base_personas
 from base import cards as base_card
 from base import deck as base_deck
+import card_frame
 import arcade
 
 def load_textures(cards):
@@ -15,16 +16,16 @@ def get_personas():
 def get_starting_deck(player):
 	assemble = []
 	for c in range(3):
-		assemble.append(base_card.vunerability(player))
+		assemble.append(card_frame.vunerability(player))
 	for c in range(7):
-		assemble.append(base_card.punch(player))
+		assemble.append(card_frame.punch(player))
 	
 
 	#for c in range(10):
 	#	assemble.append(base_card.weakness(player))
 
 	#assemble.append(base_card.x_ray_vision(player))
-	#assemble.append(base_card.king_of_atlantis(player))
+	#assemble.append(base_card.the_anti_monitor(player))
 
 	random.shuffle(assemble)
 	load_textures(assemble)
@@ -64,14 +65,14 @@ def debug_discard(player):
 def initialize_weaknesses():
 	assemble = []
 	for c in range(20):
-		assemble.append(base_card.weakness())
+		assemble.append(card_frame.weakness())
 	load_textures(assemble)
 	return assemble
 
 def initialize_kicks():
 	assemble = []
 	for c in range(16):
-		assemble.append(base_card.kick())
+		assemble.append(card_frame.kick())
 	load_textures(assemble)
 	return assemble
 

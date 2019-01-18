@@ -8,6 +8,7 @@ import effects
 import deck_builder
 import globe
 import ai_hint
+import error_checker
 
 
 class pile:
@@ -74,6 +75,7 @@ class playing(pile):
 		self.visibility = visibility
 		self.contents = []
 		self.played_this_turn = []
+		self.special_options = []
 		self.card_mods = [self.no_mod]
 
 
@@ -146,6 +148,7 @@ class supervillain_pile(pile):
 
 class player:
 	pid = -1
+	score = 0
 	deck = None
 	hand = None
 	discard = None
@@ -167,6 +170,7 @@ class player:
 	def __init__(self,pid, controler):
 		self.controler = controler
 		self.pid = pid
+
 		self.deck = pile(self, visibilities.SECRET)
 		self.hand = pile(self, visibilities.PRIVATE)
 		self.discard = pile(self)
@@ -333,16 +337,20 @@ class player:
 		for i in range(5):
 			self.draw_card()
 		self.sv_bought_this_turn = False
+		self.calculate_vp()
 
 
 	def calculate_vp(self):
-		self.deck.contents.extend(self.discard.contents)
-		self.deck.contents.extend(self.hand.contents)
-		self.deck.contents.extend(self.played.contents)
-		self.deck.contents.extend(self.ongoing.contents)
+		assemble = []
+		assemble.extend(self.deck.contents)
+		assemble.extend(self.discard.contents)
+		assemble.extend(self.hand.contents)
+		assemble.extend(self.played.contents)
+		assemble.extend(self.ongoing.contents)
 		vp = 0
-		for c in self.deck.contents:
-			vp += c.calculate_vp()
+		for c in assemble:
+			vp += c.calculate_vp(assemble)
+		self.score = vp
 		return vp
 
 
@@ -392,7 +400,7 @@ class model:
 		#	self.players.append(new_player)
 
 		new_player = player(0,None)
-		new_controler = controlers.cpu(new_player,invisible)
+		new_controler = controlers.human_view(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
@@ -402,11 +410,11 @@ class model:
 		self.players.append(new_player)
 
 		new_player = player(2,None)
-		new_controler = controlers.cpu_greedy(new_player,invisible)
+		new_controler = controlers.cpu(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
-		"""new_player = player(3,None)
+		new_player = player(3,None)
 		new_controler = controlers.cpu_greedy(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
@@ -417,7 +425,7 @@ class model:
 		self.players.append(new_player)
 
 
-		new_player = player(5,None)
+		"""new_player = player(5,None)
 		new_controler = controlers.cpu_greedy(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)"""
@@ -429,6 +437,9 @@ class model:
 		#	new_player.controler = new_controler
 		#	self.players.append(new_player)
 
+
+
+
 	def choose_personas(self):
 		for i,p in enumerate(self.players):
 			p.choose_persona(self.persona_list)
@@ -438,6 +449,7 @@ class model:
 		
 
 	def start_game(self):
+		error_checker.dupe_checker().setup_checker()
 		self.choose_personas()
 		while self.supervillain_stack.get_count() > 0:
 			self.turn_number += 1

@@ -132,6 +132,18 @@ class view_controler():
 			self.print_card(card,num)
 
 
+	def print_actions(self):
+		player = globe.boss.players[globe.boss.whose_turn]
+		print("------------------------------------------------")
+
+
+		
+		print(f" {player.persona.name}'s actions")
+		print("------------------------------------------------")
+		for num, option in enumerate(player.played.special_options):
+			print(f"{num} {option.button_text}")
+
+
 	def print_deck(self, player_id = -1):
 		player = None
 		if player_id != -1:

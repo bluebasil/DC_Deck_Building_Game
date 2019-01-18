@@ -12,6 +12,7 @@ import event_bus
 import actions
 import option
 import controlers
+import sys, traceback
 
 # --- Constants ---
 SPRITE_SCALING_PLAYER = 0.5
@@ -36,80 +37,6 @@ SCROLL_SPEED = 1
 display_special = None
 
 #Constantly checks if car effects are duplicating or deleting cards
-class dupe_checker:
-	all_cards = []
-	all_piles = []
-	players = 0
-	keep_checking = True
-	displayed = False
-	def __init__(self):
-		self.all_piles.append(globe.boss.main_deck)
-		print("Main deck",self.all_piles[-1],flush = True)
-		self.all_piles.append(globe.boss.lineup)
-		print("Lineup",self.all_piles[-1],flush = True)
-		self.all_piles.append(globe.boss.destroyed_stack)
-		print("Destroyed",self.all_piles[-1],flush = True)
-		self.all_piles.append(globe.boss.supervillain_stack)
-		print("SV stack",self.all_piles[-1],flush = True)
-		self.all_piles.append(globe.boss.kick_stack)
-		print("Kick stack",self.all_piles[-1],flush = True)
-		self.all_piles.append(globe.boss.weakness_stack)
-		print("Weaknesses",self.all_piles[-1],flush = True)
-		for i,p in enumerate(globe.boss.players):
-			self.all_piles.append(p.deck)
-			print(f"p{i} deck",self.all_piles[-1],flush = True)
-			self.all_piles.append(p.hand)
-			print(f"p{i} hand",self.all_piles[-1],flush = True)
-			self.all_piles.append(p.ongoing)
-			print(f"p{i} ongoing",self.all_piles[-1],flush = True)
-			self.all_piles.append(p.discard)
-			print(f"p{i} discard",self.all_piles[-1],flush = True)
-			self.all_piles.append(p.played)
-			print(f"p{i} played",self.all_piles[-1],flush = True)
-			self.all_piles.append(p.under_superhero)
-			print(f"p{i} under_superhero",self.all_piles[-1],flush = True)
-
-
-		for pile in self.all_piles:
-			self.all_cards.extend(pile.contents)
-
-
-
-	def check(self):
-		if len(globe.boss.supervillain_stack.contents) > 0 and self.displayed == False:
-			for c in self.all_cards:
-				count = 0
-				found = []
-				for p in self.all_piles:
-					add = p.contents.count(c)
-					if add > 0:
-						found.append(p)
-						if p.owner != c.owner and p != globe.boss.players[globe.boss.whose_turn].played:
-							print("ERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO",flush = True)
-							print(f"Owner not set properly.",c.name,c,c.owner,p,p.owner,flush = True)
-							if c.owner	!= None:
-								print(c.owner.persona.name)
-							if p.owner	!= None:
-								print(p.owner.persona.name)
-							self.keep_checking = False
-					count += add
-				if count != 1:
-					print("ERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO",flush = True)
-					print("ERROR card number unexpected:",c.name,count,c.owner,flush = True)
-					for p in found:
-						print("pile ",p,flush = True)
-
-					self.keep_checking = False
-
-			if self.keep_checking == False and self.displayed == False:
-
-				self.displayed = True
-				#globe.boss.players[0].controler = controlers.human(globe.boss.players[0],False)
-				#quit()
-
-
-
-
 
 
 
@@ -127,7 +54,6 @@ class mouse_obj():
 class MyGame(arcade.Window):
 	""" Our custom Window Class"""
 	game_board = None
-	duper = None
 
 	def __init__(self):
 		""" Initializer """
@@ -156,7 +82,6 @@ class MyGame(arcade.Window):
 
 	def setup(self):
 		self.game_board = boss("boss")
-		self.duper = dupe_checker()
 		
 		""" Set up the game and initialize the variables. """
 
@@ -204,8 +129,6 @@ class MyGame(arcade.Window):
 
 		
 		self.game_board.draw(SCREEN_WIDTH/2,SCREEN_HEIGHT/2)
-
-		self.duper.check()
 
 		#arcade.finish_render()
 
@@ -433,7 +356,7 @@ class boss(drawable):
 			kicks.draw(globe.boss.kick_stack.contents[-1],x,y)
 			draw_stack_size(globe.boss.kick_stack,x,y)
 		else:
-			kick.set_gone()
+			kicks.set_gone()
 
 
 		destroyed = self.get_drawable(pile,"destroyed")
@@ -465,11 +388,13 @@ class boss(drawable):
 			query.set_gone()
 
 		#print(f"display special {display_special}",flush = True)
+		custom = self.get_drawable(question,f"over_display")
 		if display_special != None:
-			custom = self.get_drawable(question,f"over_display")
 			custom_dialog = event_bus.question("",None,display_special.last_contents)
 			custom.depth = -100
 			custom.draw(custom_dialog,SCREEN_WIDTH/2,SCREEN_HEIGHT/2)
+		else:
+			custom.set_gone()
 
 
 
@@ -482,6 +407,7 @@ class boss(drawable):
 		if not query.gone and not query.check_collision(x,y):
 			mouse.silent = True
 		custom = self.get_drawable(question,f"over_display")
+		#print(custom.gone,custom.check_collision(x,y),display_special)
 		if not custom.gone and not custom.check_collision(x,y):
 			display_special = None
 			custom.gone = True
@@ -530,6 +456,8 @@ class player_icon(drawable):
 			else:
 				hand.set_gone()
 
+			arcade.draw_text(f"Score: {player.score}",x+400,y-player.persona.texture.height*0.1/2,arcade.color.WHITE,15)
+
 		self.assemble_juristiction()
 
 
@@ -551,6 +479,8 @@ class player(drawable):
 			MC = self.get_drawable(personas,"persona")
 			MC.draw(player.persona,x+player.persona.texture.width/2,self.maxy/2,0.75)
 			buffx += player.persona.texture.width
+
+			arcade.draw_text(f"Score: {player.score}",x+player.persona.texture.width/2-15,self.maxy+60,arcade.color.WHITE,15)
 
 		discard = self.get_drawable(pile,"discard")
 		if len(player.discard.contents) > 0:
@@ -581,6 +511,8 @@ class player(drawable):
 
 		hand = self.get_drawable(pile,"hand")
 		hand.draw(player.hand.contents,SCREEN_WIDTH-BASE_TEXTURE.width*CARD_SCALE/2,BASE_TEXTURE.height*CARD_SCALE/2)
+
+
 
 		self.assemble_juristiction()
 
@@ -980,11 +912,15 @@ def thread_game(thread_name,delay):
 		globe.boss.start_game()
 	except Exception as e:
 		print("ERR:", e)
+		print("Exception in user code:")
+		print('-'*60)
+		traceback.print_exc(file=sys.stdout)
+		print('-'*60)
 
 
 	for i, p in enumerate(globe.boss.player_score):
-		print(f"{i}-{globe.boss.players[i].persona.name} got a score of {p}")
-	print(f"Completed in {globe.boss.turn_number} turns")
+		print(f"{i}-{globe.boss.players[i].persona.name} got a score of {p}",flush = True)
+	print(f"Completed in {globe.boss.turn_number} turns",flush = True)
 	
 	#time.sleep(1)
 	#arcade.run()

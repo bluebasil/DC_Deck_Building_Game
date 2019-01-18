@@ -32,6 +32,9 @@ class persona:
 	def draw_power(self):
 		return
 
+	def destory_power(self):
+		return
+
 	def reset(self):
 		return
 
