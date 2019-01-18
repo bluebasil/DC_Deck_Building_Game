@@ -79,10 +79,9 @@ class controler:
 class human_view(controler):
 
 	def await(self,process):
-		print(globe.bus.display,flush=True)
+		#print(globe.bus.display,flush=True)
 		try:
-			print("START OF PROCESS",flush = True)
-			print("LISTENING",flush = True)
+			print("Waiting for player input...",flush = True)
 			while True:
 				#print(len(globe.bus.on_bus),flush = True)
 				if len(globe.bus.on_bus) > 0:
@@ -97,48 +96,37 @@ class human_view(controler):
 		globe.bus.clear()
 		def process():
 			current = globe.bus.read()
-			print("ITEM ON BUS:",current.header,current.content,flush = True)
 			if current.header == "card":
-				print("ITEM IS CARD",current.content.name,flush = True)
 
 				#hand to play
 				if current.content in self.player.hand.contents:
-					print("CARD IN HAND",flush = True)
 					self.player.play_c(current.content)
 					globe.bus.clear()
 
 				#lineup to buy
 				if current.content in globe.boss.lineup.contents:
-					print("CARD IN LINEUP",flush = True)
 					self.player.buy_c(current.content)
 					globe.bus.clear()
 
 				#kick to buy
 				if current.content in globe.boss.kick_stack.contents:
-					print("CARD IS KICK",flush = True)
 					self.player.buy_kick()
 					globe.bus.clear()
 
 				#sv to buy
 				if current.content in globe.boss.supervillain_stack.contents:
-					print("CARD IS SV",flush = True)
 					self.player.buy_supervillain()
 					globe.bus.clear()
 
 			if current.header == "button":
-				print("ITEM IS BUTTON",flush = True)
 
 				#hand to play
 				if current.content == actions.ENDTURN:
-					print("END TURN BUTTON FOUND",flush = True)
 					globe.bus.clear()
 					return True
 
-				print(type(current.content),"HAHAHAHAH THE TYPE IS THAT!!",flush = True)
 				if type(current.content) == actions.special_action:
-					print("GOTT HERE",flush = True)
 					current.content.click_action(self.player)
-					print("Also GOTT HERE",flush = True)
 					globe.bus.clear()
 
 		self.await(process)
@@ -155,9 +143,7 @@ class human_view(controler):
 			print("ERROR", e)
 		def process():
 			current = globe.bus.read()
-			print("ITEM ON BUS:",current.header,current.content,flush = True)
 			if current.header == "card":
-				print("ITEM IS CARD",current.content.name,flush = True)
 
 				#hand to play
 				if current.content in persona_list:
@@ -171,27 +157,21 @@ class human_view(controler):
 		globe.bus.clear()
 		text = f"You are getting attacked by {attacking_card.name}\n{attacking_card.attack_text}.\nWould you like to defend?"
 		try:
-			print("OPTION TO DEFEND",globe.bus.display,flush=True)
 			options.insert(0,option.NO)
 			globe.bus.query(text,attacking_card,options)
-			print("QUERRY SET",globe.bus.display,flush=True)
 		except Exception as e:
 			print("ERROR", e)
 
 		
 		def process():
 			current = globe.bus.read()
-			print("ITEM ON BUS:",current.header,current.content,flush = True)
 			if current.header == "card":
-				print("ITEM IS CARD",flush = True)
 				#hand to play
 				if current.content in options:
-					print("CARD IN OPTIONS",flush = True)
 					globe.bus.clear()
 					return (option.OK,options.index(current.content))
 
 			if current.header == "button":
-				print("ITEM IS BUTTON",current.content,flush = True)
 
 				#hand to play
 				if current.content == option.NO:
@@ -201,7 +181,6 @@ class human_view(controler):
 		return self.await(process)
 
 	def choose_one_of(self,instruction_text,player,cards,hint):
-		print("DO I GET TO CHOOSE",flush=True)
 		options = cards
 		globe.bus.clear()
 		text = instruction_text
@@ -213,12 +192,9 @@ class human_view(controler):
 		
 		def process():
 			current = globe.bus.read()
-			print("ITEM ON BUS:",current.header,current.content,flush = True)
 			if current.header == "card":
-				print("ITEM IS CARD",flush = True)
 				#hand to play
 				if current.content in options:
-					print("CARD IN OPTIONS",flush = True)
 					globe.bus.clear()
 					return [options.index(current.content)]
 
@@ -229,32 +205,25 @@ class human_view(controler):
 		#return [0]
 
 	def may_choose_one_of(self,instruction_text,player,cards,hint):
-		print("DO I GET TO CHOOSE",flush=True)
 		options = [option.NO]
 		options.extend(cards)
 		globe.bus.clear()
 		text = instruction_text
 		try:
-			print("OPTION TO DEFEND",globe.bus.display,flush=True)
 			globe.bus.query(text,None,options)
-			print("QUERRY SET",globe.bus.display,flush=True)
 		except Exception as e:
 			print("ERROR", e)
 
 		
 		def process():
 			current = globe.bus.read()
-			print("ITEM ON BUS:",current.header,current.content,flush = True)
 			if current.header == "card":
-				print("ITEM IS CARD",flush = True)
 				#hand to play
 				if current.content in options:
-					print("CARD IN OPTIONS",flush = True)
 					globe.bus.clear()
 					return [option.OK,cards.index(current.content)]
 
 			if current.header == "button":
-				print("ITEM IS BUTTON",current.content,flush = True)
 
 				#hand to play
 				if current.content == option.NO:
@@ -275,9 +244,7 @@ class human_view(controler):
 		
 		def process():
 			current = globe.bus.read()
-			print("ITEM ON BUS:",current.header,current.content,flush = True)
 			if current.header == "button":
-				print("ITEM IS BUTTON",current.content,flush = True)
 				if current.content == option.NO or current.content == option.OK:
 					globe.bus.clear()
 					return [current.content]
@@ -287,7 +254,6 @@ class human_view(controler):
 
 	#No responce needed
 	def reveal(self,instruction_text,player,cards):
-		print("REVEALING",flush = True)
 		options = [option.DONE]
 		options.extend(cards)
 		globe.bus.clear()
@@ -299,9 +265,7 @@ class human_view(controler):
 
 		def process():
 			current = globe.bus.read()
-			print("ITEM ON BUS:",current.header,current.content,flush = True)
 			if current.header == "button":
-				print("ITEM IS BUTTON",current.content,flush = True)
 				if current.content == option.DONE:
 					globe.bus.clear()
 					return [current.content]
@@ -320,9 +284,7 @@ class human_view(controler):
 
 		def process():
 			current = globe.bus.read()
-			print("ITEM ON BUS:",current.header,current.content,flush = True)
 			if current.header == "button":
-				print("ITEM IS BUTTON",current.content,flush = True)
 				if current.content == option.EVEN or current.content == option.ODD:
 					globe.bus.clear()
 					return [current.content]
@@ -359,26 +321,20 @@ class human_view(controler):
 			globe.bus.clear()
 			text = instruction_text
 			try:
-				print("OPTION TO DEFEND",globe.bus.display,flush=True)
 				globe.bus.query(text,None,options)
-				print("QUERRY SET",globe.bus.display,flush=True)
 			except Exception as e:
 				print("ERROR", e)
 
 			
 			def process():
 				current = globe.bus.read()
-				print("ITEM ON BUS:",current.header,current.content,flush = True)
 				if current.header == "card":
-					print("ITEM IS CARD",flush = True)
 					#hand to play
 					if current.content in options:
-						print("CARD IN OPTIONS",flush = True)
 						globe.bus.clear()
 						return current.content
 
 				if current.header == "button":
-					print("ITEM IS BUTTON",current.content,flush = True)
 
 					#hand to play
 					if current.content == option.DONE:
@@ -759,7 +715,7 @@ class human(controler):
 
 class cpu(controler):
 	#sleep length between actions
-	slti = 1
+	slti = 0.01
 	invisible = False
 
 	def __init__(self,player,invisible = False):
@@ -932,7 +888,7 @@ class cpu_greedy(cpu):
 		
 		while self.player.hand.size() > 0:
 			size_check = self.player.hand.size()
-			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is going to play a {self.player.hand.contents[0].name} (total power = {self.player.played.power})")
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} is going to play a {self.player.hand.contents[0].name} (total power = {self.player.played.power})",quick = False)
 			self.player.play(0)
 			if size_check - 1 != self.player.hand.size():
 				self.display_thought("(Differtent cards than expected)",quick = False)

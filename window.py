@@ -11,6 +11,7 @@ import time
 import event_bus
 import actions
 import option
+import controlers
 
 # --- Constants ---
 SPRITE_SCALING_PLAYER = 0.5
@@ -34,6 +35,84 @@ SCROLL_SPEED = 1
 
 display_special = None
 
+#Constantly checks if car effects are duplicating or deleting cards
+class dupe_checker:
+	all_cards = []
+	all_piles = []
+	players = 0
+	keep_checking = True
+	displayed = False
+	def __init__(self):
+		self.all_piles.append(globe.boss.main_deck)
+		print("Main deck",self.all_piles[-1],flush = True)
+		self.all_piles.append(globe.boss.lineup)
+		print("Lineup",self.all_piles[-1],flush = True)
+		self.all_piles.append(globe.boss.destroyed_stack)
+		print("Destroyed",self.all_piles[-1],flush = True)
+		self.all_piles.append(globe.boss.supervillain_stack)
+		print("SV stack",self.all_piles[-1],flush = True)
+		self.all_piles.append(globe.boss.kick_stack)
+		print("Kick stack",self.all_piles[-1],flush = True)
+		self.all_piles.append(globe.boss.weakness_stack)
+		print("Weaknesses",self.all_piles[-1],flush = True)
+		for i,p in enumerate(globe.boss.players):
+			self.all_piles.append(p.deck)
+			print(f"p{i} deck",self.all_piles[-1],flush = True)
+			self.all_piles.append(p.hand)
+			print(f"p{i} hand",self.all_piles[-1],flush = True)
+			self.all_piles.append(p.ongoing)
+			print(f"p{i} ongoing",self.all_piles[-1],flush = True)
+			self.all_piles.append(p.discard)
+			print(f"p{i} discard",self.all_piles[-1],flush = True)
+			self.all_piles.append(p.played)
+			print(f"p{i} played",self.all_piles[-1],flush = True)
+			self.all_piles.append(p.under_superhero)
+			print(f"p{i} under_superhero",self.all_piles[-1],flush = True)
+
+
+		for pile in self.all_piles:
+			self.all_cards.extend(pile.contents)
+
+
+
+	def check(self):
+		if len(globe.boss.supervillain_stack.contents) > 0 and self.displayed == False:
+			for c in self.all_cards:
+				count = 0
+				found = []
+				for p in self.all_piles:
+					add = p.contents.count(c)
+					if add > 0:
+						found.append(p)
+						if p.owner != c.owner and p != globe.boss.players[globe.boss.whose_turn].played:
+							print("ERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO",flush = True)
+							print(f"Owner not set properly.",c.name,c,c.owner,p,p.owner,flush = True)
+							if c.owner	!= None:
+								print(c.owner.persona.name)
+							if p.owner	!= None:
+								print(p.owner.persona.name)
+							self.keep_checking = False
+					count += add
+				if count != 1:
+					print("ERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO",flush = True)
+					print("ERROR card number unexpected:",c.name,count,c.owner,flush = True)
+					for p in found:
+						print("pile ",p,flush = True)
+
+					self.keep_checking = False
+
+			if self.keep_checking == False and self.displayed == False:
+
+				self.displayed = True
+				#globe.boss.players[0].controler = controlers.human(globe.boss.players[0],False)
+				#quit()
+
+
+
+
+
+
+
 class mouse_obj():
 	consumed = False
 	x = 0
@@ -48,6 +127,7 @@ class mouse_obj():
 class MyGame(arcade.Window):
 	""" Our custom Window Class"""
 	game_board = None
+	duper = None
 
 	def __init__(self):
 		""" Initializer """
@@ -75,7 +155,8 @@ class MyGame(arcade.Window):
 		arcade.set_background_color(arcade.color.AMAZON)
 
 	def setup(self):
-		self.game_board = boss("boss",0)
+		self.game_board = boss("boss")
+		self.duper = dupe_checker()
 		
 		""" Set up the game and initialize the variables. """
 
@@ -124,6 +205,8 @@ class MyGame(arcade.Window):
 		
 		self.game_board.draw(SCREEN_WIDTH/2,SCREEN_HEIGHT/2)
 
+		self.duper.check()
+
 		#arcade.finish_render()
 
 
@@ -167,10 +250,9 @@ class drawable:
 	gone = True
 	depth = 0
 
-	def __init__(self,name,depth):
+	def __init__(self,name):
 		self.children = {}
 		self.name = name
-		self.depth = depth
 
 	def draw(self):
 		#self.children = []
@@ -221,7 +303,7 @@ class drawable:
 		if name in self.children:
 			return self.children[name]
 		else:
-			new_drawable = type(name,self.depth)
+			new_drawable = type(name)
 			self.children[name] = new_drawable
 			return new_drawable
 
@@ -235,12 +317,11 @@ class drawable:
 			c.set_gone()
 
 	def mouse_up(self,mouse,x,y):
-		print(f"CLICK PASS {x} {y} {mouse.silent}, {display_special}",flush = True)
 		if mouse.consumed == False and self.check_collision(x,y):
 			vals = list(self.children.values())
 			vals.sort(key = sort_by_depth)
 			for c in vals:
-				print(c,flush = True)
+				#print(c,c.depth,flush = True)
 				if not c.gone:
 					c.mouse_up(mouse,x,y)
 
@@ -328,12 +409,14 @@ class boss(drawable):
 				svstack.draw_down(x,y,1.25)
 		draw_stack_size(globe.boss.supervillain_stack,x,y,1.25)
 
+		deck = self.get_drawable(pile,"main_deck")
 		if len(globe.boss.main_deck.contents) > 0:
-			deck = self.get_drawable(card,"main_deck")
 			x = SCREEN_WIDTH/2+2*(BASE_TEXTURE.width*CARD_SCALE + 15)+50
 			y = SCREEN_HEIGHT/2+2*(BASE_TEXTURE.height*CARD_SCALE + 15)
-			deck.draw_down(x,y)
+			deck.draw_single_down(globe.boss.main_deck.contents,x,y)
 			draw_stack_size(globe.boss.main_deck,x,y)
+		else:
+			deck.set_gone()
 
 		weaknesses = self.get_drawable(card,"weakness")
 		if len(globe.boss.weakness_stack.contents) > 0:
@@ -399,7 +482,6 @@ class boss(drawable):
 		if not query.gone and not query.check_collision(x,y):
 			mouse.silent = True
 		custom = self.get_drawable(question,f"over_display")
-		print(f"ANALYZE {custom.gone} {custom.check_collision(x,y)}",flush=True)
 		if not custom.gone and not custom.check_collision(x,y):
 			display_special = None
 			custom.gone = True
@@ -432,18 +514,21 @@ class player_icon(drawable):
 			else:
 				discard.set_gone()
 
+			deck = self.get_drawable(pile,f"{self.name}-deck")
 			if len(player.deck.contents) > 0:
-				deck = self.get_drawable(card,f"{self.name}-deck")
-				deck.draw_down(x+player.persona.texture.width*0.2*1.25,y-player.persona.texture.height*0.2+BASE_TEXTURE.height*0.2*0.25,0.2)
-
+				deck.draw_single_down(player.deck.contents,x+player.persona.texture.width*0.2*1.25,y-player.persona.texture.height*0.2+BASE_TEXTURE.height*0.2*0.25,0.2)
+			else:
+				deck.set_gone()
 
 			if len(player.ongoing.contents) > 0:
 				ongoing = self.get_drawable(pile,f"{self.name}-ongoing")
 				ongoing.draw_squished(player.ongoing.contents,x+player.persona.texture.width*0.2*1.75,y-BASE_TEXTURE.height*0.2*0.25,150,True,0.2)
 
+			hand = self.get_drawable(pile,f"{self.name}-hand")
 			if len(player.hand.contents) > 0:
-				hand = self.get_drawable(pile,f"{self.name}-hand")
 				hand.draw_squished(player.hand.contents,x+player.persona.texture.width*0.2*1.75,y-player.persona.texture.height*0.2+BASE_TEXTURE.height*0.2*0.25,150,False,0.2)
+			else:
+				hand.set_gone()
 
 		self.assemble_juristiction()
 
@@ -476,12 +561,14 @@ class player(drawable):
 		else:
 			discard.set_gone()
 
+		deck = self.get_drawable(pile,"deck")
 		if len(player.deck.contents) > 0:
-			hand = self.get_drawable(card,"deck")
 			x = buffx+CARD_SCALE*BASE_TEXTURE.width/2
 			y = 1.5*(BASE_TEXTURE.height*CARD_SCALE+15)
-			hand.draw_down(x,y)
+			deck.draw_single_down(player.deck.contents,x,y)
 			draw_stack_size(player.deck,x,y)
+		else:
+			deck.set_gone()
 
 		end_turn_button = self.get_drawable(button,"end_turn")
 		x = buffx+CARD_SCALE*BASE_TEXTURE.width/2
@@ -513,7 +600,6 @@ class scroller_left(drawable):
 		self.set_juristiction(x-width/2,y-height/2,x,y+height/2)
 
 	def mouse_up(self, mouse, x, y):
-		print("AM I REGISTEREING SCROLL CLICKS",flush=True)
 		if not mouse.consumed and self.check_collision(x,y):
 			
 			mouse.consumed = True
@@ -554,9 +640,8 @@ class pile(drawable):
 	depth = -1
 	single = False
 
-	def __init__(self,name,depth):
+	def __init__(self,name):
 		self.last_contents = []
-		super().__init__(name,depth)
 
 	def ready_card(self,c,x,y,i):
 		#print(type(c),"IS THE TYPE",flush = True)
@@ -621,7 +706,14 @@ class pile(drawable):
 
 
 	def draw_squished(self,pile_contents,x,y,width,visible,scale = 1):
+		# For debug purposes
+		self.single = True
 		super().draw()
+		self.last_contents.clear()
+		for c in pile_contents:
+			self.last_contents.append(c)
+
+
 		self.children = {}
 
 		seperation = width/len(pile_contents)
@@ -653,14 +745,29 @@ class pile(drawable):
 
 		self.assemble_juristiction()
 
+#For debug purposes
+	def draw_single_down(self,pile_contents,x,y,scale = 1):
+		self.single = True
+		super().draw()
+		self.last_contents.clear()
+		for c in pile_contents:
+			self.last_contents.append(c)
+
+		if len(pile_contents) > 0:
+			top = self.get_drawable(card,f"top_card")
+			top.draw_down(x,y,scale)
+		else:
+			display_special = None
+
+		self.assemble_juristiction()
+
 
 	def mouse_up(self, mouse, x, y):
 		global display_special
-		print(f"{self.single}I GOT TO A PILE, {len(self.last_contents)}   {self.check_collision(x,y)}",flush = True)
 		if not self.single:
 			super().mouse_up(mouse,x,y)
 		elif not self.gone and self.check_collision(x,y) and len(self.last_contents) > 0 and not mouse.consumed:
-			print(f"{self.single} BUT DID I GET HERE {self}",flush = True)
+			print(f"(Opening display)",flush = True)
 			mouse.consumed = True
 			display_special = self
 			
@@ -766,13 +873,11 @@ class card(drawable):
 
 
 	def mouse_up(self, mouse, x, y):
-		print("DID I GET HERE",flush = True)
 		if not mouse.consumed and self.check_collision(x,y) and self.card != None:
 			mouse.consumed = True
 
-			print("DID I GET HERE2",flush = True)
 			if not mouse.silent:
-				print("DID I GET HERE3",flush = True)
+				#print("(Card click)",flush = True)
 				globe.bus.card_clicked(self.card)
 
 
@@ -795,6 +900,8 @@ class button(drawable):
 	action = None
 	depth = -100
 	silent = False
+
+
 	def draw(self,action,text,x,y,card_size = False):
 		super().draw()
 		self.action = action
@@ -824,6 +931,7 @@ class button(drawable):
 
 
 	def mouse_up(self, mouse, x, y):
+		#print(self.depth)
 		if not mouse.consumed and self.check_collision(x,y):
 			mouse.consumed = True
 			if not mouse.silent and not self.silent:
@@ -891,16 +999,16 @@ def main():
 	window = MyGame()
 	window.setup()
 	
-	print("GHGsyhsH")
+	print("About to start game thread.")
 	_thread.start_new_thread(thread_game,("Game", 2, ))
-	print("GHsewrGH")
+	print("Game thread started.")
 	time.sleep(1)
 	arcade.run()
 	#globe.boss.start_game()
 	
 	#_thread.start_new_thread(,("View", 2, ))
 	
-	print("GDSFGD")
+	print("Game ended")
 	#arcade.run()
 
 

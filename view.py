@@ -24,7 +24,7 @@ class view_controler():
 		print_board(globe.boss)
 
 	def print_card(self,card, num = 0):
-		print("\033[;7m" + self.colour[card.ctype] + f"{num:<2} {card.name:<20}vp:{card.vp:>2} cost:{card.cost:>2}" + self.colour[cardtype.ANY] + \
+		print("\033[;7m" + self.colour[card.ctype] + f"{num:<2} {card.name:<20}vp:{card.vp:>2} cost:{card.cost:>2}  {card}" + self.colour[cardtype.ANY] + \
 			f"\n{card.text}\n{card.attack_text}", flush = True)
 		print("------------------------------------", flush = True)
 

@@ -185,9 +185,7 @@ class player:
 			self.hand.add(self.deck.draw())
 
 	def choose_persona(self,persona_list):
-		print("attempting persona choice",flush = True)
 		self.persona = self.controler.choose_persona(persona_list)
-		print("choice made",flush = True)
 		persona_list.remove(self.persona)
 		self.persona.set_owner(self)
 
@@ -394,7 +392,7 @@ class model:
 		#	self.players.append(new_player)
 
 		new_player = player(0,None)
-		new_controler = controlers.human_view(new_player,invisible)
+		new_controler = controlers.cpu(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
@@ -432,7 +430,6 @@ class model:
 		#	self.players.append(new_player)
 
 	def choose_personas(self):
-		print("start persona choosing",flush = True)
 		for i,p in enumerate(self.players):
 			p.choose_persona(self.persona_list)
 			print(f"{i} choose {p.persona.name}")
@@ -447,10 +444,10 @@ class model:
 			if self.notify != None:
 				self.notify()
 			if globe.DEBUG:
-				print(f"{self.whose_turn} turn")
+				print(f"{self.players[self.whose_turn].persona.name}'s' turn")
 
 			self.players[self.whose_turn].turn()
-			print(f"SUPER STACK:{len(self.supervillain_stack.contents)}")
+			#print(f"SUPER STACK:{len(self.supervillain_stack.contents)}")
 
 			if self.supervillain_stack.get_count() > 0 and \
 					self.supervillain_stack.current_sv != self.supervillain_stack.contents[-1]:

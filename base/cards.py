@@ -69,7 +69,7 @@ class card_class:
 
 	def destroy(self):
 		self.pop_self()
-		owner = None
+		self.owner = None
 		self.owner_type = owners.DESTROYED
 		globe.boss.destroyed_stack.add(self)
 
@@ -488,11 +488,11 @@ class the_emerald_knight(card_class):
 			choosen.pop_self()
 			player.played.play(choosen)
 		return 0
-
-	def end_of_turn(self):
-		if self.played_card != None:
-			globe.boss.lineup.add(self.played_card.pop_self())
-		return
+#This may be a better way to do it, but its currently being done by checking the cards owner and returning it there
+	#def end_of_turn(self):
+	#	if self.played_card != None:
+	#		globe.boss.lineup.add(self.played_card.pop_self())
+	#	return
 
 #Done
 class fastest_man_alive(card_class):
@@ -589,12 +589,13 @@ class heat_vision(card_class):
 	
 	def play_action(self,player):
 		#effects.may_destroy_card_in_hand_or_discard(player)
-		collection = self.owner.hand.contents
-		collection.extend(self.owner.discard.contents)
+		collection = player.hand.contents.copy()
+		collection.extend(player.discard.contents)
 		instruction_text = f"You may destroy a card in your hand or discard pile"
-		card_to_destroy = effects.may_choose_one_of(instruction_text,self.owner,collection,ai_hint.IFBAD)
+		card_to_destroy = effects.may_choose_one_of(instruction_text,player,collection,ai_hint.IFBAD)
 		if card_to_destroy != None:
 			card_to_destroy.destroy()
+
 		return 3
 
 #Done
@@ -654,7 +655,7 @@ class king_of_atlantis(card_class):
 	def play_action(self,player):
 		#choice = effects.may_destroy_card_in_discard(player)
 
-		instruction_text = f"You may destroy a card in your hand or discard pile"
+		instruction_text = f"You may destroy a card in your discard pile"
 		card_to_destroy = effects.may_choose_one_of(instruction_text,player,player.discard.contents,ai_hint.IFBAD)
 
 		if card_to_destroy == None:
@@ -692,13 +693,13 @@ class lobo(card_class):
 	image = "base/images/cards/Lobo.jpeg"
 	
 	def play_action(self,player):
-		collection = player.hand.contents
+		collection = player.hand.contents.copy()
 		collection.extend(player.discard.contents)
 		instruction_text = f"You may destroy a card in your hand or discard pile (1/2)"
 		card_to_destroy = effects.may_choose_one_of(instruction_text,player,collection,ai_hint.IFBAD)
 		if card_to_destroy != None:
 			card_to_destroy.destroy()
-			collection = player.hand.contents
+			collection = player.hand.contents.copy()
 			collection.extend(player.discard.contents)
 			instruction_text = f"You may destroy a card in your hand or discard pile (2/2)"
 			card_to_destroy = effects.may_choose_one_of(instruction_text,player,collection,ai_hint.IFBAD)
@@ -1273,8 +1274,8 @@ class the_watchtower(card_class):
 				if c.ctype == cardtype.HERO:
 					already_played = True
 			if not already_played:
-				if player == self.owner:
-					player.played.card_mods.append(self.watchtower_mod)
+				#if player == self.owner:
+				player.played.card_mods.append(self.watchtower_mod)
 		return 0
 
 
@@ -1585,8 +1586,10 @@ class the_joker(card_class):
 		for i,p in enumerate(participating_players):
 			card_recived = cards_to_shuffle[i-1]
 			p.discard.add(card_recived.pop_self())
+			card_recived.set_owner(p)
 			if card_recived.cost > 0:
 				p.gain_a_weakness()
+				
 		return
 
 class lex_luther(card_class):
@@ -1660,6 +1663,7 @@ class sinestro(card_class):
 	def first_apearance(self):
 		for p in globe.boss.players:
 			if effects.attack(p,self):
+				effects.reveal(f"This was {p.persona.name}'s hand",p,p.hand.contents)
 				num_heros = p.hand.get_count(cardtype.HERO)
 				for i in range(num_heros):
 					instruction_text = f"You had {num_heros} heros in you hand.  Choose a card to discard ({i+1}/{num_heros})"
