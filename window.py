@@ -434,6 +434,15 @@ class player_icon(drawable):
 			MC = self.get_drawable(personas,f"{self.name}-persona")
 			MC.draw(player.persona,x+player.persona.texture.width*0.2/2,y-player.persona.texture.height*0.2/2,0.2)
 
+			text_size = 20
+			#text_offset = 5
+			if player.vp>0:
+				text_offset = int(math.log(player.vp,10))*6 + 5
+				arcade.draw_circle_filled(x+player.persona.texture.width*0.2/2,y-player.persona.texture.height*0.2/2, 25, arcade.color.BLUE)
+				arcade.draw_text(f"{player.vp}",x+player.persona.texture.width*0.2/2 - text_offset,y-player.persona.texture.height*0.2/2-text_size*0.33,arcade.color.WHITE,text_size)
+
+
+
 			discard = self.get_drawable(pile,f"{self.name}-discard")
 			if len(player.discard.contents) > 0:
 				discard.draw_single(player.discard.contents,x+player.persona.texture.width*0.2*1.25,y-BASE_TEXTURE.height*0.2*0.25,0.2)
@@ -479,6 +488,13 @@ class player(drawable):
 			MC = self.get_drawable(personas,"persona")
 			MC.draw(player.persona,x+player.persona.texture.width/2,self.maxy/2,0.75)
 			buffx += player.persona.texture.width
+
+			text_size = 20
+			#text_offset = 5
+			if player.vp>0:
+				text_offset = int(math.log(player.vp,10))*6 + 5
+				arcade.draw_circle_filled(x+player.persona.texture.width/2,self.maxy/2, 50, arcade.color.BLUE)
+				arcade.draw_text(f"{player.vp}",x+player.persona.texture.width/2- text_offset,self.maxy/2-text_size*0.33,arcade.color.WHITE,text_size)
 
 			arcade.draw_text(f"Score: {player.score}",x+player.persona.texture.width/2-15,self.maxy+60,arcade.color.WHITE,15)
 

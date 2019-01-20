@@ -1,5 +1,5 @@
 import random
-from hu import persona as base_personas
+from fe import persona as base_personas
 from base import cards as base_card
 from base import deck as base_deck
 import card_frame
@@ -21,13 +21,14 @@ def get_starting_deck(player):
 		assemble.append(card_frame.punch(player))
 	
 
-	#for c in range(10):
-	#	assemble.append(base_card.weakness(player))
+	#for c in range(5):
+	#	assemble.append(card_frame.weakness(player))
 
-	#assemble.append(base_card.x_ray_vision(player))
-	#assemble.append(base_card.the_anti_monitor(player))
+	assemble.append(base_card.bane(player))
+	assemble.append(base_card.bane(player))
+	assemble.append(base_card.heat_vision(player))
 
-	random.shuffle(assemble)
+	#random.shuffle(assemble)
 	load_textures(assemble)
 	return assemble
 

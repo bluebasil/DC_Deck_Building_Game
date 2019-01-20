@@ -35,6 +35,18 @@ class persona:
 	def destory_power(self):
 		return
 
+	def discard_power(self):
+		return
+
+	def card_pass_power(self):
+		return
+
+	def gain_vp_power(self):
+		return
+
+	def failed_to_avoid_power(self):
+		return
+
 	def reset(self):
 		return
 

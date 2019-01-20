@@ -48,11 +48,15 @@ def attack(player,card,by_player = None):
 				player.persona.avoided_attack()
 				return False
 		elif result[0] == option.NO:
+			if by_player != None:
+				by_player.persona.failed_to_avoid_power()
 			return True
 		else:
 			print("Err: responce")
 			return attack(player,card,by_player)
 	else:
+		if by_player != None:
+			by_player.persona.failed_to_avoid_power()
 		return True
 
 def choose_a_player(instruction_text,player,includes_self = True):

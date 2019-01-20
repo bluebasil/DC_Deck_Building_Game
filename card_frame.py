@@ -40,7 +40,7 @@ class card:
 				or player == owners.MAINDECK \
 				or player == owners.KICK \
 				or player == owners.DESTROYED \
-				or player == owners.VILLAINDECK 
+				or player == owners.VILLAINDECK \
 				or player == owners.LINEUP:
 			self.owner = None
 			self.owner_type = player
@@ -54,7 +54,7 @@ class card:
 	def end_of_turn(self):
 		return
 
-	def buy_action(self):
+	def buy_action(self,player):
 		return
 
 	#defence = True must be set or this will not be an option

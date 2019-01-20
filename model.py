@@ -201,7 +201,7 @@ class player:
 		self.persona.ready()
 		self.ongoing.begin_turn()
 		self.controler.turn()
-		self.end_turn()
+		#self.end_turn()
 
 	def draw_card(self):
 		if not self.manage_reveal():
@@ -275,6 +275,13 @@ class player:
 			return True
 		return False
 
+	def discard_a_card(self,card):
+		self.persona.discard_power()
+		self.discard.add(card.pop_self())
+
+	def card_has_been_passed(self,card):
+		self.persona.card_pass_power()
+
 	def buy(self,cardnum):
 		if cardnum < 0 or cardnum >= len(globe.boss.lineup.contents):
 			return False
@@ -298,9 +305,9 @@ class player:
 		return False
 
 	def gain(self, card):
-		card.set_owner(player=self)
+		
 		self.gained_this_turn.append(card)
-		card.buy_action()
+		card.buy_action(self)
 
 		redirected = False
 		if len(self.gain_redirect) > 0:
@@ -318,15 +325,24 @@ class player:
 						redirect_responce[1].add(card)
 					redirected = True
 
+		card.set_owner(player=self)
+
 
 		if not redirected:
 			self.discard.add(card)
 		return
+
+	def gain_vp(self,amount):
+		self.vp += amount
+		self.persona.gain_vp_power()
 			
 
 	def discard_hand(self):
-		self.discard.contents.extend(self.hand.contents)
-		self.hand.contents = []
+		for c in self.hand.contents.copy():
+			self.discard_a_card(c)
+		#self.discard.contents.extend(self.hand.contents)
+		#self.hand.contents = []
+
 
 	def end_turn(self):
 		self.gain_redirect = []
@@ -450,7 +466,14 @@ class model:
 			print(f"{i} choose {p.persona.name}")
 			if p.persona.name == "The Flash":
 				self.whose_turn = i
-		
+
+	#This has not been fully adopted
+	def get_current_player(self):
+		if self.whose_turn == -1:
+			return None
+		else:
+			return self.players[self.whose_turn]
+
 
 	def start_game(self):
 		error_checker.dupe_checker().setup_checker()
@@ -462,15 +485,14 @@ class model:
 			if globe.DEBUG:
 				print(f"{self.players[self.whose_turn].persona.name}'s' turn")
 
-			self.players[self.whose_turn].turn()
+			#self.players[self.whose_turn].turn()
+			current_turn = self.players[self.whose_turn]
+			current_turn.turn()
 			#print(f"SUPER STACK:{len(self.supervillain_stack.contents)}")
-
-			if self.supervillain_stack.get_count() > 0 and \
-					self.supervillain_stack.current_sv != self.supervillain_stack.contents[-1]:
-				self.supervillain_stack.current_sv = self.supervillain_stack.contents[-1]
-				#first apearance attack
-				self.supervillain_stack.current_sv.first_apearance()
-				
+			save_whose_turn = self.whose_turn
+			#It's between turns for the SV attack
+			self.whose_turn = -1
+			current_turn.end_turn()
 
 			for i in range(5 - self.lineup.size()):
 				card_to_add = self.main_deck.draw()
@@ -482,7 +504,15 @@ class model:
 					card_to_add.owner_type = owners.LINEUP
 				self.lineup.add(card_to_add)
 
-			self.whose_turn += 1
+			if self.supervillain_stack.get_count() > 0 and \
+					self.supervillain_stack.current_sv != self.supervillain_stack.contents[-1]:
+				self.supervillain_stack.current_sv = self.supervillain_stack.contents[-1]
+				#first apearance attack
+
+				self.supervillain_stack.current_sv.first_apearance()
+				
+
+			self.whose_turn = save_whose_turn + 1
 			if self.whose_turn >= len(self.players):
 				self.whose_turn = 0
 

@@ -23,7 +23,7 @@ class batgirl(persona_frame.persona):
 		if player.pid == globe.boss.whose_turn:
 			for c in self.player.hand.contents:
 				if c.name == "Punch" and self.action in self.player.played.special_options:
-					self.player.discard.add(c.pop_self())
+					self.player.discard_a_card(c)
 					self.player.draw_card()
 					self.player.played.special_options.remove(self.action)
 					return True

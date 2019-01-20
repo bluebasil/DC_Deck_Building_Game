@@ -25,7 +25,6 @@ class aquamans_trident(card_frame.card):
 			player.gain_redirect.remove(self.trident_redirect)
 			return (True,player.hand)
 		return (False,None)
-	image = "base/images/cards/Aquamans_Trident.jpeg"
 	
 	def play_action(self,player):
 		used = False
@@ -60,8 +59,7 @@ class bane(card_frame.card):
 				#effects.discard_a_card(p)
 				if len(p.hand.contents) > 0:
 					result = effects.choose_one_of("Choose a card to discard.",p,p.hand.contents,ai_hint.WORST)
-					result.pop_self()
-					p.discard.add(result)
+					p.discard_a_card(result)
 		return
 
 
@@ -153,8 +151,7 @@ class bulletproof(card_frame.card):
 		return 2
 
 	def defend(self):
-		self.pop_self()
-		self.owner.discard.add(self)
+		self.owner.discard_a_card(self)
 		self.owner.draw_card()
 		#This effdect does it, but be carefull
 		#effects.may_destroy_card_in_hand_or_discard(self.owner)
@@ -180,8 +177,7 @@ class the_cape_and_cowl(card_frame.card):
 		return 2
 
 	def defend(self):
-		self.pop_self()
-		self.owner.discard.add(self)
+		self.owner.discard_a_card(self)
 		for i in range(2):
 			self.owner.draw_card()
 		return
@@ -366,7 +362,7 @@ class gorilla_grodd(card_frame.card):
 	name = "Grorilla Grodd"
 	vp = 2
 	cost = 5
-	ctype = cardtype.HERO
+	ctype = cardtype.VILLAIN
 	text = "+3 Power"
 	image = "base/images/cards/Gorilla_Grodd.jpeg"
 	
@@ -625,8 +621,7 @@ class the_penguin(card_frame.card):
 		for i in range(2):
 			if len(player.hand.contents) > 0:
 				result = effects.choose_one_of("Choose a card to discard.",player,player.hand.contents,ai_hint.WORST)
-				result.pop_self()
-				player.discard.add(result)
+				player.discard_a_card(result)
 		return 0
 
 #Done
@@ -647,8 +642,8 @@ class poison_ivy(card_frame.card):
 	def attack_action(self,by_player):
 		for p in globe.boss.players:
 			if p != by_player and effects.attack(p,self,by_player):
-				card_to_discard = p.reveal_card().pop_self()
-				p.discard.add(card_to_discard)
+				card_to_discard = p.reveal_card()
+				p.discard_a_card(card_to_discard)
 				if card_to_discard.cost >= 1:
 					p.gain_a_weakness()
 		return
@@ -771,8 +766,8 @@ class solomon_grundy(card_frame.card):
 			return (True,player.deck)
 		return (False,None)
 
-	def buy_action(self):
-		self.owner.gain_redirect.append(self.solomon_grundy_redirect)
+	def buy_action(self,player):
+		player.gain_redirect.append(self.solomon_grundy_redirect)
 		return
 
 
@@ -795,6 +790,7 @@ class starro(card_frame.card):
 		for p in globe.boss.players:
 			if p != by_player and effects.attack(p,self,by_player):
 				card_to_discard = p.reveal_card()
+				p.discard_a_card(card_to_discard)
 				if card_to_discard.ctype != cardtype.LOCATION:
 					result = effects.ok_or_no(f"Would you like to play a {card_to_discard.name}?",by_player,card_to_discard,ai_hint.ALWAYS)
 					if result:
@@ -845,8 +841,7 @@ class super_speed(card_frame.card):
 		return 0
 
 	def defend(self):
-		self.pop_self()
-		self.owner.discard.add(self)
+		self.owner.discard_a_card(self)
 		for i in range(2):
 			self.owner.draw_card()
 		return
@@ -916,7 +911,7 @@ class two_face(card_frame.card):
 		if card_is_even == choose_even:
 			player.draw_card()
 		else:
-			player.discard.add(on_top.pop_self())
+			player.discard_a_card(on_top)
 
 		return 1
 
@@ -1191,8 +1186,7 @@ class the_anti_monitor(card_frame.card):
 				if len(assemble) > 0:
 					card_to_give = effects.choose_one_of(instruction_text,p,assemble,ai_hint.WORST)
 					card_to_give.pop_self()
-					card_to_give.set_owner(None)
-					card_to_give.owner_type = owners.LINEUP
+					card_to_give.set_owner(owners.LINEUP)
 					globe.boss.lineup.add(card_to_give)
 		return
 
@@ -1225,7 +1219,7 @@ class atrocitus(card_frame.card):
 				p.under_superhero.add(selected_card.pop_self())
 		return
 
-	def buy_action(self):
+	def buy_action(self,player):
 		for p in globe.boss.players:
 			for c in p.under_superhero.contents:
 				p.deck.add(c.pop_self())
@@ -1250,7 +1244,7 @@ class black_manta(card_frame.card):
 		for p in globe.boss.players:
 			if effects.attack(p,self):
 				discarded = p.reveal_card()
-				p.discard.add(discarded.pop_self())
+				p.discard_a_card(discarded)
 				if discarded.cost >= 1:
 					instruction_text = f"Would you like to destroy this card?  If not, you hand will be discarded."
 					if effects.ok_or_no(instruction_text,p,card = discarded,hint = ai_hint.IFBAD):
@@ -1266,13 +1260,13 @@ class brainiac(card_frame.card):
 	cost = 11
 	ctype = cardtype.VILLAIN
 	owner_type = owners.VILLAINDECK
-	text = "Each player reveals a random card from his hand. Play each revealed non-Location."
+	text = "Each foe reveals a random card from his hand. Play each revealed non-Location."
 	attack_text = "First Appearance - Attack:: Each player chooses two cards from his hand and puts them on the table face down.  Shuffle all of the chosen cards face down, then deal two back to each player at random."
 	image = "base/images/cards/Brainiac 11.jpg"
 	
 	def play_action(self,player):
 		for p in globe.boss.players:
-			if p.hand.size() > 0:
+			if p != player and p.hand.size() > 0:
 				card_to_play = random.choice(p.hand.contents)
 				effects.reveal(f"This was on top of {p.pid}-{p.persona.name}'s deck",player,[card_to_play])
 				if card_to_play.ctype != cardtype.LOCATION:
@@ -1322,7 +1316,7 @@ class captain_cold(card_frame.card):
 				p.persona.active = False
 		return
 
-	def buy_action(self):
+	def buy_action(self,player):
 		for p in globe.boss.players:
 			p.persona.active = True
 		return
@@ -1366,7 +1360,7 @@ class darkseid(card_frame.card):
 						instruction_text = f"Discard 2 cards from your hand ({i+1}/2)"
 						if p.hand.size() > 0:
 							card_to_discard = effects.choose_one_of(instruction_text,p,p.hand.contents,hint = ai_hint.WORST)
-							p.discard.add(card_to_discard.pop_self())
+							p.discard_a_card(card_to_discard)
 		return
 
 #done
@@ -1390,7 +1384,7 @@ class deathstroke(card_frame.card):
 			choosen = effects.may_choose_one_of(instruction_text,player,assemble,hint = ai_hint.BEST)
 			if choosen != None:
 				choosen.set_owner(player)
-				player.discard.add(choosen.pop_self())
+				player.discard_a_card(choosen)
 				return 0
 		return 3
 			
@@ -1430,7 +1424,7 @@ class the_joker(card_frame.card):
 				if choosen == None:
 					player.draw_card()
 				else:
-					p.discard.add(choosen.pop_self())
+					p.discard_a_card(choosen)
 		return 2
 
 	def first_apearance(self):
@@ -1446,7 +1440,7 @@ class the_joker(card_frame.card):
 		if len(cards_to_shuffle) > 0:
 			for i,p in enumerate(participating_players):
 				card_recived = cards_to_shuffle[i-1]
-				p.discard.add(card_recived.pop_self())
+				p.discard_a_card(card_recived)
 				card_recived.set_owner(p)
 				if card_recived.cost > 0:
 					p.gain_a_weakness()
@@ -1496,7 +1490,7 @@ class parallax(card_frame.card):
 				assemble = effects.new_assemble(p.hand.contents)
 				for c in assemble:
 					if c.cost <= 2:
-						p.discard.add(c.pop_self())
+						p.discard_a_card(c)
 		return
 
 class sinestro(card_frame.card):
@@ -1530,7 +1524,7 @@ class sinestro(card_frame.card):
 					instruction_text = f"You had {num_heros} heros in you hand.  Choose a card to discard ({i+1}/{num_heros})"
 					if p.hand.size() > 0:
 						choose = effects.choose_one_of(instruction_text,p,p.hand.contents,ai_hint.WORST)
-						p.discard.add(choose.pop_self())
+						p.discard_a_card(choose)
 		return
 
 

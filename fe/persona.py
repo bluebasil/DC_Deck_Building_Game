@@ -9,7 +9,7 @@ import owners
 
 
 def get_personas():
-	return []
+	return [bane(),bizarro(),black_adam(),black_manta(),deathstroke(),harley_quinn(),lex_luther(),sinestro(),the_joker()]
 
 
 
@@ -26,7 +26,7 @@ class bane(persona_frame.persona):
 		return True
 
 	def mod(self,card,player):
-		if len(player.played.played_this_turn) > 0 and player.played.played_this_turn[0].cost >= 1:
+		if len(player.played.played_this_turn) == 0 and card.cost >= 1:
 			self.action = actions.special_action("Bane",self.special_action_click)
 			self.player.played.special_options.append(self.action)
 			self.player.played.card_mods.remove(self.mod)
@@ -39,7 +39,7 @@ class bane(persona_frame.persona):
 	def ai_is_now_a_good_time(self):
 		return False
 
-
+#Once i make harly quin i could not makew the bizzaro button come up until two weakenss cards are in my discard pile?
 class bizarro(persona_frame.persona):
 	name = "Bizarro"
 	text = "When you destroy a card, gain a Weakness.\nDuring your turn, you may put two Weakness cards from your\ndiscard pile on top of the Weakness stack.  If you do, draw a card."
@@ -82,13 +82,13 @@ class black_adam(persona_frame.persona):
 	image = "fe/images/personas/Black Adam MC.jpg"
 
 	def mod(self,card,player):
-		if card.ctype == SUPERPOWER: # and len(player.played.played_this_turn) == 0:
+		if card.ctype == cardtype.SUPERPOWER: # and len(player.played.played_this_turn) == 0:
 			instruction_text = "Would you like to destory it? If you do, draw a card and gain 1 VP."
 			result = effects.ok_or_no(instruction_text,player,card,ai_hint.IFBAD)
 			if result:
-				card.destory(player)
+				card.destroy(player)
 				player.draw_card()
-				player.vp += 1
+				player.gain_vp(1)
 			self.player.played.card_mods.remove(self.mod)
 		return 0
 
@@ -99,16 +99,16 @@ class black_adam(persona_frame.persona):
 class black_manta(persona_frame.persona):
 	name = "Black Manta"
 	text = "You may put any cards you buy or gain from the lineup on the bottom of your deck."
-	image = "base/images/personas/Black Manta MC.jpg"
+	image = "fe/images/personas/Black Manta MC.jpg"
 
-	def aquaman_redirect(self,player,card):
-		if globe.boss.whose_turn == self.player.pid and effects.ok_or_no(f"Would you like to put {card.name} on the bottom of your deck?",player,card,ai_hint.ALWAYS):
+	def black_manta_redirect(self,player,card):
+		if globe.boss.whose_turn == self.player.pid and card.owner_type == owners.LINEUP and effects.ok_or_no(f"Would you like to put {card.name} on the bottom of your deck?",player,card,ai_hint.ALWAYS):
 			return [True,player.deck,"bottom"]
 		return (False,None)
 
 	def ready(self):
 		if self.active:
-			self.player.gain_redirect.append(self.aquaman_redirect)
+			self.player.gain_redirect.append(self.black_manta_redirect)
 
 class deathstroke(persona_frame.persona):
 	name = "Deathstroke"
@@ -122,222 +122,121 @@ class deathstroke(persona_frame.persona):
 		return
 
 
+class harley_quinn(persona_frame.persona):
+	name = "Harley Quinn"
+	text = "During each player's turn, the first time you pass\na card or discard a card, draw a card."
+	image = "fe/images/personas/Harley Quinn MC.jpg"
+	last_seen_turn = -1
 
-"""
-class black_canary(persona_frame.persona):
-	name = "Black Canary"
-	text = "+1 Power for each different Villain you play during your turn."
-	image = "hu/images/personas/Black Canary HU MC.jpg"
-	
+	def discard_power(self):
+		if self.active and globe.boss.whose_turn != -1 and self.last_seen_turn != globe.boss.whose_turn:
+			self.last_seen_turn = globe.boss.whose_turn
+			self.player.draw_card()
+		return
+
+	def card_pass_power(self):
+		if self.active and globe.boss.whose_turn != -1 and self.last_seen_turn != globe.boss.whose_turn:
+			self.last_seen_turn = globe.boss.whose_turn
+			self.player.draw_card()
+		return
+
+
+class lex_luther(persona_frame.persona):
+	name = "Lex Luther"
+	text = "At the end of your turn, draw an extra card for each Hero you bought or gianed during your turn."
+	image = "fe/images/personas/Lex Luthor MC.jpg"
+
+	def ai_overvalue(self,card):
+		if card.ctype == cardtype.HERO:
+			return persona_frame.overvalue()
+		return 0
+
+#the reset is specifically timed for this to be possible
+	def reset(self):
+		if self.active:
+			for c in self.player.gained_this_turn:
+				if c.ctype == cardtype.HERO:
+					self.player.draw_card()
+
+
+class sinestro(persona_frame.persona):
+	name = "Sinestro"
+	text = "When one or more foes failes to avoid an Attack you play, gain 1 VP.\nThe first time you gain VPs during each of your turns, draw a card."
+	image = "fe/images/personas/Sinestro MC.jpg"
+	ability_used = False
+	same_attack = False
+
+
+	def ai_overvalue(self,card):
+		if card.ctype == cardtype.HERO:
+			return persona_frame.overvalue()
+		return 0
+
+	def mod(self,card,player):
+		print("ATTACK RESET",flush = True)
+		self.same_attack = False
+		return 0
+
+	def gain_vp_power(self):
+		if not self.ability_used and self.active and globe.boss.whose_turn == self.player.pid:
+			self.player.draw_card()
+			self.ability_used = True
+		return
+
+	def failed_to_avoid_power(self):
+		if self.active and not self.same_attack:
+			self.player.gain_vp(1)
+			self.same_attack = True
+		return
+
+	def reset(self):
+		self.ability_used = False
+		self.player.played.card_mods.append(self.mod)
+
+
+
+class the_joker(persona_frame.persona):
+	name = "The Joker"
+	text = "Once during each of your turns, you may destory a Villain you have played this turn.  If you do, draw a card and ATTACK:: Each foe gains a Weakness."
+	image = "fe/images/personas/The Joker MC.jpg"
+	attack_text = "ATTACK:: Each foe gains a Weakness."
+	action = None
+
+
 	def ai_overvalue(self,card):
 		if card.ctype == cardtype.VILLAIN:
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.ctype == cardtype.SUPERPOWER:
-			already_played = False
-			for c in self.player.played.played_this_turn:
-				if card.name == c.name:
-					already_played = True
-			if not already_played:
-				return 1
-		return 0
-
-
-	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
-
-
-class booster_gold(persona_frame.persona):
-	name = "Booster Gold"
-	text = "+1 Power for each Defense card you play during your turn.  When you avoid an attack, draw a card."
-	image = "hu/images/personas/Booster Gold MC.jpg"
-	
-	def ai_overvalue(self,card):
-		if card.defence:
-			return persona_frame.overvalue()
-		return 0
-
-	def mod(self,card,player):
-		if card.defence:
-			return 1
-		return 0
-
-
-	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
-
-	def avoided_attack(self):
-		self.player.draw_card()
-		return
-
-class hawkman(persona_frame.persona):
-	name = "Hawkman"
-	text = "+1 Power for each Hero you play during your turn."
-	image = "hu/images/personas/Hawkman MC.jpg"
-
-	def ai_overvalue(self,card):
-		if card.ctype == cardtype.HERO:
-			return persona_frame.overvalue()
-		return 0
-
-	def mod(self,card,player):
-		if card.ctype == cardtype.HERO:
-			return 1
-		return 0
-
-
-	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
-
-class nightwing(persona_frame.persona):
-	name = "Nightwing"
-	text = "The first time you play an Equipment during your turn, +1 Power.\n The second time you play an Equipment during your turn, draw a card."
-	image = "hu/images/personas/Nightwing MC.jpg"
-
-	def ai_overvalue(self,card):
-		if card.ctype == cardtype.EQUIPMENT:
-			return persona_frame.overvalue()
-		return 0
-
-	def mod(self,card,player):
-		if card.ctype == cardtype.EQUIPMENT:
-			number_played = 0
-			for c in self.player.played.played_this_turn:
-				if c.ctype == cardtype.EQUIPMENT:
-					number_played += 1
-			if number_played == 0:
-				return 1
-			elif number_played == 1:
-				self.player.draw_card()
-		return 0
-
-
-	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
-
-
-
-class red_tornado(persona_frame.persona):
-	name = "Red Tornado"
-	text = "Once during each of your turns, if there are four or more different card types in your discard pile, +2 Power."
-	image = "hu/images/personas/Red Tornado MC.jpg"
-	accounted_for = False
-	action = None
-
-	def get_typecount(self):
-		return {cardtype.HERO:self.player.deck.get_count(cardtype.HERO) + self.player.discard.get_count(cardtype.HERO) + 1, \
-						cardtype.VILLAIN:self.player.deck.get_count(cardtype.VILLAIN) + self.player.discard.get_count(cardtype.VILLAIN) + 1, \
-						cardtype.SUPERPOWER:self.player.deck.get_count(cardtype.SUPERPOWER) + self.player.discard.get_count(cardtype.SUPERPOWER) + 1, \
-						cardtype.EQUIPMENT:self.player.deck.get_count(cardtype.EQUIPMENT) + self.player.discard.get_count(cardtype.EQUIPMENT) + 1}
-
-	def ai_overvalue(self,card):
-		card_types = self.get_typecount()
-		all_relevant = sum(list(card_types.values()))
-		print("MAKE SURE NONE OF THESE ARE 0",card.ctype,all_relevant,flush=True)
-		if card.ctype in card_types:
-			return 0.25/(card_types[card.ctype]/all_relevant) - 1
-		return 0
-
-
 	def special_action_click(self,player):
-		#We must ensure that we are doing this on our turn
-		if player.pid == globe.boss.whose_turn:
-			card_types = set()
-			for c in player.discard.contents:
-				card_types.add(c.ctype)
-			if len(card_types) >= 4:
-				player.played.plus_power(2)
-				player.played.special_options.remove(self.action)
-				return True
+		instruction_text = "You may destory one of the villains you\nhave played this turn.  If you do, draw a card and Attack::\nEach foes gains a Weakness."
+		assemble = []
+		for c in player.played.played_this_turn:
+			if c.ctype == cardtype.VILLAIN:
+				assemble.append(c)
+		result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.IFBAD)
+		if result != None:
+			result.destroy(player)
+			player.draw_card()
+			for p in globe.boss.players:
+				if p != player:
+					if effects.attack(p,self,player):
+						p.gain_a_weakness()
+			self.player.played.special_options.remove(self.action)
+			return True
 		return False
 
+	def mod(self,card,player):
+		if card.ctype == cardtype.VILLAIN:
+			self.action = actions.special_action("The Joker",self.special_action_click)
+			self.player.played.special_options.append(self.action)
+			self.player.played.card_mods.remove(self.mod)
+		return 0
 
 	def ready(self):
 		if self.active:
-			self.action = actions.special_action("Red Tornado",self.special_action_click)
-			self.player.played.special_options.append(self.action)
+			self.player.played.card_mods.append(self.mod)
 
-
-	#If there is more than a 50% chance of getting a card that does anything,
 	def ai_is_now_a_good_time(self):
 		if self.action in self.player.played.special_options:
 			return self.special_action_click(self.player)
-
-
-class shazam(persona_frame.persona):
-	name = "Shazam"
-	text = "You may pay 4 Power, If you do, gain the top card of the main deck.  You may put it on top of your deck or into your discard pile."
-	image = "hu/images/personas/Shazam MC.jpg"
-	action = None
-
-
-	def special_action_click(self,player):
-		#We must ensure that we are doing this on our turn
-		if player.pid == globe.boss.whose_turn:
-			if self.player.played.power >= 4:
-				self.player.played.power -= 4
-				card = globe.boss.main_deck.contents[-1]
-				instruction_text = f"Would you like to put {card.name} on top of your deck?"
-				result = effects.ok_or_no(instruction_text,self.player,card,ai_hint.ALWAYS)
-				card = globe.boss.main_deck.contents.pop()
-				card.set_owner(self.player)
-				if result:
-					self.player.deck.add(card)
-				else:
-					self.player.gain(card)
-				return True
-		return False
-
-
-	def ready(self):
-		if self.active:
-			self.action = actions.special_action("Shazam",self.special_action_click)
-			self.player.played.special_options.append(self.action)
-
-	#IDK
-	def ai_is_now_a_good_time(self):
-
-		return False
-
-
-
-class starfire(persona_frame.persona):
-	name = "Starfire"
-	text = "Once during each of your turns, if there are no Super Powers in the Line-up, draw a card."
-	image = "hu/images/personas/Starfire HU MC.jpg"
-	action = None
-
-	def ai_overvalue(self,card):
-		if card.ctype == cardtype.SUPERPOWER:
-			return persona_frame.overvalue()
-		return 0
-
-
-	def special_action_click(self,player):
-		#We must ensure that we are doing this on our turn
-		if player.pid == globe.boss.whose_turn:
-			if globe.boss.lineup.get_count(cardtype.SUPERPOWER) == 0:
-				self.player.draw_card()
-				player.played.special_options.remove(self.action)
-				return True
-		return False
-
-
-	def ready(self):
-		if self.active:
-			self.action = actions.special_action("Starfire",self.special_action_click)
-			self.player.played.special_options.append(self.action)
-
-
-	#If there is more than a 50% chance of getting a card that does anything,
-	def ai_is_now_a_good_time(self):
-		if self.action in self.player.played.special_options:
-			return self.special_action_click(self.player)
-
-"""
