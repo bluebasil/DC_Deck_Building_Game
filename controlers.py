@@ -53,8 +53,10 @@ class controler:
 	def choose_even_or_odd(self,instruction_text,player):
 		return [option.EVEN]
 
-	def choose_a_player(self,player,options):
-		return options[0]
+	def choose_a_player(self,instruction_text,player,options,hint):
+		return 0
+
+		min(self.player.pid,len(options)-1)
 
 	#NO,HAND,DISCARD
 	#def may_destroy_card_in_hand_or_discard(self):
@@ -291,23 +293,20 @@ class human_view(controler):
 
 		return self.await(process)
 
-	"""def choose_a_player(self,player,options):
-		options = [option.ODD,option.EVEN]
+	def choose_a_player(self,instruction_text,player,options,hint = None):
 		globe.bus.clear()
 		text = instruction_text
-		options
-		try:
-			globe.bus.query(text,card,options)
-		except Exception as e:
-			print("ERROR", e)
+		globe.bus.query(text,None,options)
 
 		def process():
 			current = globe.bus.read()
-			print("ITEM ON BUS:",current.header,current.content,flush = True)
-			if current.header == "button":
-				print("ITEM IS BUTTON",current.content,flush = True)
-				return [current.content]
-		return options[0]"""
+			if current.header == "card":
+				#hand to play
+				if current.content in options:
+					globe.bus.clear()
+					return options.index(current.content)
+
+		return self.await(process)
 
 
 	def choose_however_many(self,instruction_text,player,cards,hint = None):
@@ -755,7 +754,7 @@ class cpu(controler):
 			return 750
 		if card.name == "Punch":
 			return 250
-		if card.ctype == cardtype.LOCATION:
+		if card.ctype_eq(cardtype.LOCATION):
 			return -1
 		return card.cost
 
@@ -810,6 +809,8 @@ class cpu(controler):
 		if hint == ai_hint.BEST:
 			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[-1].name}")
 			return [len(cards)-1]
+		elif hint == ai_hint.RANDOM:
+			return [random.randint(0,len(cards)-1)]
 		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}")
 		return [0]
 
@@ -827,15 +828,12 @@ class cpu(controler):
 		elif hint == ai_hint.IFBAD and cards[0].cost <= 3:
 			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}")
 			return [option.OK,0]
+		elif hint == ai_hint.RANDOM:
+			return [option.OK,random.randint(0,len(cards)-1)]
 		else:
 			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose not to so")
 			return [option.NO]
 		
-
-	#def may_put_on_top(self,instruction_text):
-	#	self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}")
-	#	self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to do so")
-	#	return option.OK
 
 	def ok_or_no(self,instruction_text,player,card,hint):
 		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}")
@@ -848,29 +846,35 @@ class cpu(controler):
 		elif hint == ai_hint.NEVER:
 			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose NOT to do so")
 			return [option.NO]
+		elif card != None and hint == ai_hint.IFGOOD:
+			if card.cost >= 4:
+				self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to do so")
+				return [option.OK]
+			else:
+				self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose NOT to do so")
+				return [option.NO]
 		else:
 			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to do so (by default)")
 			return [option.OK]
 
-	#only OK or CANNOT are accepted
-	"""def discard_a_card(self):
-		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} told to discard a card")
-		if self.player.hand.size() == 0:
-			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} does not have a hand")
-			return option.CANNOT
+	def choose_a_player(self,instruction_text,player,options,hint):
+		if hint == ai_hint.BEST:
+			if self.player in options:
+				return options.index(self.player)
+			else:
+				return random.randint(0,len(options) - 1)
+		elif hint == ai_hint.WORST:
+			if self.player in options:
+				choose = random.randint(0,len(options) - 1)
+				if choose >= options.index(self.player):
+					choose += 1
+				return choose
+			else:
+				return random.randint(0,len(options) - 1)
 		else:
-			lowest_cost = 20
-			lowest_position = -1
-			for i,c in enumerate(self.player.hand.contents):
-				if c.cost < lowest_cost:
-					lowest_cost = c.cost
-					lowest_position = i
-				elif c.cost == lowest_cost:
-					if c.name == "Vunerability" or c.name == "Weakness":
-						lowest_position = i
-		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose to discard a {self.player.hand.contents[lowest_position].name}")
-		return (option.OK,lowest_position)
-"""
+			return random.randint(0,len(options) - 1)
+
+		
 
 	def choose_however_many(self,instruction_text,player,cards,hint):
 		if hint == ai_hint.IFBAD:
@@ -879,7 +883,7 @@ class cpu(controler):
 				if c.cost <= 4:
 					choose.append(i)
 			if len(choose) > 1:
-				return choose
+				return random
 		return [option.NO]
 
 

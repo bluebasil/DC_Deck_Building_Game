@@ -29,12 +29,12 @@ class batman(persona_frame.persona):
 	image = "base/images/personas/Batman MC.jpg"
 
 	def ai_overvalue(self,card):
-		if card.ctype == cardtype.EQUIPMENT:
+		if card.ctype_eq(cardtype.EQUIPMENT):
 			return persona_frame.overvalue()
 		return 0
 
 	def mod(self,card,player):
-		if card.ctype == cardtype.EQUIPMENT:
+		if card.ctype_eq(cardtype.EQUIPMENT):
 			return 1
 		return 0
 
@@ -48,22 +48,22 @@ class cyborg(persona_frame.persona):
 	image = "base/images/personas/Cyborg MC.jpg"
 
 	def ai_overvalue(self,card):
-		if card.ctype == cardtype.SUPERPOWER or card.ctype == cardtype.EQUIPMENT:
+		if card.ctype_eq(cardtype.SUPERPOWER) or card.ctype_eq(cardtype.EQUIPMENT):
 			return persona_frame.overvalue()
 		return 0
 
 	def mod(self,card,player):
-		if card.ctype == cardtype.SUPERPOWER:
+		if card.ctype_eq(cardtype.SUPERPOWER):
 			already_played = False
 			for c in self.player.played.played_this_turn:
-				if c.ctype == cardtype.SUPERPOWER:
+				if c.ctype_eq(cardtype.SUPERPOWER):
 					already_played = True
 			if not already_played:
 				return 1
-		elif card.ctype == cardtype.EQUIPMENT:
+		elif card.ctype_eq(cardtype.EQUIPMENT):
 			already_played = False
 			for c in self.player.played.played_this_turn:
-				if c.ctype == cardtype.EQUIPMENT:
+				if c.ctype_eq(cardtype.EQUIPMENT):
 					already_played = True
 			if not already_played:
 				
@@ -134,12 +134,12 @@ class hawkman(persona_frame.persona):
 	#image = "base/images/personas/Aquaman MC.jpg"
 
 	def ai_overvalue(self,card):
-		if card.ctype == cardtype.HERO:
+		if card.ctype_eq(cardtype.HERO):
 			return persona_frame.overvalue()
 		return 0
 
 	def mod(self,card,player):
-		if card.ctype == cardtype.HERO:
+		if card.ctype_eq(cardtype.HERO):
 			return 1
 		return 0
 
@@ -154,12 +154,12 @@ class superman(persona_frame.persona):
 	image = "base/images/personas/Superman MC.jpg"
 	
 	def ai_overvalue(self,card):
-		if card.ctype == cardtype.SUPERPOWER:
+		if card.ctype_eq(cardtype.SUPERPOWER):
 			return persona_frame.overvalue()
 		return 0
 
 	def mod(self,card,player):
-		if card.ctype == cardtype.SUPERPOWER:
+		if card.ctype_eq(cardtype.SUPERPOWER):
 			already_played = False
 			for c in self.player.played.played_this_turn:
 				if card.name == c.name:
@@ -179,7 +179,7 @@ class wonder_woman(persona_frame.persona):
 	image = "base/images/personas/Wonder Woman MC.jpg"
 
 	def ai_overvalue(self,card):
-		if card.ctype == cardtype.VILLAIN:
+		if card.ctype_eq(cardtype.VILLAIN):
 			return persona_frame.overvalue()
 		return 0
 
@@ -187,7 +187,7 @@ class wonder_woman(persona_frame.persona):
 	def reset(self):
 		if self.active:
 			for c in self.player.gained_this_turn:
-				if c.ctype == cardtype.VILLAIN:
+				if c.ctype_eq(cardtype.VILLAIN):
 					self.player.draw_card()
 
 class martian_manhunter(persona_frame.persona):
@@ -196,16 +196,16 @@ class martian_manhunter(persona_frame.persona):
 	image = "base/images/personas/Martian Manhunter MC.jpg"
 
 	def ai_overvalue(self,card):
-		if card.ctype == cardtype.VILLAIN or card.ctype == cardtype.HERO:
+		if card.ctype_eq(cardtype.VILLAIN) or card.ctype_eq(cardtype.HERO):
 			return persona_frame.overvalue()
 		return 0
 
 	def villain_mod(self,card,player):
-		if card.ctype == cardtype.VILLAIN:
+		if card.ctype_eq(cardtype.VILLAIN):
 			#This card is 1
 			villain_count = 1
 			for c in self.player.played.played_this_turn:
-				if c.ctype == cardtype.VILLAIN:
+				if c.ctype_eq(cardtype.VILLAIN):
 					villain_count += 1
 			if villain_count == 2:
 				if self.villain_mod in self.player.played.card_mods:
@@ -215,11 +215,11 @@ class martian_manhunter(persona_frame.persona):
 
 
 	def hero_mod(self,card,player):
-		if card.ctype == cardtype.HERO:
+		if card.ctype_eq(cardtype.HERO):
 			#This card is 1
 			hero_count = 1
 			for c in self.player.played.played_this_turn:
-				if c.ctype == cardtype.HERO:
+				if c.ctype_eq(cardtype.HERO):
 					hero_count += 1
 			if hero_count == 2:
 				if self.hero_mod in self.player.played.card_mods:

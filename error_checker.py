@@ -81,4 +81,12 @@ class dupe_checker:
 
 
 	def setup_checker(self):
-		_thread.start_new_thread(self.constant_check,("Error Checker", 2, ))
+		print("STARTING ERR CHECKER",flush = True)
+		try:
+			_thread.start_new_thread(self.constant_check,("Error Checker", 2, ))
+		except Exception as e:
+			print("ERR:", e)
+			print("Exception in user code:")
+			print('-'*60)
+			traceback.print_exc(file=sys.stdout)
+			print('-'*60)

@@ -17,6 +17,8 @@ class card:
 	attack_text = ""
 	image = "base/images/cards/back.jpeg"
 	texture = None
+	#List of pid's of who has a frozen token on this card
+	frozen = []
 
 
 	#stats
@@ -28,6 +30,13 @@ class card:
 		if owner != None:
 			self.owner_type = owners.PLAYER
 		self.texture = arcade.load_texture(self.image)
+		self.frozen = []
+
+	def get_ctype(self):
+		return [self.ctype]
+
+	def ctype_eq(self,ctype):
+		return self.ctype == ctype
 	
 	def play_action(self,player):
 		return 0

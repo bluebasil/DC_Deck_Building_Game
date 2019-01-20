@@ -49,7 +49,7 @@ class bizarro(persona_frame.persona):
 	def special_action_click(self,player):
 		to_remove = []
 		for c in self.player.discard.contents:
-			if c.ctype == cardtype.WEAKNESS:
+			if c.ctype_eq(cardtype.WEAKNESS):
 				to_remove.append(c)
 				if len(to_remove) == 2:
 					for w in to_remove:
@@ -82,7 +82,7 @@ class black_adam(persona_frame.persona):
 	image = "fe/images/personas/Black Adam MC.jpg"
 
 	def mod(self,card,player):
-		if card.ctype == cardtype.SUPERPOWER: # and len(player.played.played_this_turn) == 0:
+		if card.ctype_eq(cardtype.SUPERPOWER): # and len(player.played.played_this_turn) == 0:
 			instruction_text = "Would you like to destory it? If you do, draw a card and gain 1 VP."
 			result = effects.ok_or_no(instruction_text,player,card,ai_hint.IFBAD)
 			if result:
@@ -147,7 +147,7 @@ class lex_luther(persona_frame.persona):
 	image = "fe/images/personas/Lex Luthor MC.jpg"
 
 	def ai_overvalue(self,card):
-		if card.ctype == cardtype.HERO:
+		if card.ctype_eq(cardtype.HERO):
 			return persona_frame.overvalue()
 		return 0
 
@@ -155,7 +155,7 @@ class lex_luther(persona_frame.persona):
 	def reset(self):
 		if self.active:
 			for c in self.player.gained_this_turn:
-				if c.ctype == cardtype.HERO:
+				if c.ctype_eq(cardtype.HERO):
 					self.player.draw_card()
 
 
@@ -168,7 +168,7 @@ class sinestro(persona_frame.persona):
 
 
 	def ai_overvalue(self,card):
-		if card.ctype == cardtype.HERO:
+		if card.ctype_eq(cardtype.HERO):
 			return persona_frame.overvalue()
 		return 0
 
@@ -204,7 +204,7 @@ class the_joker(persona_frame.persona):
 
 
 	def ai_overvalue(self,card):
-		if card.ctype == cardtype.VILLAIN:
+		if card.ctype_eq(cardtype.VILLAIN):
 			return persona_frame.overvalue()
 		return 0
 
@@ -212,7 +212,7 @@ class the_joker(persona_frame.persona):
 		instruction_text = "You may destory one of the villains you\nhave played this turn.  If you do, draw a card and Attack::\nEach foes gains a Weakness."
 		assemble = []
 		for c in player.played.played_this_turn:
-			if c.ctype == cardtype.VILLAIN:
+			if c.ctype_eq(cardtype.VILLAIN):
 				assemble.append(c)
 		result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.IFBAD)
 		if result != None:
@@ -227,7 +227,7 @@ class the_joker(persona_frame.persona):
 		return False
 
 	def mod(self,card,player):
-		if card.ctype == cardtype.VILLAIN:
+		if card.ctype_eq(cardtype.VILLAIN):
 			self.action = actions.special_action("The Joker",self.special_action_click)
 			self.player.played.special_options.append(self.action)
 			self.player.played.card_mods.remove(self.mod)

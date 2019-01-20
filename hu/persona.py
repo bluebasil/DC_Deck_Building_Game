@@ -53,12 +53,12 @@ class black_canary(persona_frame.persona):
 	image = "hu/images/personas/Black Canary HU MC.jpg"
 	
 	def ai_overvalue(self,card):
-		if card.ctype == cardtype.VILLAIN:
+		if card.ctype_eq(cardtype.VILLAIN):
 			return persona_frame.overvalue()
 		return 0
 
 	def mod(self,card,player):
-		if card.ctype == cardtype.SUPERPOWER:
+		if card.ctype_eq(cardtype.SUPERPOWER):
 			already_played = False
 			for c in self.player.played.played_this_turn:
 				if card.name == c.name:
@@ -103,12 +103,12 @@ class hawkman(persona_frame.persona):
 	image = "hu/images/personas/Hawkman MC.jpg"
 
 	def ai_overvalue(self,card):
-		if card.ctype == cardtype.HERO:
+		if card.ctype_eq(cardtype.HERO):
 			return persona_frame.overvalue()
 		return 0
 
 	def mod(self,card,player):
-		if card.ctype == cardtype.HERO:
+		if card.ctype_eq(cardtype.HERO):
 			return 1
 		return 0
 
@@ -123,15 +123,15 @@ class nightwing(persona_frame.persona):
 	image = "hu/images/personas/Nightwing MC.jpg"
 
 	def ai_overvalue(self,card):
-		if card.ctype == cardtype.EQUIPMENT:
+		if card.ctype_eq(cardtype.EQUIPMENT):
 			return persona_frame.overvalue()
 		return 0
 
 	def mod(self,card,player):
-		if card.ctype == cardtype.EQUIPMENT:
+		if card.ctype_eq(cardtype.EQUIPMENT):
 			number_played = 0
 			for c in self.player.played.played_this_turn:
-				if c.ctype == cardtype.EQUIPMENT:
+				if c.ctype_eq(cardtype.EQUIPMENT):
 					number_played += 1
 			if number_played == 0:
 				return 1
@@ -173,7 +173,7 @@ class red_tornado(persona_frame.persona):
 		if player.pid == globe.boss.whose_turn:
 			card_types = set()
 			for c in player.discard.contents:
-				card_types.add(c.ctype)
+				card_types.update(c.get_ctype())
 			if len(card_types) >= 4:
 				player.played.plus_power(2)
 				player.played.special_options.remove(self.action)
@@ -237,7 +237,7 @@ class starfire(persona_frame.persona):
 	action = None
 
 	def ai_overvalue(self,card):
-		if card.ctype == cardtype.SUPERPOWER:
+		if card.ctype_eq(cardtype.SUPERPOWER):
 			return persona_frame.overvalue()
 		return 0
 

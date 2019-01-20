@@ -59,20 +59,21 @@ def attack(player,card,by_player = None):
 			by_player.persona.failed_to_avoid_power()
 		return True
 
-def choose_a_player(instruction_text,player,includes_self = True):
+def choose_a_player(instruction_text,player,includes_self = True,hint = ai_hint.WORST):
 	assemble = []
 	for i,p in enumerate(globe.boss.players):
 		if p != player or includes_self:
-			assemble.append(p)
-	result = player.controler.choose_a_player(instruction_text,player,assemble)
+			assemble.append(p.persona)
+
+	result = player.controler.choose_a_player(instruction_text,player,assemble,hint)
 	if globe.DEBUG:
 		print("choose_a_player",result)
-	if not ensure_int(result[0]):
+	if not ensure_int(result):
 		return choose_a_player(instruction_text,player,includes_self)
-	elif result[0] < 0 or result[0] >= len(assemble):
+	elif result < 0 or result >= len(assemble):
 		print(f"ERR: invalid number. max:{len(assemble)-1}")
 		return choose_a_player(instruction_text,player,includes_self)
-	return assemble[result[0]]
+	return assemble[result].player
 
 def choose_one_of(instruction_text,player,cards,hint = ai_hint.WORST):
 	result = player.controler.choose_one_of(instruction_text,player,cards,hint)
@@ -185,7 +186,7 @@ def may_destroy_card_in_hand_or_discard(player):
 	player.discard.add(card_to_discard)
 	return (option.OK,card_to_discard)"""
 
-def x_ray_vision_reveal(player):
+"""def x_ray_vision_reveal(player):
 	assemble = []
 	for p in globe.boss.players:
 		if p != player:
@@ -203,7 +204,7 @@ def x_ray_vision_reveal(player):
 		elif result[1] < 0 or result[1] >= player.hand.size():
 			print("ERR: invalid number")
 			return x_ray_vision_reveal(player)
-		elif assemble[result[1]].ctype == cardtype.LOCATION:
+		elif assemble[result[1]].ctype_eq(cardtype.LOCATION):
 			print("ERR: Cannot play a location this way")
 			return x_ray_vision_reveal(player)
 
@@ -211,7 +212,7 @@ def x_ray_vision_reveal(player):
 		assemble[result[1]].owner.deck.contents.pop()
 		player.play_and_return(assemble[result[1]],assemble[result[1]].owner.deck)
 		return option.OK
-	return option.CANNOT
+	return option.CANNOT"""
 
 #(no/ok, if ok:#)
 """def may_destroy_card_in_discard(player):

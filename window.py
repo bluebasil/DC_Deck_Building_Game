@@ -498,6 +498,13 @@ class player(drawable):
 
 			arcade.draw_text(f"Score: {player.score}",x+player.persona.texture.width/2-15,self.maxy+60,arcade.color.WHITE,15)
 
+
+			on_top = self.get_drawable(pile,"on_top")
+			if len(player.over_superhero) > 0:
+				on_top.draw_squished(player.over_superhero,x+player.persona.texture.width*0.25,self.maxy+60,150,True,0.2)
+			else:
+				on_top.set_gone()
+
 		discard = self.get_drawable(pile,"discard")
 		if len(player.discard.contents) > 0:
 			x = buffx+CARD_SCALE*BASE_TEXTURE.width/2
@@ -806,8 +813,11 @@ class card(drawable):
 
 		self.set_juristiction(x-width/2,y-height/2,x+width/2,y+height/2)
 		#print(self.name,self.jminx,self.jminy,self.jmaxx,self.jmaxy,self)
-		arcade.draw_point(x-width/2, y-height/2, arcade.color.RED, 10)
-		arcade.draw_point(x+width/2, y+height/2, arcade.color.RED, 10)
+		#arcade.draw_point(x-width/2, y-height/2, arcade.color.RED, 10)
+		#arcade.draw_point(x+width/2, y+height/2, arcade.color.RED, 10)
+		if hasattr(card, 'frozen') and len(card.frozen) > 0:
+			arcade.draw_circle_filled(x,y,width*0.33,[255,255,255,200])
+
 	def draw_down(self,x,y,scale = 1):
 		super().draw()
 		self.card = None

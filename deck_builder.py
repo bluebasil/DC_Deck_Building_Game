@@ -1,7 +1,9 @@
 import random
 from fe import persona as base_personas
-from base import cards as base_card
-from base import deck as base_deck
+from fe import cards as base_card
+from fe import deck as base_deck
+from base import deck as sv_deck
+from base import cards as helper
 import card_frame
 import arcade
 
@@ -23,10 +25,15 @@ def get_starting_deck(player):
 
 	#for c in range(5):
 	#	assemble.append(card_frame.weakness(player))
-
-	assemble.append(base_card.bane(player))
-	assemble.append(base_card.bane(player))
-	assemble.append(base_card.heat_vision(player))
+	assemble.append(base_card.cosmic_staff(player))
+	assemble.append(base_card.cosmic_staff(player))
+	assemble.append(helper.clayface(player))
+	assemble.append(base_card.star_labs(player))
+	assemble.append(card_frame.punch(player))
+	assemble.append(card_frame.punch(player))
+	assemble.append(base_card.cosmic_staff(player))
+	assemble.append(helper.clayface(player))
+	assemble.append(base_card.firestorm_matrix(player))
 
 	#random.shuffle(assemble)
 	load_textures(assemble)
@@ -79,7 +86,7 @@ def initialize_kicks():
 
 
 def initialize_supervillains():
-	assemble = base_deck.initialize_supervillains()
+	assemble = sv_deck.initialize_supervillains()
 	load_textures(assemble)
 	return assemble
 

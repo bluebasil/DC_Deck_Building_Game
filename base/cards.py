@@ -94,7 +94,7 @@ class the_bat_signal(card_frame.card):
 		instruction_text = "Choose a Hero from you discard pile to put into your hand"
 		assemble = []
 		for c in player.discard.contents:
-			if c.ctype == cardtype.HERO:
+			if c.ctype_eq(cardtype.HERO):
 				assemble.append(c)
 		if len(assemble) > 0:
 			choosen = effects.choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
@@ -117,7 +117,7 @@ class bizarro(card_frame.card):
 	def calculate_vp(self,all_cards):
 		count = 0
 		for c in all_cards:
-			if c.ctype == cardtype.WEAKNESS:
+			if c.ctype_eq(cardtype.WEAKNESS):
 				count += 1
 		return 2*count + 1
 
@@ -207,12 +207,12 @@ class cheetah(card_frame.card):
 		instruction_text = "Choose a one of these to gain from the Line-Up"
 		assemble = []
 		for c in globe.boss.lineup.contents:
-			if c.cost <= 4:
+			if c.cost <= 4 and len(c.frozen) == 0:
 				assemble.append(c)
 		if len(assemble) > 0:
 			choosen = effects.choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			#if choosen != None
-			player.gain(choosen.pop_self())
+			player.gain(choosen)
 		return 0
 
 #Done
@@ -227,6 +227,7 @@ class clayface(card_frame.card):
 	def play_action(self,player):
 		instruction_text = "Choose a card that you have already played to play again"
 		assemble = []
+		#Should i be able to play cards in toher people hands on on their decks, or in the destroyed pile, or in my dack...
 		for c in player.played.contents:
 			if c.name != "Clayface":
 				assemble.append(c)
@@ -273,11 +274,11 @@ class the_dark_knight(card_frame.card):
 	def play_action(self,player):
 		assemble = []
 		for c in globe.boss.lineup.contents:
-			if c.ctype == cardtype.EQUIPMENT:
+			if c.ctype_eq(cardtype.EQUIPMENT):
 				assemble.append(c)
 		print(len(assemble)," was ASSEMBELED",flush=True)
 		for c in assemble:
-			player.gain(c.pop_self())
+			player.gain(c)
 
 		can_use = False
 		used = False
@@ -329,7 +330,7 @@ class the_emerald_knight(card_frame.card):
 		instruction_text = "Choose one of these from the line up, play it, then return it at the end of the turn"
 		assemble = []
 		for c in globe.boss.lineup.contents:
-			if c.ctype == cardtype.EQUIPMENT or c.ctype == cardtype.HERO or c.ctype == cardtype.SUPERPOWER:
+			if c.ctype_eq(cardtype.EQUIPMENT) or c.ctype_eq(cardtype.HERO) or c.ctype_eq(cardtype.SUPERPOWER):
 				assemble.append(c)
 		if len(assemble) > 0:
 			choosen = effects.choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
@@ -384,7 +385,7 @@ class green_arrow(card_frame.card):
 	def calculate_vp(self,all_cards):
 		count = 0
 		for c in all_cards:
-			if c.ctype == cardtype.HERO:
+			if c.ctype_eq(cardtype.HERO):
 				count += 1
 		if count > 4:
 			return 5
@@ -571,7 +572,7 @@ class the_man_of_steel(card_frame.card):
 	def play_action(self,player):
 		assemble = []
 		for c in player.discard.contents:
-			if c.ctype == cardtype.SUPERPOWER:
+			if c.ctype_eq(cardtype.SUPERPOWER):
 				assemble.append(c)
 		for c in assemble:
 			player.hand.add(c.pop_self())
@@ -677,10 +678,10 @@ class princess_diana_of_themyscira(card_frame.card):
 	def play_action(self,player):
 		assemble = []
 		for c in globe.boss.lineup.contents:
-			if c.ctype == cardtype.VILLAIN and c.cost <= 7:
+			if c.ctype_eq(cardtype.VILLAIN) and c.cost <= 7:
 				assemble.append(c)
 		for c in assemble:
-			player.gain(c.pop_self())
+			player.gain(c)
 		return 0
 
 #done
@@ -695,7 +696,8 @@ class the_riddler(card_frame.card):
 	def special_action_click(self,player):
 		if globe.boss.main_deck.size() > 0 and player.played.power >= 3:
 			player.played.power -= 3
-			player.gain(globe.boss.main_deck.contents.pop())
+
+			player.gain(globe.boss.main_deck.contents[-1])
 
 	def play_action(self,player):
 		#player.played_riddler = True
@@ -720,7 +722,7 @@ class robin(card_frame.card):
 		instruction_text = "Choose an Equipment from you discard pile to put into your hand"
 		assemble = []
 		for c in player.discard.contents:
-			if c.ctype == cardtype.EQUIPMENT:
+			if c.ctype_eq(cardtype.EQUIPMENT):
 				assemble.append(c)
 		if len(assemble) > 0:
 			choosen = effects.choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
@@ -791,7 +793,7 @@ class starro(card_frame.card):
 			if p != by_player and effects.attack(p,self,by_player):
 				card_to_discard = p.reveal_card()
 				p.discard_a_card(card_to_discard)
-				if card_to_discard.ctype != cardtype.LOCATION:
+				if not card_to_discard.ctype_eq(cardtype.LOCATION):
 					result = effects.ok_or_no(f"Would you like to play a {card_to_discard.name}?",by_player,card_to_discard,ai_hint.ALWAYS)
 					if result:
 						by_player.play_and_return(card_to_discard.pop_self(),p.discard)
@@ -886,7 +888,7 @@ class swamp_thing(card_frame.card):
 	
 	def play_action(self,player):
 		for c in player.ongoing.contents:
-			if c.ctype == cardtype.LOCATION:
+			if c.ctype_eq(cardtype.LOCATION):
 				return 5
 		return 2
 
@@ -930,7 +932,7 @@ class utility_belt(card_frame.card):
 	def calculate_vp(self,all_cards):
 		count = 0
 		for c in all_cards:
-			if c.ctype == cardtype.EQUIPMENT:
+			if c.ctype_eq(cardtype.EQUIPMENT):
 				count += 1
 		if count > 4:
 			return 5
@@ -991,7 +993,7 @@ class arkham_asylum(card_frame.card):
 	ongoing = True
 
 	def arkham_mod(self,card,player):
-		if card.ctype == cardtype.VILLAIN and self.arkham_mod in player.played.card_mods:
+		if card.ctype_eq(cardtype.VILLAIN) and self.arkham_mod in player.played.card_mods:
 			player.played.card_mods.remove(self.arkham_mod)
 			player.draw_card()
 		return 0
@@ -1005,7 +1007,7 @@ class arkham_asylum(card_frame.card):
 
 			already_played = False
 			for c in player.played.played_this_turn:
-				if c.ctype == cardtype.VILLAIN:
+				if c.ctype_eq(cardtype.VILLAIN):
 					already_played = True
 			if not already_played:
 				player.played.card_mods.append(self.arkham_mod)
@@ -1021,7 +1023,7 @@ class the_batcave(card_frame.card):
 	ongoing = True
 
 	def batcave_mod(self,card,player):
-		if card.ctype == cardtype.EQUIPMENT and self.batcave_mod in player.played.card_mods:
+		if card.ctype_eq(cardtype.EQUIPMENT) and self.batcave_mod in player.played.card_mods:
 			player.played.card_mods.remove(self.batcave_mod)
 			player.draw_card()
 		return 0
@@ -1035,7 +1037,7 @@ class the_batcave(card_frame.card):
 
 			already_played = False
 			for c in player.played.played_this_turn:
-				if c.ctype == cardtype.EQUIPMENT:
+				if c.ctype_eq(cardtype.EQUIPMENT):
 					already_played = True
 			if not already_played:
 				player.played.card_mods.append(self.batcave_mod)
@@ -1051,7 +1053,7 @@ class fortress_of_solitude(card_frame.card):
 	ongoing = True
 
 	def solitude_mod(self,card,player):
-		if card.ctype == cardtype.SUPERPOWER and self.solitude_mod in player.played.card_mods:
+		if card.ctype_eq(cardtype.SUPERPOWER) and self.solitude_mod in player.played.card_mods:
 			player.played.card_mods.remove(self.solitude_mod)
 			player.draw_card()
 		return 0
@@ -1065,7 +1067,7 @@ class fortress_of_solitude(card_frame.card):
 
 			already_played = False
 			for c in player.played.played_this_turn:
-				if c.ctype == cardtype.SUPERPOWER:
+				if c.ctype_eq(cardtype.SUPERPOWER):
 					already_played = True
 			if not already_played:
 				player.played.card_mods.append(self.solitude_mod)
@@ -1111,7 +1113,7 @@ class the_watchtower(card_frame.card):
 	ongoing = True
 
 	def watchtower_mod(self,card,player):
-		if card.ctype == cardtype.HERO and self.watchtower_mod in player.played.card_mods:
+		if card.ctype_eq(cardtype.HERO) and self.watchtower_mod in player.played.card_mods:
 			player.played.card_mods.remove(self.watchtower_mod)
 			player.draw_card()
 		return 0
@@ -1125,7 +1127,7 @@ class the_watchtower(card_frame.card):
 
 			already_played = False
 			for c in player.played.played_this_turn:
-				if c.ctype == cardtype.HERO:
+				if c.ctype_eq(cardtype.HERO):
 					already_played = True
 			if not already_played:
 				#if player == self.owner:
@@ -1269,7 +1271,7 @@ class brainiac(card_frame.card):
 			if p != player and p.hand.size() > 0:
 				card_to_play = random.choice(p.hand.contents)
 				effects.reveal(f"This was on top of {p.pid}-{p.persona.name}'s deck",player,[card_to_play])
-				if card_to_play.ctype != cardtype.LOCATION:
+				if not card_to_play.ctype_eq(cardtype.LOCATION):
 					player.play_and_return(card_to_play.pop_self(), p.hand)
 		return 0
 
@@ -1352,7 +1354,7 @@ class darkseid(card_frame.card):
 			if effects.attack(p,self):
 				has_villain = False
 				for c in p.hand.contents:
-					if c.ctype == cardtype.VILLAIN:
+					if c.ctype_eq(cardtype.VILLAIN):
 						#Reveal card
 						has_villain = True
 				if not has_villain:
@@ -1378,7 +1380,7 @@ class deathstroke(card_frame.card):
 		instruction_text = f"You may choose to gain a hero or villain from the lineup.  If you choose not to, +3 Power"
 		assemble = []
 		for c in globe.boss.lineup.contents:
-			if c.ctype == cardtype.VILLAIN or c.ctype == cardtype.HERO:
+			if c.ctype_eq(cardtype.VILLAIN) or c.ctype_eq(cardtype.HERO):
 				assemble.append(c)
 		if len(assemble) > 0:
 			choosen = effects.may_choose_one_of(instruction_text,player,assemble,hint = ai_hint.BEST)
@@ -1395,10 +1397,10 @@ class deathstroke(card_frame.card):
 			if effects.attack(p,self):
 				assemble = []
 				for c in p.hand.contents:
-					if c.ctype == cardtype.HERO or c.ctype == cardtype.SUPERPOWER or c.ctype == cardtype.EQUIPMENT:
+					if c.ctype_eq(cardtype.HERO) or c.ctype_eq(cardtype.SUPERPOWER) or c.ctype_eq(cardtype.EQUIPMENT):
 						assemble.append(c)
 				for c in p.discard.contents:
-					if c.ctype == cardtype.HERO or c.ctype == cardtype.SUPERPOWER or c.ctype == cardtype.EQUIPMENT:
+					if c.ctype_eq(cardtype.HERO) or c.ctype_eq(cardtype.SUPERPOWER) or c.ctype_eq(cardtype.EQUIPMENT):
 						assemble.append(c)
 				if len(assemble) > 0:
 					card_to_destroy = effects.choose_one_of(instruction_text,p,assemble,hint = ai_hint.WORST)
@@ -1505,7 +1507,7 @@ class sinestro(card_frame.card):
 	
 	def play_action(self,player):
 		effects.reveal("This was on top of the main deck",player,[globe.boss.main_deck.contents[-1]])
-		if len(globe.boss.main_deck.contents) > 0 and globe.boss.main_deck.contents[-1].ctype == cardtype.HERO:
+		if len(globe.boss.main_deck.contents) > 0 and globe.boss.main_deck.contents[-1].ctype_eq(cardtype.HERO):
 			globe.boss.main_deck.contents.pop().destroy(player)
 			return 3
 		else:

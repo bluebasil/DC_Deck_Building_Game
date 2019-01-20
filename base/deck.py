@@ -1,37 +1,6 @@
 from . import cards
 import random
 
-#def get_starting_deck(player):
-#	assemble = []
-#	for c in range(7):
-#		assemble.append(cards.punch(player))
-#	for c in range(3):
-#		assemble.append(cards.vunerability(player))
-#
-#	random.shuffle(assemble)
-#
-#	return assemble
-
-
-
-"""assemble.append(cards.punch(player))
-	assemble.append(cards.lasso_of_truth(player))
-	assemble.append(cards.high_tech_hero(player))
-	assemble.append(cards.x_ray_vision(player))
-	assemble.append(cards.heat_vision(player))
-	assemble.append(cards.king_of_atlantis(player))
-	for c in range(3):
-		assemble.append(cards.punch(player))
-	assemble.append(cards.king_of_atlantis(player))
-	assemble.append(cards.weakness(player))
-	assemble.append(cards.nth_metal(player))
-	
-	
-	assemble.append(cards.the_penguin(player))
-	assemble.append(cards.fastest_man_alive(player))
-	assemble.append(cards.heat_vision(player))
-	assemble.append(cards.mera(player))
-"""
 
 
 def initialize_supervillains():

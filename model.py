@@ -158,6 +158,7 @@ class player:
 	controler = None
 	persona = None
 	under_superhero = None
+	over_superhero = None
 
 	gain_redirect = []
 	gained_this_turn = []
@@ -176,8 +177,11 @@ class player:
 		self.hand = pile(self, visibilities.PRIVATE)
 		self.discard = pile(self)
 		self.under_superhero = pile(self)
+		self.over_superhero = []
 		self.ongoing = ongoing_pile(self)
 		self.played = playing(self)
+
+		self.vp = 2
 
 		#These should be reinitialized or they share values with all insatnces
 		self.gain_redirect = []
@@ -198,6 +202,11 @@ class player:
 		self.persona.reset()
 
 	def turn(self):
+		#unfreeze all cards in lineup
+		for c in globe.boss.lineup.contents:
+			if self.pid in c.frozen:
+				c.frozen.remove(self.pid)
+
 		self.persona.ready()
 		self.ongoing.begin_turn()
 		self.controler.turn()
@@ -282,20 +291,22 @@ class player:
 	def card_has_been_passed(self,card):
 		self.persona.card_pass_power()
 
+#depreciated
 	def buy(self,cardnum):
 		if cardnum < 0 or cardnum >= len(globe.boss.lineup.contents):
 			return False
-		elif self.played.power >= globe.boss.lineup.contents[cardnum].cost:
-			globe.boss.lineup.contents[cardnum].bought = True
+		card = globe.boss.lineup.contents[cardnum]
+		if self.played.power >= card.cost:
+			card.bought = True
 			if globe.DEBUG:
-				print(f"{globe.boss.lineup.contents[cardnum]} bought")
-			self.played.power -= globe.boss.lineup.contents[cardnum].cost
+				print(f"{card.name} bought")
+			self.played.power -= card.cost
 			self.gain(globe.boss.lineup.contents.pop(cardnum))
 			return True
 		return False
 
 	def buy_c(self,card):
-		if self.played.power >= card.cost:
+		if self.played.power >= card.cost and len(card.frozen) == 0:
 			card.bought = True
 			if globe.DEBUG:
 				print(f"{card.name} bought")
@@ -305,6 +316,10 @@ class player:
 		return False
 
 	def gain(self, card):
+		if len(card.frozen) != 0:
+			return
+
+		card.pop_self()
 		
 		self.gained_this_turn.append(card)
 		card.buy_action(self)
