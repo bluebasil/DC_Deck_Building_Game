@@ -363,7 +363,7 @@ class firestorm_matrix(card_frame.card):
 				#Here comes the scary stuff
 
 				def firestorm_special_action_click(player,actual_self = drawn):
-					print("SPECIAL ACTION CLICK",actual_self.name,flush=True)
+					#print("SPECIAL ACTION CLICK",actual_self.name,flush=True)
 					if actual_self.action in player.played.special_options:
 						player.played.special_options.remove(actual_self.action)
 						backup_play_action = actual_self.play_action
@@ -373,7 +373,7 @@ class firestorm_matrix(card_frame.card):
 						actual_self.play_action = backup_play_action
 
 				def replace_play_action(player,actual_self = drawn):
-					print("REPLACE PLAY ACTION",actual_self.name,flush=True)
+					#print("REPLACE PLAY ACTION",actual_self.name,flush=True)
 					actual_self.action = actions.special_action(f"Firestorm-{actual_self.name}",actual_self.firestorm_special_action_click)
 					player.played.special_options.append(actual_self.action)
 					return 0
@@ -390,15 +390,80 @@ class firestorm(card_frame.card):
 	ctype = cardtype.HERO
 	text = 'Put the top card of your deck on your Super-Villain.\nThis card has the game text of each card on you\nSuper-Villain this turn.\n(At the end of the game, destroy those cards.)'
 	image = "fe/images/cards/Firestorm.jpg"
+	currently_played_by = None
 
 	def play_action(self,player):
+		#print(player,"AHAHAHAHAH")
+		self.currently_played_by = player
 		drawn = player.reveal_card()
-		player.over_superhero.append(drawn.pop_self())
+		player.over_superhero.contents.append(drawn.pop_self())
 		#Should i remove the owner?
 		total = 0
-		for c in player.over_superhero:
+		assemble = player.over_superhero.contents.copy()
+		for c in assemble:
+			save_owner = c.owner
+			c.set_owner(self.owner)
 			total += c.play_action(player)
+			#location = self.find_self()
+			self.firestorm_find_and_replace(c,save_owner)
+			#print(c.name,"firesotrm is ",self.find_self())
+			#if self in player.ongoing.contents:
+			#	location[0].contents.insert(location[1],self.pop_self())
+			#put's locations and other cards back
+			#if c not in player.over_superhero.contents:
+			#	c.pop_self()
+			#	player.over_superhero.contents.append(c)
 		return total
+
+	def get_ctype(self):
+		if self.currently_played_by != None:
+			temp_ctype = set()
+			temp_ctype.add(self.ctype)
+			assemble = self.currently_played_by.over_superhero.contents.copy()
+			for c in assemble:
+				temp_ctype.add(c.get_ctype())
+			return temp_ctype
+		else:
+			return [self.ctype]
+
+	def ctype_eq(self,ctype):
+		if self.currently_played_by != None:
+			are_they_equal = self.ctype == ctype
+			assemble = self.currently_played_by.over_superhero.contents.copy()
+			for c in assemble:
+				are_they_equal = are_they_equal or c.ctype_eq(ctype)
+			return are_they_equal
+		else:
+			return self.ctype == ctype
+
+	def end_of_turn(self):
+		if self.currently_played_by != None:
+			assemble = self.currently_played_by.over_superhero.contents.copy()
+			for c in assemble:
+				save_owner = c.owner
+				c.set_owner(self.owner)
+				c.end_of_turn()
+				self.firestorm_find_and_replace(c,save_owner)
+			self.currently_played_by = None
+		return
+
+	def firestorm_find_and_replace(self,c,save_owner):
+		
+		#If it changed owners
+		self.owner = c.owner
+		#but give back original card
+		c.set_owner(save_owner)
+		if c not in self.currently_played_by.over_superhero.contents:
+			location = c.find_self()
+			#Firestorm cannot be made ongoing
+			#Firestorm cannot be taken out of the destroyed pile
+			if location[0].name != "Ongoing" and self.find_self()[0].name != "Destroyed":
+				self.pop_self()
+				location[0].contents.insert(location[1],self)
+			self.currently_played_by.over_superhero.contents.append(c.pop_self())
+
+
+
 
 
 

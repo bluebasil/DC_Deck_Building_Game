@@ -16,9 +16,11 @@ class pile:
 	contents = None
 	visibility = visibilities.PUBLIC
 	owner = None
+	name = ""
 
 	#I'll start the deck empty
-	def __init__(self,owner = None,visibility = visibilities.PUBLIC):
+	def __init__(self,name,owner = None,visibility = visibilities.PUBLIC):
+		self.name = name
 		self.owner = owner
 		self.visibility = visibility
 		self.contents = []
@@ -70,7 +72,8 @@ class playing(pile):
 	def no_mod(self,card,player):
 		return card.play_action(player)
 
-	def __init__(self,owner = None,visibility = visibilities.PUBLIC):
+	def __init__(self,name,owner = None,visibility = visibilities.PUBLIC):
+		self.name = name
 		self.owner = owner
 		self.visibility = visibility
 		self.contents = []
@@ -173,13 +176,13 @@ class player:
 		self.controler = controler
 		self.pid = pid
 
-		self.deck = pile(self, visibilities.SECRET)
-		self.hand = pile(self, visibilities.PRIVATE)
-		self.discard = pile(self)
-		self.under_superhero = pile(self)
-		self.over_superhero = []
-		self.ongoing = ongoing_pile(self)
-		self.played = playing(self)
+		self.deck = pile("Deck",self, visibilities.SECRET)
+		self.hand = pile("Hand",self, visibilities.PRIVATE)
+		self.discard = pile("Discard",self)
+		self.under_superhero = pile("Under Persona",self)
+		self.over_superhero = pile("Over Persona",self)
+		self.ongoing = ongoing_pile("Ongoing",self)
+		self.played = playing("Played",self)
 
 		self.vp = 2
 
@@ -257,7 +260,7 @@ class player:
 				print(f" {globe.boss.supervillain_stack.contents[-1].name} bought")
 			self.sv_bought_this_turn = True
 			self.played.power -= globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv
-			self.gain(globe.boss.supervillain_stack.contents.pop())
+			self.gain(globe.boss.supervillain_stack.contents[-1])
 			return True
 		return False
 
@@ -267,20 +270,20 @@ class player:
 				print(f"kick bought")
 			globe.boss.kick_stack.contents[-1].bought = True
 			self.played.power -= globe.boss.kick_stack.contents[-1].cost
-			self.gain(globe.boss.kick_stack.contents.pop())
+			self.gain(globe.boss.kick_stack.contents[-1])
 			return True
 		return False
 
-	def riddle(self):
+	"""def riddle(self):
 		if self.played_riddler and globe.boss.main_deck.size() > 0 and self.played.power >= 3:
 			self.played.power -= 3
-			self.gain(globe.boss.main_deck.contents.pop())
+			self.gain(globe.boss.main_deck.contents)
 			return True
-		return False
+		return False"""
 
 	def gain_a_weakness(self):
 		if globe.boss.weakness_stack.size() > 0:
-			self.gain(globe.boss.weakness_stack.contents.pop())
+			self.gain(globe.boss.weakness_stack.contents[-1])
 			return True
 		return False
 
@@ -301,7 +304,7 @@ class player:
 			if globe.DEBUG:
 				print(f"{card.name} bought")
 			self.played.power -= card.cost
-			self.gain(globe.boss.lineup.contents.pop(cardnum))
+			self.gain(globe.boss.lineup.contents[cardnum])
 			return True
 		return False
 
@@ -311,7 +314,7 @@ class player:
 			if globe.DEBUG:
 				print(f"{card.name} bought")
 			self.played.power -= card.cost
-			self.gain(card.pop_self())
+			self.gain(card)
 			return True
 		return False
 
@@ -408,17 +411,17 @@ class model:
 
 	#initialize Game
 	def __init__(self,number_of_players=2):
-		self.main_deck = pile()
+		self.main_deck = pile("Main Deck")
 		self.main_deck.contents = deck_builder.initialize_deck()
-		self.weakness_stack = pile()
+		self.weakness_stack = pile("Weakness Stack")
 		self.weakness_stack.contents = deck_builder.initialize_weaknesses()
-		self.kick_stack = pile()
+		self.kick_stack = pile("Kick Stack")
 		self.kick_stack.contents = deck_builder.initialize_kicks()
-		self.supervillain_stack = supervillain_pile()
+		self.supervillain_stack = supervillain_pile("SV Stack")
 		self.supervillain_stack.contents = deck_builder.initialize_supervillains()
 		self.supervillain_stack.current_sv = self.supervillain_stack.contents[-1]
-		self.lineup = pile()
-		self.destroyed_stack = pile()
+		self.lineup = pile("Linup")
+		self.destroyed_stack = pile("Destroyed")
 		self.persona_list = deck_builder.get_personas()
 
 		for c in range(5):
@@ -533,6 +536,8 @@ class model:
 
 
 		for p in self.players:
+			#for c in p.over_superhero.contents.copy():
+			#	c.destroy()
 			self.player_score.append(p.calculate_vp())
 
 

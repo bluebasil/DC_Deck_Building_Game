@@ -178,9 +178,11 @@ class drawable:
 		self.name = name
 
 	def draw(self):
+		#for c in self.children.values():
+		#	c.set_gone()
 		#self.children = []
 		#self.jminx = self.jminy = self.jmaxx = self.jmaxy = 0
-		pass
+		return
 
 	def clicked(self,x,y):
 		return
@@ -377,9 +379,13 @@ class boss(drawable):
 		#Power display
 		arcade.draw_text(f"{globe.boss.players[globe.boss.whose_turn].played.power} Power", SCREEN_WIDTH*0.8,SCREEN_HEIGHT*0.9 , arcade.color.WHITE, 86)
 
-		for i,special_option in enumerate(globe.boss.players[globe.boss.whose_turn].played.special_options):
-			option = self.get_drawable(button,f"special_action_{i}")
-			option.draw(special_option,special_option.button_text,SCREEN_WIDTH*0.9,SCREEN_HEIGHT*0.8 - i*(option.jmaxy-option.jminy +15))
+		if globe.boss.whose_turn == 0:
+			for i,special_option in enumerate(globe.boss.players[globe.boss.whose_turn].played.special_options):
+				option = self.get_drawable(button,f"special_action_{i}")
+				#print("A BUTTON SHOULD HAVE BEEN DRAWN 1",option.gone,flush = True)
+				option.draw(special_option,special_option.button_text,SCREEN_WIDTH*0.9,SCREEN_HEIGHT*0.8 - i*(option.jmaxy-option.jminy +15))
+				#print("A BUTTON SHOULD HAVE BEEN DRAWN 2",option.gone,flush = True)
+
 		
 		query = self.get_drawable(question,f"question")
 		if globe.bus.display != None:
@@ -467,6 +473,12 @@ class player_icon(drawable):
 
 			arcade.draw_text(f"Score: {player.score}",x+400,y-player.persona.texture.height*0.1/2,arcade.color.WHITE,15)
 
+			on_top = self.get_drawable(pile,f"{self.name}-on_top")
+			if len(player.over_superhero.contents) > 0:
+				on_top.draw_squished(player.over_superhero.contents,x+player.persona.texture.width*0.2*3.5,y-player.persona.texture.height*0.2+BASE_TEXTURE.height*0.2*0.25,150,True,0.2)
+			else:
+				on_top.set_gone()
+
 		self.assemble_juristiction()
 
 
@@ -500,8 +512,8 @@ class player(drawable):
 
 
 			on_top = self.get_drawable(pile,"on_top")
-			if len(player.over_superhero) > 0:
-				on_top.draw_squished(player.over_superhero,x+player.persona.texture.width*0.25,self.maxy+60,150,True,0.2)
+			if len(player.over_superhero.contents) > 0:
+				on_top.draw_squished(player.over_superhero.contents,x+player.persona.texture.width*0.25,self.maxy+60,150,True,0.2)
 			else:
 				on_top.set_gone()
 
@@ -879,7 +891,7 @@ class button(drawable):
 			arcade.draw_texture_rectangle(x, y, width,height,BUTTON_TEXTURE,0)
 			arcade.draw_text(f"{text}", x-text_offset, y-text_size/3, arcade.color.WHITE, text_size)
 		
-		
+		#print("FHSJFHSJFHSJFHJSF",self.gone,flush= True)
 
 		self.set_juristiction(x-width/2,y-height/2,x+width/2,y+height/2)
 		#print(self.name,self.jminx,self.jminy,self.jmaxx,self.jmaxy,self)

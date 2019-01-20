@@ -1150,6 +1150,7 @@ class ras_al_ghul(card_frame.card):
 		return 3
 
 	def end_of_turn(self):
+		print(self.name, "END OF TURN FROM RAS",flush = True)
 		self.pop_self()
 		self.owner.deck.contents.insert(0,self)
 		return

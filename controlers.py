@@ -809,6 +809,9 @@ class cpu(controler):
 		if hint == ai_hint.BEST:
 			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[-1].name}")
 			return [len(cards)-1]
+		elif hint == ai_hint.WORST:
+			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}")
+			return [0]
 		elif hint == ai_hint.RANDOM:
 			return [random.randint(0,len(cards)-1)]
 		self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}")
