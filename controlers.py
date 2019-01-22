@@ -886,7 +886,7 @@ class cpu(controler):
 				if c.cost <= 4:
 					choose.append(i)
 			if len(choose) > 1:
-				return random
+				return choose
 		return [option.NO]
 
 

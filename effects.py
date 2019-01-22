@@ -44,7 +44,7 @@ def attack(player,card,by_player = None):
 				print("Err: invalid number")
 				return attack(player,card,by_player)
 			else:
-				assemble[result[1]].defend()
+				assemble[result[1]].defend(attacker = by_player, defender = player)
 				player.persona.avoided_attack()
 				return False
 		elif result[0] == option.NO:

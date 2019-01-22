@@ -58,10 +58,10 @@ class black_canary(persona_frame.persona):
 		return 0
 
 	def mod(self,card,player):
-		if card.ctype_eq(cardtype.SUPERPOWER):
+		if card.ctype_eq(cardtype.VILLAIN):
 			already_played = False
 			for c in self.player.played.played_this_turn:
-				if card.name == c.name:
+				if card != c and card.name == c.name:
 					already_played = True
 			if not already_played:
 				return 1
@@ -133,9 +133,9 @@ class nightwing(persona_frame.persona):
 			for c in self.player.played.played_this_turn:
 				if c.ctype_eq(cardtype.EQUIPMENT):
 					number_played += 1
-			if number_played == 0:
+			if number_played == 1:
 				return 1
-			elif number_played == 1:
+			elif number_played == 2:
 				self.player.draw_card()
 		return 0
 

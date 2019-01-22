@@ -68,7 +68,7 @@ class card:
 
 	#defence = True must be set or this will not be an option
 	#pop_self will come in handy
-	def defend(self):
+	def defend(self,attacker = None,defender = None):
 		return
 
 	#Only used for cards in the supervilalin stack
@@ -81,8 +81,7 @@ class card:
 	def destroy(self,player_responsible):
 		self.pop_self()
 		player_responsible.persona.destory_power()
-		self.owner = None
-		self.owner_type = owners.DESTROYED
+		self.set_owner(owners.DESTROYED)
 		globe.boss.destroyed_stack.add(self)
 
 

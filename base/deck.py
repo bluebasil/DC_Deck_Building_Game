@@ -17,6 +17,7 @@ def initialize_supervillains():
 	assemble.append(cards.parallax())
 	assemble.append(cards.sinestro())
 	random.shuffle(assemble)
+	#assemble.append(cards.the_joker())
 	assemble.append(cards.ras_al_ghul())
 	return assemble
 

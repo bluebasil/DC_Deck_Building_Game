@@ -33,6 +33,16 @@ deck = {cards.amanda_waller: 2, \
 		cards.expert_marksman: 2, \
 		cards.firestorm_matrix: 1, \
 		cards.firestorm: 1, \
+		cards.giant_growth: 3, \
+
+		cards.giant_growth: 3, \
+		cards.giganta: 2, \
+		cards.grid: 2, \
+		cards.insanity: 3, \
+		cards.invulnerable: 3, \
+		cards.johnny_quick: 2, \
+		cards.mallet: 3, \
+		cards.man_bat_serum: 3, \
 		
 		cards.belle_reve: 1, \
 		cards.blackgate_prison: 1, \

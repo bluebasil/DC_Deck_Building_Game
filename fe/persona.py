@@ -26,7 +26,7 @@ class bane(persona_frame.persona):
 		return True
 
 	def mod(self,card,player):
-		if len(player.played.played_this_turn) == 0 and card.cost >= 1:
+		if len(player.played.played_this_turn) == 1 and card.cost >= 1:
 			self.action = actions.special_action("Bane",self.special_action_click)
 			self.player.played.special_options.append(self.action)
 			self.player.played.card_mods.remove(self.mod)

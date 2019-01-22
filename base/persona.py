@@ -56,17 +56,16 @@ class cyborg(persona_frame.persona):
 		if card.ctype_eq(cardtype.SUPERPOWER):
 			already_played = False
 			for c in self.player.played.played_this_turn:
-				if c.ctype_eq(cardtype.SUPERPOWER):
+				if c != card and c.ctype_eq(cardtype.SUPERPOWER):
 					already_played = True
 			if not already_played:
 				return 1
 		elif card.ctype_eq(cardtype.EQUIPMENT):
 			already_played = False
 			for c in self.player.played.played_this_turn:
-				if c.ctype_eq(cardtype.EQUIPMENT):
+				if c != card and c.ctype_eq(cardtype.EQUIPMENT):
 					already_played = True
 			if not already_played:
-				
 				self.player.draw_card()
 		return 0
 
@@ -107,7 +106,7 @@ class green_lantern(persona_frame.persona):
 
 	def mod(self,card,player):
 		#if not self.accounted_for:
-		others = [card]
+		others = []
 		for c in self.player.played.played_this_turn:
 			unique = True
 			if c.cost >= 1:
@@ -162,7 +161,7 @@ class superman(persona_frame.persona):
 		if card.ctype_eq(cardtype.SUPERPOWER):
 			already_played = False
 			for c in self.player.played.played_this_turn:
-				if card.name == c.name:
+				if c != card and card.name == c.name:
 					already_played = True
 			if not already_played:
 				return 1
@@ -203,7 +202,7 @@ class martian_manhunter(persona_frame.persona):
 	def villain_mod(self,card,player):
 		if card.ctype_eq(cardtype.VILLAIN):
 			#This card is 1
-			villain_count = 1
+			villain_count = 0
 			for c in self.player.played.played_this_turn:
 				if c.ctype_eq(cardtype.VILLAIN):
 					villain_count += 1
@@ -217,7 +216,7 @@ class martian_manhunter(persona_frame.persona):
 	def hero_mod(self,card,player):
 		if card.ctype_eq(cardtype.HERO):
 			#This card is 1
-			hero_count = 1
+			hero_count = 0
 			for c in self.player.played.played_this_turn:
 				if c.ctype_eq(cardtype.HERO):
 					hero_count += 1

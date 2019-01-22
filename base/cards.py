@@ -73,7 +73,7 @@ class the_batmobile(card_frame.card):
 	image = "base/images/cards/Batmobile_2.jpeg"
 	
 	def play_action(self,player):
-		if len(player.played.played_this_turn) == 0:
+		if len(player.played.played_this_turn) == 1:
 			player.discard_hand()
 			for i in range(5):
 				player.draw_card()
@@ -134,7 +134,7 @@ class blue_beetle(card_frame.card):
 	def play_action(self,player):
 		return 3
 
-	def defend(self):
+	def defend(self,attacker = None,defender = None):
 		return
 
 #Done
@@ -150,7 +150,7 @@ class bulletproof(card_frame.card):
 	def play_action(self,player):
 		return 2
 
-	def defend(self):
+	def defend(self,attacker = None,defender = None):
 		self.owner.discard_a_card(self)
 		self.owner.draw_card()
 		#This effdect does it, but be carefull
@@ -176,7 +176,7 @@ class the_cape_and_cowl(card_frame.card):
 	def play_action(self,player):
 		return 2
 
-	def defend(self):
+	def defend(self,attacker = None,defender = None):
 		self.owner.discard_a_card(self)
 		for i in range(2):
 			self.owner.draw_card()
@@ -479,7 +479,8 @@ class jonn_jonzz(card_frame.card):
 	def play_action(self,player):
 		top_of_sv = globe.boss.supervillain_stack.contents.pop()
 		player.played.play(top_of_sv)
-		player.played.contents.remove(top_of_sv)
+		top_of_sv.pop_self()
+		#player.played.contents.remove(top_of_sv)
 		globe.boss.supervillain_stack.add(top_of_sv)
 		return 0
 
@@ -530,7 +531,7 @@ class lasso_of_truth(card_frame.card):
 	def play_action(self,player):
 		return 1
 
-	def defend(self):
+	def defend(self,attacker = None,defender = None):
 		self.pop_self()
 		self.owner.discard.add(self)
 		self.owner.draw_card()
@@ -602,7 +603,7 @@ class nth_metal(card_frame.card):
 	image = "base/images/cards/Nth_Metal.jpeg"
 	
 	def play_action(self,player):
-		top_card = player.reveal_card()
+		top_card = player.reveal_card(public = False)
 		if effects.ok_or_no(f"A {top_card.name} is on top of your deck, would you like to destroy it? (ok/no)",player,top_card,ai_hint.IFBAD):
 			top_card.destroy(player)
 		return 0
@@ -643,7 +644,7 @@ class poison_ivy(card_frame.card):
 	def attack_action(self,by_player):
 		for p in globe.boss.players:
 			if p != by_player and effects.attack(p,self,by_player):
-				card_to_discard = p.reveal_card()
+				card_to_discard = p.reveal_card(public = False)
 				p.discard_a_card(card_to_discard)
 				if card_to_discard.cost >= 1:
 					p.gain_a_weakness()
@@ -661,7 +662,6 @@ class power_ring(card_frame.card):
 	
 	def play_action(self,player):
 		top_card = player.reveal_card()
-		effects.reveal("Top card of your deck:",player,[top_card])
 		if top_card.cost >= 1:
 			return 3
 		return 2
@@ -791,7 +791,7 @@ class starro(card_frame.card):
 	def attack_action(self,by_player):
 		for p in globe.boss.players:
 			if p != by_player and effects.attack(p,self,by_player):
-				card_to_discard = p.reveal_card()
+				card_to_discard = p.reveal_card(public = False)
 				p.discard_a_card(card_to_discard)
 				if not card_to_discard.ctype_eq(cardtype.LOCATION):
 					result = effects.ok_or_no(f"Would you like to play a {card_to_discard.name}?",by_player,card_to_discard,ai_hint.ALWAYS)
@@ -842,7 +842,7 @@ class super_speed(card_frame.card):
 		player.draw_card()
 		return 0
 
-	def defend(self):
+	def defend(self,attacker = None,defender = None):
 		self.owner.discard_a_card(self)
 		for i in range(2):
 			self.owner.draw_card()
@@ -905,7 +905,6 @@ class two_face(card_frame.card):
 		choose_even = effects.choose_even_or_odd("Choose even or odd, then reveal the top card of your deck.  If its cost matches your choice, draw it.  If not, discard it.",player)
 		
 		on_top = player.reveal_card()
-		effects.reveal(f"This was on top of {player.persona.name}'s deck",player,[on_top])
 		if on_top.cost%2 == 0:
 			card_is_even = True
 		else:
@@ -956,8 +955,8 @@ class x_ray_vision(card_frame.card):
 			if p != player:
 				top_card = p.reveal_card()
 				if top_card != None:
-					effects.reveal(f"{top_card.name} is on the top of {p.persona.name}'s deck.",p,[top_card])
-					assemble.append(top_card)
+					if not top_card.ctype_eq(cardtype.LOCATION):
+						assemble.append(top_card)
 		if len(assemble) > 0:
 			result = effects.may_choose_one_of("You may play of of the revealed cards.\nIt will then go back ontop of the players deck.",player,assemble,ai_hint.BEST)
 			if result != None:
@@ -1246,7 +1245,7 @@ class black_manta(card_frame.card):
 	def first_apearance(self):
 		for p in globe.boss.players:
 			if effects.attack(p,self):
-				discarded = p.reveal_card()
+				discarded = p.reveal_card(public = False)
 				p.discard_a_card(discarded)
 				if discarded.cost >= 1:
 					instruction_text = f"Would you like to destroy this card?  If not, you hand will be discarded."
@@ -1271,7 +1270,7 @@ class brainiac(card_frame.card):
 		for p in globe.boss.players:
 			if p != player and p.hand.size() > 0:
 				card_to_play = random.choice(p.hand.contents)
-				effects.reveal(f"This was on top of {p.pid}-{p.persona.name}'s deck",player,[card_to_play])
+				effects.reveal(f"This was in {p.pid}-{p.persona.name}'s hand",player,[card_to_play])
 				if not card_to_play.ctype_eq(cardtype.LOCATION):
 					player.play_and_return(card_to_play.pop_self(), p.hand)
 		return 0
@@ -1337,17 +1336,16 @@ class darkseid(card_frame.card):
 	
 	def play_action(self,player):
 		instruction_text = f"You may destroy 2 cards in your hand, if you do, +5 Power, +3 power otherwise (1/2)"
-		card1 = effects.may_choose_one_of(instruction_text,player,player.hand.contents,hint = ai_hint.IFBAD)
+		assemble = player.hand.contents.copy()
+		card1 = effects.may_choose_one_of(instruction_text,player,assemble,hint = ai_hint.IFBAD)
 		if card1 != None:
 			instruction_text = f"You may destroy 2 cards in your hand, if you do, +5 Power, +3 power otherwise (2/2).  If you do not choose a second card, no cards will be destroyed."
-			card1.pop_self()
-			card2 = effects.may_choose_one_of(instruction_text,player,player.hand.contents,hint = ai_hint.IFBAD)
+			assemble.remove(card1)
+			card2 = effects.may_choose_one_of(instruction_text,player,assemble,hint = ai_hint.IFBAD)
 			if card2 != None:
 				card1.destroy(player)
 				card2.destroy(player)
 				return 5
-			else:
-				player.hand.add(card1)
 		return 3
 
 	def first_apearance(self):
@@ -1435,13 +1433,15 @@ class the_joker(card_frame.card):
 		cards_to_shuffle = []
 		participating_players = []
 		for p in globe.boss.players:
+			print(p.persona.name,flush=True)
 			if effects.attack(p,self):
 				if p.hand.size() > 0:
 					card_to_give = effects.choose_one_of(instruction_text,p,p.hand.contents,hint = ai_hint.WORST)
 					cards_to_shuffle.append(card_to_give)
-				participating_players.append(p)
+					participating_players.append(p)
 		if len(cards_to_shuffle) > 0:
 			for i,p in enumerate(participating_players):
+				print("DJDJDJ",i-1,len(cards_to_shuffle),flush=True)
 				card_recived = cards_to_shuffle[i-1]
 				p.discard_a_card(card_recived)
 				card_recived.set_owner(p)
@@ -1509,7 +1509,7 @@ class sinestro(card_frame.card):
 	def play_action(self,player):
 		effects.reveal("This was on top of the main deck",player,[globe.boss.main_deck.contents[-1]])
 		if len(globe.boss.main_deck.contents) > 0 and globe.boss.main_deck.contents[-1].ctype_eq(cardtype.HERO):
-			globe.boss.main_deck.contents.pop().destroy(player)
+			globe.boss.main_deck.contents[-1].destroy(player)
 			return 3
 		else:
 			new_card = globe.boss.main_deck.contents.pop()

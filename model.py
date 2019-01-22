@@ -111,6 +111,9 @@ class playing(pile):
 			self.contents.append(card)
 		modifier = 0
 
+		if not ongoing:
+			self.played_this_turn.append(card)
+
 		# SO that the mods can delete themselves afterwards
 		assemble = []
 		for mod in self.card_mods:
@@ -126,8 +129,7 @@ class playing(pile):
 
 		#print("MOD WAS",modifier)
 		self.power += modifier
-		if not ongoing:
-			self.played_this_turn.append(card)
+		
 		#print("PLAYED!", self.power, self)
 
 	def parallax_double(self):
@@ -184,7 +186,7 @@ class player:
 		self.ongoing = ongoing_pile("Ongoing",self)
 		self.played = playing("Played",self)
 
-		self.vp = 2
+		self.vp = 5
 
 		#These should be reinitialized or they share values with all insatnces
 		self.gain_redirect = []
@@ -224,10 +226,14 @@ class player:
 
 		return drawn_card
 
-	def reveal_card(self):
+	def reveal_card(self,public = True):
 		if not self.manage_reveal():
 			return None
-		return self.deck.contents[-1]
+		top_card = self.deck.contents[-1]
+		if public:
+			reveal_text = f"{top_card.name} was on the top of {self.persona.name}'s deck."
+			effects.reveal(reveal_text,self,[top_card])
+		return top_card
 
 	def manage_reveal(self):
 		if not self.deck.can_draw():
@@ -250,7 +256,8 @@ class player:
 
 	def play_and_return(self, card, pile):
 		self.played.play(card)
-		self.played.contents.remove(card)
+		card.pop_self()
+		#self.played.contents.remove(card)
 		pile.add(card)
 
 	def buy_supervillain(self):
@@ -453,7 +460,7 @@ class model:
 		self.players.append(new_player)
 
 		new_player = player(3,None)
-		new_controler = controlers.cpu_greedy(new_player,invisible)
+		new_controler = controlers.cpu(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
@@ -519,7 +526,7 @@ class model:
 					print("MAIN DECK RAN OUT!")
 					return
 				else:
-					card_to_add.owner_type = owners.LINEUP
+					card_to_add.set_owner(owners.LINEUP)
 				self.lineup.add(card_to_add)
 
 			if self.supervillain_stack.get_count() > 0 and \
