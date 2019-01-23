@@ -1,5 +1,4 @@
-All card names are the property of DC 
-Concept and card text are the property of Cryptozoic
+All card names are the property of DC.  Concept and cards are the property of Cryptozoic.
 
 
 This is a personal project to digitalize the DC deck builing game by Cryptozoic.  It is not intended for commertial use.
