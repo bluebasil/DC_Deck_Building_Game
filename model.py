@@ -445,7 +445,7 @@ class model:
 		#	self.players.append(new_player)
 
 		new_player = player(0,None)
-		new_controler = controlers.human_view(new_player,invisible)
+		new_controler = controlers.cpu(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
@@ -459,12 +459,12 @@ class model:
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
-		new_player = player(3,None)
-		new_controler = controlers.cpu(new_player,invisible)
-		new_player.controler = new_controler
-		self.players.append(new_player)
+		#new_player = player(3,None)
+		#new_controler = controlers.cpu(new_player,invisible)
+		#new_player.controler = new_controler
+		#self.players.append(new_player)
 
-		new_player = player(4,None)
+		new_player = player(3,None)
 		new_controler = controlers.cpu_greedy(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)

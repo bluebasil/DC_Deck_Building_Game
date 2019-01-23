@@ -43,6 +43,31 @@ deck = {cards.amanda_waller: 2, \
 		cards.johnny_quick: 2, \
 		cards.mallet: 3, \
 		cards.man_bat_serum: 3, \
+
+		cards.man_bat: 2, \
+		cards.owlman: 1, \
+		cards.pandora: 1, \
+		cards.pandoras_box: 2, \
+		cards.phantom_stranger: 1, \
+		cards.power_armor: 1, \
+		cards.power_drain: 2, \
+		cards.power_girl: 3, \
+		cards.power_ring: 1, \
+		cards.royal_flush_gang: 5, \
+		cards.secret_society_communicator: 2, \
+		cards.sledgehammer: 2, \
+		cards.stargirl: 2, \
+		cards.steel: 2, \
+		cards.steve_trevor: 2, \
+		cards.super_intellect: 2, \
+		cards.superwoman: 1, \
+		cards.the_blight: 2, \
+		cards.transmutation: 3, \
+		cards.ultra_strength: 1, \
+		cards.ultraman: 1, \
+		cards.venom_injector: 2, \
+		cards.vibe: 2, \
+		cards.word_of_power: 2, \
 		
 		cards.belle_reve: 1, \
 		cards.blackgate_prison: 1, \

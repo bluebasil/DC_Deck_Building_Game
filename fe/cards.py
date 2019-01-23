@@ -298,13 +298,13 @@ class element_woman(card_frame.card):
 		return 2
 
 	def get_ctype(self):
-		if self.owner == None and not being_played:
+		if self.owner == None and not self.being_played:
 			return super().get_ctype()
 		else:
 			return [cardtype.HERO,cardtype.SUPERPOWER,cardtype.EQUIPMENT,cardtype.VILLAIN]
 
 	def ctype_eq(self,ctype):
-		if self.owner == None and not being_played:
+		if self.owner == None and not self.being_played:
 			return super().ctype_eq(ctype)
 		else:
 			if ctype == cardtype.SUPERPOWER or ctype == cardtype.EQUIPMENT or ctype == cardtype.VILLAIN or ctype == self.ctype:
@@ -547,8 +547,10 @@ class insanity(card_frame.card):
 			for i,p in enumerate(globe.boss.players):
 				current = cards_to_pass[i-1]
 				if current != None:
-					current.set_owner(p.pop_self())
+					current.pop_self()
+					current.set_owner(p)
 					p.hand.contents.append(current)
+		return 0
 
 
 
@@ -625,7 +627,7 @@ class mallet(card_frame.card):
 			player.draw_card()
 		else:
 			instruction_text = f"Which players discard pile would you like to pass the {top_card.name} to?"
-			result = choose_a_player(instruction_text,player,includes_self = True,hint = ai_hint.WORST)
+			result = effects.choose_a_player(instruction_text,player,includes_self = True,hint = ai_hint.WORST)
 			top_card.pop_self()
 			top_card.set_owner(result)
 			result.discard.contents.append(top_card)
@@ -685,12 +687,12 @@ class owlman(card_frame.card):
 	
 	def play_action(self,player):
 		assemble = []
-		for c in globe.boss.lineup:
+		for c in globe.boss.lineup.contents:
 			if c.ctype_eq(cardtype.EQUIPMENT):
 				assemble.append(c)
 		if len(assemble) > 0:
 			instruction_text = "You may destroy an Equipment in the Line-up."
-			result = may_choose_one_of(instruction_text,player,assemble,ai_hint.RANDOM)
+			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.RANDOM)
 			if result != None:
 				result.destroy(player)
 		unique_equipment = set()
@@ -711,7 +713,7 @@ class pandora(card_frame.card):
 		card_to_add = globe.boss.main_deck.draw()
 		if card_to_add != None:
 			card_to_add.set_owner(owners.LINEUP)
-			self.lineup.add(card_to_add)
+			globe.boss.lineup.add(card_to_add)
 		unique_cost = set()
 		for c in globe.boss.lineup.contents:
 			unique_cost.add(c.cost)
@@ -748,12 +750,12 @@ class phantom_stranger(card_frame.card):
 	def play_action(self,player):
 		if len(player.hand.contents) > 0:
 			instruction_text = "You may destroy a card in your hand."
-			result = may_choose_one_of(instruction_text,player,player.hand.contents,ai_hint.IFBAD)
+			result = effects.may_choose_one_of(instruction_text,player,player.hand.contents,ai_hint.IFBAD)
 			if result != None:
 				result.destroy(player)
 		if len(player.discard.contents) > 0:
 			instruction_text = "You may destroy a card in your discard pile."
-			result = may_choose_one_of(instruction_text,player,player.discard.contents,ai_hint.IFBAD)
+			result = effects.may_choose_one_of(instruction_text,player,player.discard.contents,ai_hint.IFBAD)
 			if result != None:
 				result.destroy(player)
 		return 0
@@ -834,12 +836,12 @@ class power_ring(card_frame.card):
 	
 	def play_action(self,player):
 		assemble = []
-		for c in globe.boss.lineup:
+		for c in globe.boss.lineup.contents:
 			if c.ctype_eq(cardtype.HERO):
 				assemble.append(c)
 		if len(assemble) > 0:
 			instruction_text = "You may destroy an Hero in the Line-up."
-			result = may_choose_one_of(instruction_text,player,assemble,ai_hint.RANDOM)
+			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.RANDOM)
 			if result != None:
 				result.destroy(player)
 		unique_hero = set()
@@ -886,7 +888,7 @@ class secret_society_communicator(card_frame.card):
 		assemble.extend(player.hand.contents)
 		assemble.extend(player.discard.contents)
 		if len(assemble) > 0:
-			result = effects.may_choose_one_of(self.text,player,assemble,ai_hint.IFBAD):
+			result = effects.may_choose_one_of(self.text,player,assemble,ai_hint.IFBAD)
 			if result != None:
 				result.destroy(player)
 				if result.ctype_eq(cardtype.HERO):
@@ -911,7 +913,7 @@ class sledgehammer(card_frame.card):
 			if not c.ctype_eq(cardtype.EQUIPMENT):
 				assemble.append(c)
 		if len(assemble) > 0:
-			result = effects.may_choose_one_of(self.text,player,assemble,ai_hint.IFBAD):
+			result = effects.may_choose_one_of(self.text,player,assemble,ai_hint.IFBAD)
 			if result != None:
 				result.destroy(player)
 				if result.cost >= 1:
@@ -925,7 +927,7 @@ class stargirl(card_frame.card):
 	cost = 4
 	ctype = cardtype.HERO
 	text = "+2 Power\nDefense: You may discard this card to avoid an Attack.  if you\ndo, draw a card and put a card with cost 1 or greater from the\ndestroyed pile on the bottom of the main deck."
-	image = "fe/images/cards/Stargirl.jpg"
+	image = "fe/images/cards/Star Girl.jpg"
 	defence = True
 	
 	def play_action(self,player):
@@ -962,7 +964,7 @@ class steel(card_frame.card):
 			if not c.ctype_eq(cardtype.HERO):
 				assemble.append(c)
 		if len(assemble) > 0:
-			result = effects.may_choose_one_of(self.text,player,assemble,ai_hint.IFBAD):
+			result = effects.may_choose_one_of(self.text,player,assemble,ai_hint.IFBAD)
 			if result != None:
 				result.destroy(player)
 				if result.cost >= 1:
@@ -999,7 +1001,7 @@ class super_intellect(card_frame.card):
 		assemble.extend(player.hand.contents)
 		assemble.extend(player.discard.contents)
 		if len(assemble) > 0:
-			result = effects.may_choose_one_of(self.text,player,assemble,ai_hint.IFBAD):
+			result = effects.may_choose_one_of(self.text,player,assemble,ai_hint.IFBAD)
 			if result != None:
 				result.destroy(player)
 				if result.ctype_eq(cardtype.EQUIPMENT):
@@ -1018,12 +1020,12 @@ class superwoman(card_frame.card):
 	
 	def play_action(self,player):
 		assemble = []
-		for c in globe.boss.lineup:
+		for c in globe.boss.lineup.contents:
 			if c.ctype_eq(cardtype.VILLAIN):
 				assemble.append(c)
 		if len(assemble) > 0:
 			instruction_text = "You may destroy an Villain in the Line-up."
-			result = may_choose_one_of(instruction_text,player,assemble,ai_hint.RANDOM)
+			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.RANDOM)
 			if result != None:
 				result.destroy(player)
 		unique_villain = set()
@@ -1046,7 +1048,7 @@ class the_blight(card_frame.card):
 		assemble.extend(player.hand.contents)
 		assemble.extend(player.discard.contents)
 		if len(assemble) > 0:
-			result = effects.may_choose_one_of(self.text,player,assemble,ai_hint.IFBAD):
+			result = effects.may_choose_one_of(self.text,player,assemble,ai_hint.IFBAD)
 			if result != None:
 				result.destroy(player)
 				if result.ctype_eq(cardtype.SUPERPOWER):
@@ -1068,14 +1070,98 @@ class transmutation(card_frame.card):
 		assemble.extend(player.hand.contents)
 		assemble.extend(player.discard.contents)
 		if len(assemble) > 0:
-			result = effects.may_choose_one_of(self.text,player,assemble,ai_hint.IFBAD):
+			result = effects.choose_one_of(self.text,player,assemble,ai_hint.RANDOM)
+			assemble = []
+			for c in globe.boss.lineup.contents:
+				if c.cost <= result.cost:
+					assemble.append(c)
+			result = effects.may_choose_one_of(f"you may gain a card from the lineup of cost {result.cost} or less",player,assemble,ai_hint.BEST)
+			if result != None:
+				player.gain(result)
+		return 0
+
+
+class ultra_strength(card_frame.card):
+	name = "Ultra ultra_strength"
+	vp = 3
+	cost = 9
+	ctype = cardtype.SUPERPOWER
+	text = "+3 Power and draw two cars."
+	image = "fe/images/cards/Ultra Strength.jpg"
+	
+	def play_action(self,player):
+		for i in range(2):
+			player.draw_card()
+		return 3
+
+
+class ultraman(card_frame.card):
+	name = "Ultraman"
+	vp = 3
+	cost = 8
+	ctype = cardtype.VILLAIN
+	text = "You may destroy a card in the Line-up.\n+1 Power for each different Super Power in the destroyed pile."
+	image = "fe/images/cards/Ultraman.jpg"
+	
+	def play_action(self,player):
+		if len(globe.boss.lineup.contents) > 0:
+			instruction_text = "You may destroy a card in the Line-up."
+			result = effects.may_choose_one_of(instruction_text,player,globe.boss.lineup.contents,ai_hint.RANDOM)
 			if result != None:
 				result.destroy(player)
-				if result.ctype_eq(cardtype.SUPERPOWER):
-					return result.cost
-				return 0
-		return 2
+		unique_superpower= set()
+		for c in globe.boss.destroyed_stack.contents:
+			if c.ctype_eq(cardtype.SUPERPOWER):
+				unique_superpower.add(c.name)
+		return len(unique_superpower)
 
+
+class venom_injector(card_frame.card):
+	name = "Venom Injector"
+	vp = 0
+	cost = 1
+	ctype = cardtype.EQUIPMENT
+	text = "When you destroy this card in any zone, +2 Power."
+	image = "fe/images/cards/Venom Injector 1.jpg"
+	
+	def destroy(self,player_responsible):
+		player_responsible.played.plus_power(2)
+		super().destroy(player_responsible)
+
+
+
+class vibe(card_frame.card):
+	name = "Vibe"
+	vp = 1
+	cost = 2
+	ctype = cardtype.HERO
+	text = "+1 Power\nYou may put a Hero or Super Power with cost 5 or\nless from your discard pile on top of your deck."
+	image = "fe/images/cards/Vibe.jpg"
+	
+	def play_action(self,player):
+		assemble = []
+		for c in player.discard.contents:
+			if c.cost <= 5 and (c.ctype_eq(cardtype.HERO) or c.ctype_eq(cardtype.SUPERPOWER)):
+				assemble.append(c)
+		if len(assemble) > 0:
+			instruction_text = "You may put a Hero or Super Power with cost 5 or\nless from your discard pile on top of your deck."
+			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
+			if result != None:
+				player.deck.contents.append(result.pop_self())
+		return 1
+
+
+class word_of_power(card_frame.card):
+	name = "Word Of Power"
+	vp = 0
+	cost = 1
+	ctype = cardtype.SUPERPOWER
+	text = "When you destroy this card in any zone, you\npay 4 less to defeat Super Heros this turn."
+	image = "fe/images/cards/Word of Power.jpg"
+	
+	def destroy(self,player_responsible):
+		player_responsible.discount_on_sv += 4
+		super().destroy(player_responsible)
 
 
 ####LOCATIONS
