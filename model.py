@@ -186,7 +186,7 @@ class player:
 		self.ongoing = ongoing_pile("Ongoing",self)
 		self.played = playing("Played",self)
 
-		self.vp = 5
+		#self.vp = 5
 
 		#These should be reinitialized or they share values with all insatnces
 		self.gain_redirect = []
@@ -445,7 +445,7 @@ class model:
 		#	self.players.append(new_player)
 
 		new_player = player(0,None)
-		new_controler = controlers.cpu(new_player,invisible)
+		new_controler = controlers.human_view(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 

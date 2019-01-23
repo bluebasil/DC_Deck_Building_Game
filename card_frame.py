@@ -80,6 +80,7 @@ class card:
 
 	def destroy(self,player_responsible):
 		self.pop_self()
+		#if player_responsible != None:
 		player_responsible.persona.destory_power()
 		self.set_owner(owners.DESTROYED)
 		globe.boss.destroyed_stack.add(self)

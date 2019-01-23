@@ -187,7 +187,7 @@ class constructs_of_fear(card_frame.card):
 			if p != by_player and effects.attack(p,self,by_player):
 				for i in range(2):
 					if len(p.hand.contents) > 0:
-						result = effects.choose_one_of(f"Choose a card to discard. ({i}/2)",p,p.hand.contents,ai_hint.WORST)
+						result = effects.choose_one_of(f"Choose a card to discard. ({i+1}/2)",p,p.hand.contents,ai_hint.WORST)
 						p.discard_a_card(result)
 		return
 
@@ -205,12 +205,13 @@ class cosmic_staff(card_frame.card):
 
 	def defend(self,attacker = None,defender = None):
 		self.owner.discard_a_card(self)
-		self.owner.gain(globe.boss.main_deck.contents[0])
+		if len(globe.boss.main_deck.contents) > 0:
+			self.owner.gain(globe.boss.main_deck.contents[0])
 		return
 
 class deathstorm(card_frame.card):
 	name = "Deathstorm"
-	vp = '*'
+	vp = '10*'
 	cost = 4
 	ctype = cardtype.VILLAIN
 	text = "You may destroy a card in your hand.\nAt the end of the game, this card is worth 10VP minus 1VP fewer for each\ncard in excess of 20 in your deck. (Minimum 0)"
@@ -593,7 +594,7 @@ class invulnerable(card_frame.card):
 			instruction_text = f"You may destroy a vunerability in your hand or discard pile.\nIf you choose not to, this card will be discarded."
 			result = effects.may_choose_one_of(instruction_text,self.owner,assemble,ai_hint.RANDOM)
 			if result != None:
-				result.destroy()
+				result.destroy(self.owner)
 				return
 		self.owner.discard_a_card(self)
 		return
@@ -741,7 +742,7 @@ class pandoras_box(card_frame.card):
 
 class phantom_stranger(card_frame.card):
 	name = "Phantom Stranger"
-	vp = '*'
+	vp = '10*'
 	cost = 5
 	ctype = cardtype.HERO
 	text = "You may destroy a card in your hand and you may destroy\na card in your discard pile.\nAt the end of the game this card is worth 10VP  minus 1VP for each\ncard with cost 0 in your deck. (Minimum 0.)"
@@ -863,7 +864,7 @@ class royal_flush_gang(card_frame.card):
 			player.draw_card()
 		for i in range(2):
 			if len(player.hand.contents) > 0:
-				instruction_text = f"Choose a card to discard ({i}/2)"
+				instruction_text = f"Choose a card to discard ({i+1}/2)"
 				result = effects.choose_one_of(instruction_text,player,player.hand.contents,ai_hint.WORST)
 				player.discard_a_card(result)
 
@@ -944,6 +945,9 @@ class stargirl(card_frame.card):
 		if len(assemble) > 0:
 			instruction_text = "Put a card with cost 1 or greater on the bottom of the main deck."
 			result = effects.choose_one_of(instruction_text,self.owner,assemble,ai_hint.RANDOM)
+			result.pop_self()
+			result.set_owner(owners.MAINDECK)
+			globe.boss.main_deck.contents.insert(0,result)
 		return
 
 
@@ -1069,8 +1073,10 @@ class transmutation(card_frame.card):
 		assemble = []
 		assemble.extend(player.hand.contents)
 		assemble.extend(player.discard.contents)
+		player,gain_vp(1)
 		if len(assemble) > 0:
 			result = effects.choose_one_of(self.text,player,assemble,ai_hint.RANDOM)
+			result.destroy(player)
 			assemble = []
 			for c in globe.boss.lineup.contents:
 				if c.cost <= result.cost:
@@ -1305,3 +1311,565 @@ class star_labs(card_frame.card):
 			player.ongoing.add(self.pop_self())
 		player.played.card_mods.append(self.location_mod)
 		return 0
+
+
+
+
+
+
+
+
+
+
+#SuperVillains
+class aquaman(card_frame.card):
+	name = "Aquaman"
+	vp = 6
+	cost = 11
+	ctype = cardtype.HERO
+	owner_type = owners.VILLAINDECK
+	text = "You may put up to three cards from your discard pile on top of your\ndeck. If you choose not to, +3 Power."
+	image = "fe/images/cards/Aquaman 11.jpg"
+	attack_text = "First Appearance - Attack:: Each player puts four cards with\ncost 0 from his discard pile on top of his deck. If you put none\nthere, gain a Weakness."
+	
+	def play_action(self,player):
+		number_put = 0
+		#Initialize it to something other than None
+		result = False
+		while result != None and number_put < 3:
+			print("Loop1",flush = True)
+			if len(player.discard.contents) > 0:
+				instruction_text = f"You may put a card from your discard pile on top of your deck.\nIf you choose not to put any, +3 Power. ({number_put+1}/3)"
+				result = effects.may_choose_one_of(instruction_text,player,player.discard.contents,ai_hint.IFGOOD)
+				if result != None:
+					number_put += 1
+					result.pop_self()
+					player.deck.contents.append(result)
+			else:
+				result = None
+		if number_put == 0:
+			return 3
+		return 0
+
+
+	def first_apearance(self):
+		for p in globe.boss.players:
+			if effects.attack(p,self):
+				assemble = []
+				for c in p.discard.contents:
+					if c.cost == 0:
+						assemble.append(c)
+				if len(assemble) != 0:
+					for i in range(4):
+						if len(assemble) != 0:
+							instruction_text = f"Put a card of cost 0 from your discard ontop of your deck ({i+1}/4)"
+							result = effects.choose_one_of(instruction_text,p,assemble,ai_hint.BEST)
+							result.pop_self()
+							assemble.remove(result)
+							p.deck.contents.append(result)
+				else:
+					p.gain_a_weakness()
+		return
+
+
+class batman(card_frame.card):
+	name = "Batman"
+	vp = 6
+	cost = 11
+	ctype = cardtype.HERO
+	owner_type = owners.VILLAINDECK
+	text = "You may play up to three Equipment with cost 6 or less from the\ndestroyed pile, and then put them on the bottom of the main deck.\nIf you choose not to, +3 Power."
+	image = "fe/images/cards/Batman 11.jpg"
+	attack_text = "First Appearance - Attack:: Each player destroys an Equipment in\nhis hand or discard pile. If you cannot, gain a Weakness."
+	
+	def play_action(self,player):
+		assemble = []
+		for c in globe.boss.destroyed_stack.contents:
+			if c.ctype_eq(cardtype.EQUIPMENT) and c.cost <= 6:
+				assemble.append(c)
+
+
+		number_put = 0
+		#Initialize it to something other than None
+		result = False
+		while result != None and number_put < 3:
+			print("Loop2",flush = True)
+			if len(assemble) > 0:
+				instruction_text = f"You may up to three Equipment of cost 6 or less from the destroyed pile. If you choose to play none, +3 Power ({number_put+1}/3)"
+				result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.IFGOOD)
+				if result != None:
+					number_put += 1
+					#I should make a better play and return function
+					player.play_and_return(result,globe.boss.destroyed)
+					result.pop_self()
+					result.set_owner(owners.MAINDECK)
+					globe.boss.main_deck.insert(0,result)
+					assemble.remove(result)
+			else:
+				result = None
+		if number_put == 0:
+			return 3
+		return 0
+
+
+	def first_apearance(self):
+		for p in globe.boss.players:
+			if effects.attack(p,self):
+				assemble = []
+				for c in p.hand.contents:
+					if c.ctype_eq(cardtype.EQUIPMENT):
+						assemble.append(c)
+				for c in p.discard.contents:
+					if c.ctype_eq(cardtype.EQUIPMENT):
+						assemble.append(c)
+				if len(assemble) != 0:
+					instruction_text = f"Destroy an Equipment in your hand or discard pile."
+					result = effects.choose_one_of(instruction_text,p,assemble,ai_hint.WORST)
+					result.destroy(p)
+				else:
+					p.gain_a_weakness()
+		return
+
+
+
+class constantine(card_frame.card):
+	name = "Constantine"
+	vp = 5
+	cost = 10
+	ctype = cardtype.HERO
+	owner_type = owners.VILLAINDECK
+	text = "Reveal the top three cards of your deck. Draw one, destroy one, and put\none on top of your deck. Gain VPs equal to the destroyed cards VP value."
+	image = "fe/images/cards/Constantine 10.jpg"
+	attack_text = "First Appearance - Attack:: Each player loses 3VPs. If you have\nnone to lose, gain a Weakness."
+	
+	def play_action(self,player):
+		assemble = []
+		for i in range(3):
+			assemble.append(player.reveal_card(public = False))
+			player.deck.contents.pop()
+		effects.reveal(f"These were the top 3 cards on {player.persona.name}'s deck",player,assemble)
+		result = effects.choose_one_of("Choose one of these to draw.",player,assemble,ai_hint.BEST)
+		assemble.remove(result)
+		result.pop_self()
+		player.hand.contents.append(result)
+		result = effects.choose_one_of("Choose one of these to destroy.  You will gain the destroyed costs VP value.",player,assemble,ai_hint.WORST)
+		vp_to_gain = result.vp
+		if vp_to_gain == '*':
+			vp_to_gain = 3
+		elif isinstance(vp_to_gain, str):
+			vp_to_gain = vp_to_gain.replace('*','')
+			try:
+				vp_to_gain = int(vp_to_gain)
+			except:
+				print(f"Error converting {vp_to_gain} to an int, defaulting to 3.")
+				vp_to_gain = 3
+		else:
+			vp_to_gain = result.vp
+		player.gain_vp(vp_to_gain)
+		result.destroy(player)
+		#The last card stays on the top of the deck
+		return 0
+
+
+	def first_apearance(self):
+		for p in globe.boss.players:
+			if effects.attack(p,self):
+				if p.vp == 0:
+					p.gain_a_weakness()
+				else:
+					p.vp = max(0,p.vp-3)
+		return
+
+
+class cyborg(card_frame.card):
+	name = "Cyborg"
+	vp = 5
+	cost = 10
+	ctype = cardtype.HERO
+	owner_type = owners.VILLAINDECK
+	text = "+2 Power for each Super Power and Equipment you play or have\nplayed this turn."
+	image = "fe/images/cards/Cyborg 10.jpg"
+	attack_text = "First Appearance - Attack:: Each player discards a Super\nPower and an Equipment. If you discard no cards, gain a Weakness."
+	
+	def cyborg_mod(self,card,player):
+		if card.ctype_eq(cardtype.SUPERPOWER) or card.ctype_eq(cardtype.EQUIPMENT):
+			return 2
+		return 0
+
+	def play_action(self,player):
+		player.played.card_mods.append(self.cyborg_mod)
+		so_far_power = 0
+		for c in player.played.played_this_turn:
+			if c.ctype_eq(cardtype.SUPERPOWER) or c.ctype_eq(cardtype.EQUIPMENT):
+				so_far_power += 2
+		return so_far_power
+
+
+	def first_apearance(self):
+		for p in globe.boss.players:
+			if effects.attack(p,self):
+				card_discarded = False
+				assemble = []
+				for c in p.hand.contents:
+					if c.ctype_eq(cardtype.SUPERPOWER):
+						assemble.append(c)
+				if len(assemble) > 0:
+					result = effects.choose_one_of("Discard a Super Power",p,assemble,ai_hint.WORST)
+					card_discarded = True
+
+				assemble = []
+				for c in p.hand.contents:
+					if c.ctype_eq(cardtype.EQUIPMENT):
+						assemble.append(c)
+				if len(assemble) > 0:
+					result = effects.choose_one_of("Discard a Super Power",p,assemble,ai_hint.WORST)
+					card_discarded = True
+
+				if not card_discarded:
+					p.gain_a_weakness()
+		return
+
+
+class green_arrow(card_frame.card):
+	name = "Green Arrow"
+	vp = 5
+	cost = 9
+	ctype = cardtype.HERO
+	owner_type = owners.VILLAINDECK
+	text = "When you play this card, leave it in front of you for the rest of the game.\nOngoing: Punch cards your play have an additional +1 Power."
+	image = "fe/images/cards/Green Arrow 9.jpg"
+	attack_text = "First Appearance - Attack:: Each player discards two Punch\ncards. For each Punch you fail ti discard, gain a Weakness."
+	
+	def green_arrow_mod(self,card,player):
+		#there is a risk that the card is removed from ongoing from an ealier mod
+		if card.name == "Punch" and self.green_arrow_mod in player.played.card_mods:
+			return 1
+		return 0
+	
+	
+	def play_action(self,player):
+		if self not in player.ongoing.contents:
+			player.ongoing.add(self.pop_self())
+		player.played.card_mods.append(self.green_arrow_mod)
+		return 0
+
+	def first_apearance(self):
+		for p in globe.boss.players:
+			if effects.attack(p,self):
+				assemble = []
+				for c in p.hand.contents:
+					if c.name == "Punch":
+						assemble.append(c)
+				discarded = 0
+				while len(assemble) > 0 and discarded < 2:
+					print("Loop3",flush = True)
+					p.discard_a_card(assemble.pop())
+					discarded += 1
+				while discarded < 2:
+					print("Loop4",flush = True)
+					p.gain_a_weakness()
+					discarded += 1
+		return
+
+
+class green_lantern(card_frame.card):
+	name = "Green Lantern"
+	vp = 6
+	cost = 11
+	ctype = cardtype.HERO
+	owner_type = owners.VILLAINDECK
+	text = "You may play up to three Heros with a cost of 6 or less from the\ndestroyed pile, and then put them on the bottom of the main deck.\nIf you choose not to, +3 Power"
+	image = "fe/images/cards/Green Lantern.jpg"
+	attack_text = "First Appearance - Attack:: Each player destroys a Hero in his hand or discard pile. If you cannot, gain a Weakness"
+	
+	def play_action(self,player):
+		assemble = []
+		for c in globe.boss.destroyed_stack.contents:
+			if c.ctype_eq(cardtype.HERO) and c.cost <= 6:
+				assemble.append(c)
+
+
+		number_put = 0
+		#Initialize it to something other than None
+		result = False
+		while result != None and number_put < 3:
+			print("Loop5",flush = True)
+			if len(assemble) > 0:
+				instruction_text = f"You may up play to three Heros of cost 6 or less from the destroyed pile. If you choose to play none, +3 Power ({number_put+1}/3)"
+				result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.IFGOOD)
+				if result != None:
+					number_put += 1
+					#I should make a better play and return function
+					player.play_and_return(result,globe.boss.destroyed_stack)
+					result.pop_self()
+					result.set_owner(owners.MAINDECK)
+					globe.boss.main_deck.insert(0,result)
+					assemble.remove(result)
+			else:
+				result = None
+		if number_put == 0:
+			return 3
+		return 0
+
+
+	def first_apearance(self):
+		for p in globe.boss.players:	
+			if effects.attack(p,self):
+				assemble = []
+				for c in p.hand.contents:
+					if c.ctype_eq(cardtype.HERO):
+						assemble.append(c)
+				for c in p.discard.contents:
+					if c.ctype_eq(cardtype.HERO):
+						assemble.append(c)
+				if len(assemble) != 0:
+					instruction_text = f"Destroy a Hero in your hand or discard pile."
+					result = effects.choose_one_of(instruction_text,p,assemble,ai_hint.WORST)
+					result.destroy(p)
+				else:
+					p.gain_a_weakness()
+		return
+
+
+class martian_manhunter(card_frame.card):
+	name = "Martian Manhunter 12"
+	vp = 6
+	cost = 12
+	ctype = cardtype.HERO
+	owner_type = owners.VILLAINDECK
+	text = "+2 Power for each Hero and Villain you play or have\nplayed this turn."
+	image = "fe/images/cards/Martian Manhunter 12.jpg"
+	attack_text = "First Appearance - Attack:: Each player discards a\nHero and a Villain. If you discard no cards, gain a Weakness."
+	
+	def cyborg_mod(self,card,player):
+		if card.ctype_eq(cardtype.HERO) or card.ctype_eq(cardtype.VILLAIN):
+			return 2
+		return 0
+
+	def play_action(self,player):
+		player.played.card_mods.append(self.cyborg_mod)
+		so_far_power = 0
+		for c in player.played.played_this_turn:
+			if c.ctype_eq(cardtype.HERO) or c.ctype_eq(cardtype.VILLAIN):
+				so_far_power += 2
+		return so_far_power
+
+
+	def first_apearance(self):
+		for p in globe.boss.players:
+			if effects.attack(p,self):
+				card_discarded = False
+				assemble = []
+				for c in p.hand.contents:
+					if c.ctype_eq(cardtype.HERO):
+						assemble.append(c)
+				if len(assemble) > 0:
+					result = effects.choose_one_of("Discard a Hero",p,assemble,ai_hint.WORST)
+					card_discarded = True
+
+				assemble = []
+				for c in p.hand.contents:
+					if c.ctype_eq(cardtype.VILLAIN):
+						assemble.append(c)
+				if len(assemble) > 0:
+					result = effects.choose_one_of("Discard a Villain",p,assemble,ai_hint.WORST)
+					card_discarded = True
+
+				if not card_discarded:
+					p.gain_a_weakness()
+		return
+
+
+class shazam(card_frame.card):
+	name = "Shazam"
+	vp = 6
+	cost = 12
+	ctype = cardtype.HERO
+	owner_type = owners.VILLAINDECK
+	text = "Gain the top two cards of the main deck, play them, and then\ndestroy one of them. (Its effects remain)."
+	image = "fe/images/cards/Shazam 12.jpg"
+	attack_text = "First Appearance - Attack:: Each player puts a card with\ncost 5 or greater from his hand or discard pile on the bottom of\nthe main deck. If you cannot, gain a Weakness."
+	
+	def play_action(self,player):
+		assemble = []
+		for i in range(2):
+			new_card = globe.boss.main_deck.draw()
+			if new_card != None:
+				new_card.set_owner(player)
+				player.play_and_return(new_card,player.played)
+				assemble.append(new_card)
+		if len(assemble) > 0:
+			result = effects.choose_one_of("Destroy one of the cards that you just gained.",player,assemble,ai_hint.WORST)
+			result.destroy(player)
+		return 0
+
+
+	def first_apearance(self):
+		for p in globe.boss.players:
+			if effects.attack(p,self):
+				assemble = []
+				for c in p.hand.contents:
+					if c.cost >= 5:
+						assemble.append(c)
+				for c in p.discard.contents:
+					if c.cost >= 5:
+						assemble.append(c)
+				if len(assemble) > 0:
+					result = effects.choose_one_of("Choose a card to put on the bottom of the main deck.",p,assemble,ai_hint.WORST)
+					result.set_owner(owners.MAINDECK)
+					result.pop_self()
+					globe.boss.main_deck.contents.insert(0,result)
+				else:
+					p.gain_a_weakness()
+		return
+
+
+class superman(card_frame.card):
+	name = "Superman"
+	vp = 6
+	cost = 13
+	ctype = cardtype.HERO
+	owner_type = owners.VILLAINDECK
+	text = "You may play up to three Super Powers from the destroyed pile, and then\nput them on the bottom of the main deck. If you choose not to, +4 Power."
+	image = "fe/images/cards/Superman 13.jpg"
+	attack_text = "First Appearance - Attack:: Each player destroys a Super\nPower in his hand or discard pile. If you cannot, gain two Weakness cards."
+	
+	def play_action(self,player):
+		assemble = []
+		for c in globe.boss.destroyed_stack.contents:
+			if c.ctype_eq(cardtype.SUPERPOWER):
+				assemble.append(c)
+		#Initialize to anything but None
+		result = True
+		num_played = 0
+		while result != None and num_played <= 3:
+			print("Loop6",flush = True)
+			instruction_text = f"You may play a Super Power from the destroyed pile,\nand then put on the bottom of the main deck. ({num_played+1}/3)"
+			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
+			if result != None:
+				num_played += 1
+				player.play_and_return(result,globe.boss.destroyed_stack)
+				result.set_owner(owners.MAINDECK)
+				result.pop_self()
+				globe.boss.main_deck.contents.insert(0,result)
+		if num_played == 0:
+			return 4
+		return 0
+
+
+	def first_apearance(self):
+		for p in globe.boss.players:
+			if effects.attack(p,self):
+				assemble = []
+				for c in p.hand.contents:
+					if c.ctype_eq(cardtype.SUPERPOWER):
+						assemble.append(c)
+				for c in p.discard.contents:
+					if c.ctype_eq(cardtype.SUPERPOWER):
+						assemble.append(c)
+				if len(assemble) > 0:
+					result = effects.choose_one_of("Destroy a Super Power from your hand or discard pile",p,assemble,ai_hint.WORST)
+					result.destroy(p)
+				else:
+					for i in range(2):
+						p.gain_a_weakness()
+		return
+
+class swamp_thing(card_frame.card):
+	name = "Swamp Thing"
+	vp = 5
+	cost = 9
+	ctype = cardtype.HERO
+	owner_type = owners.VILLAINDECK
+	text = "+2 Power for each Location in play."
+	image = "fe/images/cards/Swamp Thing 9.jpg"
+	attack_text = "First Appearance - Attack:: Each player puts a\nLocation he controls into his discard pile. If you\ncannot, gain a Weakness."
+	
+	def play_action(self,player):
+		locations_in_play = 0
+		for p in globe.boss.players:
+			for c in p.ongoing.contents:
+				if c.ctype_eq(cardtype.LOCATION):
+					locations_in_play += 1
+		return locations_in_play*2
+
+
+	def first_apearance(self):
+		for p in globe.boss.players:
+			if effects.attack(p,self):
+				assemble = []
+				for c in p.ongoing.contents:
+					if c.ctype_eq(cardtype.LOCATION):
+						assemble.append(c)
+				if len(assemble) > 0:
+					result = effects.choose_one_of("discard a location you control",p,assemble,ai_hint.WORST)
+					p.discard_a_card(result)
+				else:
+					p.gain_a_weakness()
+		return
+
+class the_flash(card_frame.card):
+	name = "The Flash"
+	vp = 4
+	cost = 8
+	ctype = cardtype.HERO
+	owner_type = owners.VILLAINDECK
+	text = "Draw three cards, and then discard a card."
+	image = "fe/images/cards/The Flash 8.jpg"
+	
+	def play_action(self,player):
+		for i in range(3):
+			player.draw_card()
+		result = effects.choose_one_of("Choose a card to discard",player,player.hand.contents,ai_hint.WORST)
+		player.discard_a_card(result)
+		return 0
+
+class wonder_woman(card_frame.card):
+	name = "Wonder Woman"
+	vp = 6
+	cost = 11
+	ctype = cardtype.HERO
+	owner_type = owners.VILLAINDECK
+	text = "You may play up to three Villains from the destroyed pile, and then\nput them on the bottom of the main deck. If you choose not to, +3 Power."
+	image = "fe/images/cards/Wonder Woman 11.jpg"
+	attack_text = "First Appearance - Attack:: Each player destroys a Villain in his\nhand or discard pile. If you cannot, gain a Weakness."
+	
+	def play_action(self,player):
+		assemble = []
+		for c in globe.boss.destroyed_stack.contents:
+			if c.ctype_eq(cardtype.VILLAIN) and c.cost <= 6:
+				assemble.append(c)
+		#Initialize to anything but None
+		result = True
+		num_played = 0
+		while result != None and num_played <= 3:
+			print("Loop0",flush = True)
+			instruction_text = f"You may play a Super Power from the destroyed pile,\nand then put on the bottom of the main deck. ({num_played+1}/3)"
+			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
+			if result != None:
+				num_played += 1
+				player.play_and_return(result,globe.boss.destroyed)
+				result.set_owner(owners.MAINDECK)
+				result.pop_self()
+				globe.boss.main_deck.contents.insert(0,result)
+		if num_played == 0:
+			return 3
+		return 0
+
+
+	def first_apearance(self):
+		for p in globe.boss.players:
+			if effects.attack(p,self):
+				assemble = []
+				for c in p.hand.contents:
+					if c.ctype_eq(cardtype.VILLAIN):
+						assemble.append(c)
+				for c in p.discard.contents:
+					if c.ctype_eq(cardtype.VILLAIN):
+						assemble.append(c)
+				if len(assemble) > 0:
+					result = effects.choose_one_of("Destroy a Villain from your hand or discard pile",p,assemble,ai_hint.WORST)
+					result.destroy(p)
+				else:
+					p.gain_a_weakness()
+		return

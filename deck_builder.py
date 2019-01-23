@@ -2,8 +2,8 @@ import random
 from fe import persona as base_personas
 from fe import cards as base_card
 from fe import deck as base_deck
-from base import deck as sv_deck
-from base import cards as helper
+#from base import deck as sv_deck
+#from base import cards as helper
 import card_frame
 import arcade
 
@@ -55,25 +55,6 @@ def debug_discard(player):
 	return assemble
 
 
-"""assemble.append(cards.punch(player))
-	assemble.append(cards.lasso_of_truth(player))
-	assemble.append(cards.high_tech_hero(player))
-	assemble.append(cards.x_ray_vision(player))
-	assemble.append(cards.heat_vision(player))
-	assemble.append(cards.king_of_atlantis(player))
-	for c in range(3):
-		assemble.append(cards.punch(player))
-	assemble.append(cards.king_of_atlantis(player))
-	assemble.append(cards.weakness(player))
-	assemble.append(cards.nth_metal(player))
-	
-	
-	assemble.append(cards.the_penguin(player))
-	assemble.append(cards.fastest_man_alive(player))
-	assemble.append(cards.heat_vision(player))
-	assemble.append(cards.mera(player))
-"""
-
 
 def initialize_weaknesses():
 	assemble = []
@@ -91,7 +72,7 @@ def initialize_kicks():
 
 
 def initialize_supervillains():
-	assemble = sv_deck.initialize_supervillains()
+	assemble = base_deck.initialize_supervillains()
 	load_textures(assemble)
 	return assemble
 

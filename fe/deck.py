@@ -4,7 +4,20 @@ import random
 
 def initialize_supervillains():
 	assemble = []
-
+	assemble.append(cards.aquaman())
+	assemble.append(cards.batman())
+	assemble.append(cards.constantine())
+	assemble.append(cards.cyborg())
+	assemble.append(cards.green_arrow())
+	assemble.append(cards.green_lantern())
+	assemble.append(cards.martian_manhunter())
+	assemble.append(cards.shazam())
+	assemble.append(cards.superman())
+	assemble.append(cards.swamp_thing())
+	assemble.append(cards.wonder_woman())
+	random.shuffle(assemble)
+	#assemble.append(cards.the_joker())
+	assemble.append(cards.the_flash())
 	return assemble
 
 deck = {}
@@ -34,7 +47,6 @@ deck = {cards.amanda_waller: 2, \
 		cards.firestorm_matrix: 1, \
 		cards.firestorm: 1, \
 		cards.giant_growth: 3, \
-
 		cards.giant_growth: 3, \
 		cards.giganta: 2, \
 		cards.grid: 2, \
@@ -43,7 +55,6 @@ deck = {cards.amanda_waller: 2, \
 		cards.johnny_quick: 2, \
 		cards.mallet: 3, \
 		cards.man_bat_serum: 3, \
-
 		cards.man_bat: 2, \
 		cards.owlman: 1, \
 		cards.pandora: 1, \
@@ -68,7 +79,6 @@ deck = {cards.amanda_waller: 2, \
 		cards.venom_injector: 2, \
 		cards.vibe: 2, \
 		cards.word_of_power: 2, \
-		
 		cards.belle_reve: 1, \
 		cards.blackgate_prison: 1, \
 		cards.central_city: 1, \

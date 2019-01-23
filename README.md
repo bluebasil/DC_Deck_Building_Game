@@ -1,34 +1,23 @@
 All card names are the property of DC 
 Concept and card text are the property of Cryptozoic
 
-Just building as a personal project
 
+This is a personal project to digitalize the DC deck builing game by Cryptozoic.  It is not intended for commertial use.
 
-TODO:
-concept of cards and decks	 	Done
-interation of cards and decks	Done
-basic UI						Done
-concept of a turn				Done
-ability to play cards			Done
-ability to buy cards			Done
-SV's							Done
-basic card logic				Done
-add endgame						Done
-add equipment					Done
-add superpowers					Done
-attack logic					Done
-add villains					Done
-defence logic					Done
-add heros						Done
-integration testing				ongoing...
-persona's 						Done
-add basic ai 					Done
-add locations					Done
-add personalities 				Done
-add sv logic					TODO
-advance ai logic				TODO
-multiple ai personalities?
-strip UI from ai's (speed)		Done
-web ui?
-online interation
+So Far
+------
 
+* Graphical user interface, written 100% in Python with the 'arcade' library.  Eventually goal of converting to a multiplayer web experiace for i can play with a couple of my friends
+* Base set cards, supervillains, and personas (large cards) are fully programmed and functional
+* Heros Unite personas are in
+* Forever Evil cards and personas are in and currently testing (I decided to skip Heros Unite for now)
+
+To Do
+-----
+
+* Finish Forever Evil by adding superheros (still denoted as SV's in the code)
+* Corectly impliemnt care effect combo queing (abilities triggered by a played card should only trigger once the cards text has been fully followed)
+* Add Heros Unite
+* Add a small set or two.  each one will come with new features
+* Get python<->Javascript socketing working, i have already played around with it a little to no sucess
+* Create Javascript front end (I don't intend on prettying up the python interface because my eventual goal is a Javascript front end anyways)
