@@ -540,7 +540,7 @@ class insanity(card_frame.card):
 			instruction_text = "Choose a card to pass to the hand of the player to your left."
 			for p in globe.boss.players:
 				if len(p.hand.contents) > 0:
-					cards_to_pass.append(effects.choose_one_of(instruction_text,player,p.hand.contents,ai_hint.WORST))
+					cards_to_pass.append(effects.choose_one_of(instruction_text,p,p.hand.contents,ai_hint.WORST))
 					#Alerts any relevant persona powers (harly quin)
 					p.persona.card_pass_power()
 				else:
@@ -672,6 +672,7 @@ class man_bat(card_frame.card):
 
 
 	def defend(self,defender = None,attacker = None):
+		print(self.owner,defender,attacker,"THOSE ARE THE PPL")
 		self.owner.discard_a_card(self)
 		if attacker != None and attacker.vp > 0:
 			self.owner.vp += 1
@@ -987,7 +988,10 @@ class steve_trevor(card_frame.card):
 	def destroy(self,player_responsible):
 		for i in range(2):
 			player_responsible.draw_card()
-		result = effects.choose_one_of("Choose a card to discard",player_responsible,player_responsible.hand.contents,ai_hint.WORST)
+		assemble = player_responsible.hand.contents.copy()
+		if self in assemble:
+			assemble.remove(self)
+		result = effects.choose_one_of("Choose a card to discard",player_responsible,assemble,ai_hint.WORST)
 		player_responsible.discard_a_card(result)
 		super().destroy(player_responsible)
 
@@ -1073,7 +1077,7 @@ class transmutation(card_frame.card):
 		assemble = []
 		assemble.extend(player.hand.contents)
 		assemble.extend(player.discard.contents)
-		player,gain_vp(1)
+		player.gain_vp(1)
 		if len(assemble) > 0:
 			result = effects.choose_one_of(self.text,player,assemble,ai_hint.RANDOM)
 			result.destroy(player)
@@ -1400,7 +1404,8 @@ class batman(card_frame.card):
 				if result != None:
 					number_put += 1
 					#I should make a better play and return function
-					player.play_and_return(result,globe.boss.destroyed)
+					player.play_and_return(result.pop_self(),player.played)
+					assemble.remove(result)
 					result.pop_self()
 					result.set_owner(owners.MAINDECK)
 					globe.boss.main_deck.insert(0,result)
@@ -1446,7 +1451,10 @@ class constantine(card_frame.card):
 		assemble = []
 		for i in range(3):
 			assemble.append(player.reveal_card(public = False))
+			#I take the card off to get fresh cards properly (the shuffling the discard pile if neccessary)
 			player.deck.contents.pop()
+		# I put the cards back, otherwise they cannot be destroyed because they cannot be found, +the last card has to go back anyways
+		player.deck.contents.extend(assemble)
 		effects.reveal(f"These were the top 3 cards on {player.persona.name}'s deck",player,assemble)
 		result = effects.choose_one_of("Choose one of these to draw.",player,assemble,ai_hint.BEST)
 		assemble.remove(result)
@@ -1600,10 +1608,10 @@ class green_lantern(card_frame.card):
 				if result != None:
 					number_put += 1
 					#I should make a better play and return function
-					player.play_and_return(result,globe.boss.destroyed_stack)
+					player.play_and_return(result.pop_self(),player.played)
 					result.pop_self()
 					result.set_owner(owners.MAINDECK)
-					globe.boss.main_deck.insert(0,result)
+					globe.boss.main_deck.contents.insert(0,result)
 					assemble.remove(result)
 			else:
 				result = None
@@ -1742,13 +1750,14 @@ class superman(card_frame.card):
 		#Initialize to anything but None
 		result = True
 		num_played = 0
-		while result != None and num_played <= 3:
+		while result != None and num_played < 3:
 			print("Loop6",flush = True)
 			instruction_text = f"You may play a Super Power from the destroyed pile,\nand then put on the bottom of the main deck. ({num_played+1}/3)"
 			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			if result != None:
 				num_played += 1
-				player.play_and_return(result,globe.boss.destroyed_stack)
+				player.play_and_return(result.pop_self(),player.played)
+				assemble.remove(result)
 				result.set_owner(owners.MAINDECK)
 				result.pop_self()
 				globe.boss.main_deck.contents.insert(0,result)
@@ -1842,13 +1851,14 @@ class wonder_woman(card_frame.card):
 		#Initialize to anything but None
 		result = True
 		num_played = 0
-		while result != None and num_played <= 3:
+		while result != None and num_played < 3:
 			print("Loop0",flush = True)
-			instruction_text = f"You may play a Super Power from the destroyed pile,\nand then put on the bottom of the main deck. ({num_played+1}/3)"
+			instruction_text = f"You may play a Villain from the destroyed pile,\nand then put on the bottom of the main deck. ({num_played+1}/3)"
 			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			if result != None:
 				num_played += 1
-				player.play_and_return(result,globe.boss.destroyed)
+				player.play_and_return(result.pop_self(),player.played)
+				assemble.remove(result)
 				result.set_owner(owners.MAINDECK)
 				result.pop_self()
 				globe.boss.main_deck.contents.insert(0,result)

@@ -553,7 +553,7 @@ class player(drawable):
 
 
 class scroller_left(drawable):
-	depth = -5
+	depth = -60
 	parent = None
 	scolling = False
 	def draw(self,pile_parent,x,y):
@@ -575,7 +575,7 @@ class scroller_left(drawable):
 			#print(pos,self.scroll_offset,(BASE_TEXTURE.width*CARD_SCALE + 15)/2,flush=True)
 
 class scroller_right(drawable):
-	depth = -5
+	depth = -60
 	parent = None
 	scolling = False
 	def draw(self,pile_parent,x,y):
@@ -591,6 +591,7 @@ class scroller_right(drawable):
 		self.set_juristiction(x+width/2-15/2,y-height/2,x+width+15/2,y+height/2)
 
 	def mouse_up(self, mouse, x, y):
+		#print("PHANTOM CLICK RIGHT",)
 		if not mouse.consumed and self.check_collision(x,y):
 			
 			mouse.consumed = True
@@ -868,7 +869,7 @@ class personas(drawable):
 
 class button(drawable):
 	action = None
-	depth = -100
+	depth = -55
 	silent = False
 
 

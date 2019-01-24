@@ -416,6 +416,8 @@ class model:
 	persona_list = []
 	turn_number = 0
 
+	dupe_checker = None
+
 	#initialize Game
 	def __init__(self,number_of_players=2):
 		self.main_deck = pile("Main Deck")
@@ -454,17 +456,17 @@ class model:
 		new_player.controler = new_controler
 		self.players.append(new_player)
 
-		new_player = player(2,None)
-		new_controler = controlers.cpu(new_player,invisible)
-		new_player.controler = new_controler
-		self.players.append(new_player)
+		#new_player = player(2,None)
+		#new_controler = controlers.cpu(new_player,invisible)
+		#new_player.controler = new_controler
+		#self.players.append(new_player)
 
 		#new_player = player(3,None)
 		#new_controler = controlers.cpu(new_player,invisible)
 		#new_player.controler = new_controler
 		#self.players.append(new_player)
 
-		new_player = player(3,None)
+		new_player = player(2,None)
 		new_controler = controlers.cpu_greedy(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
@@ -501,7 +503,7 @@ class model:
 
 
 	def start_game(self):
-		error_checker.dupe_checker().setup_checker()
+		self.dupe_checker = error_checker.dupe_checker()
 		self.choose_personas()
 		while self.supervillain_stack.get_count() > 0:
 			self.turn_number += 1
@@ -515,6 +517,8 @@ class model:
 			current_turn.turn()
 			#print(f"SUPER STACK:{len(self.supervillain_stack.contents)}")
 			save_whose_turn = self.whose_turn
+			if self.dupe_checker.check():
+				return
 			#It's between turns for the SV attack
 			self.whose_turn = -1
 			current_turn.end_turn()

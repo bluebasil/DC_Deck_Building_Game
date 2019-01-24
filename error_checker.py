@@ -74,8 +74,10 @@ class dupe_checker:
 			if self.keep_checking == False and self.displayed == False:
 
 				self.displayed = True
+				return True
 				#globe.boss.players[0].controler = controlers.human(globe.boss.players[0],False)
 				#quit()
+		return False
 
 	def constant_check(self,thread_name,delay):
 		while True:
