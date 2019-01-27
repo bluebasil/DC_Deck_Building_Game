@@ -19,10 +19,13 @@ SPRITE_SCALING_PLAYER = 0.5
 SPRITE_SCALING_COIN = 0.2
 COIN_COUNT = 50
 
-SCREEN_WIDTH = 3000
-SCREEN_HEIGHT = 2000
-CARD_SCALE = 0.5
+SCREEN_SCALE = 0.5
+SCREEN_WIDTH = int(3000*SCREEN_SCALE)
+SCREEN_HEIGHT = int(2000*SCREEN_SCALE)
+CARD_SCALE = 0.5*SCREEN_SCALE
 BASE_TEXTURE = arcade.load_texture("images/back.png")
+#BASE_TEXTURE.height = BASE_TEXTURE.height*SCREEN_SCALE
+#BASE_TEXTURE.width = BASE_TEXTURE.width*SCREEN_SCALE
 BACKGROUND_TEXTURE = arcade.load_texture("images/blue_background2.png")
 CPU_TEXTURE = arcade.load_texture("images/cpu_frame.png")
 POINT_TEXTURE = arcade.load_texture("images/pointer.png")
@@ -124,8 +127,8 @@ class MyGame(arcade.Window):
 
 		#arcade.draw_text(output, 10, 20, arcade.color.WHITE, 14)
 		scale = 0.95
-		arcade.draw_texture_rectangle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2,3000, \
-							  2000, BACKGROUND_TEXTURE, 0)
+		arcade.draw_texture_rectangle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2,SCREEN_WIDTH, \
+							  SCREEN_HEIGHT, BACKGROUND_TEXTURE, 0)
 
 		
 		self.game_board.draw(SCREEN_WIDTH/2,SCREEN_HEIGHT/2)
@@ -258,9 +261,9 @@ class drawable:
 
 
 def draw_stack_size(stack,x,y,scale = 1):
-	x = x + BASE_TEXTURE.width*CARD_SCALE*0.5*scale-30
-	y = y + BASE_TEXTURE.height*CARD_SCALE*0.5*scale-30
-	arcade.draw_rectangle_filled(x,y , 50, 50, arcade.color.BLACK)
+	x = x + BASE_TEXTURE.width*CARD_SCALE*0.5*scale-30*SCREEN_SCALE
+	y = y + BASE_TEXTURE.height*CARD_SCALE*0.5*scale-30*SCREEN_SCALE
+	arcade.draw_rectangle_filled(x,y , 50*SCREEN_SCALE, 50*SCREEN_SCALE, arcade.color.BLACK)
 	wid = len(stack.contents)
 	text_offset = 4
 	if wid>0:
@@ -301,8 +304,8 @@ class boss(drawable):
 		#player
 		new_player = self.get_drawable(player,"player_hand")
 		new_player.draw(globe.boss.players[0],0,0,0)
-		siz = 200
-		start = SCREEN_HEIGHT-25
+		siz = 200*SCREEN_SCALE
+		start = SCREEN_HEIGHT-25*SCREEN_SCALE
 		#Other players
 		for i,p in enumerate(globe.boss.players[1:]):
 			new_player = self.get_drawable(player_icon,f"player{i}")
@@ -310,23 +313,23 @@ class boss(drawable):
 			#enumerate will start at 0
 			if i+1 == globe.boss.whose_turn:
 				point_scale = 0.25
-				arcade.draw_texture_rectangle(400, start-100, POINT_TEXTURE.width*point_scale, \
+				arcade.draw_texture_rectangle(400*SCREEN_SCALE, start-100*SCREEN_SCALE, POINT_TEXTURE.width*point_scale, \
 							  POINT_TEXTURE.height*point_scale, POINT_TEXTURE, 0)
-			start -= siz +25
+			start -= siz +25*SCREEN_SCALE
 
 		if 0 == globe.boss.whose_turn:
-			point_scale = 0.25
-			arcade.draw_texture_rectangle(400, 800, POINT_TEXTURE.width*point_scale, \
+			point_scale = 0.25*SCREEN_SCALE
+			arcade.draw_texture_rectangle(400*SCREEN_SCALE, 800*SCREEN_SCALE, POINT_TEXTURE.width*point_scale, \
 						  POINT_TEXTURE.height*point_scale, POINT_TEXTURE, 90)
 
 
 
 		lineup = self.get_drawable(pile,"linup")
-		lineup.draw(globe.boss.lineup.contents,SCREEN_WIDTH/2,SCREEN_HEIGHT/2+BASE_TEXTURE.height*CARD_SCALE + 15,True)
+		lineup.draw(globe.boss.lineup.contents,SCREEN_WIDTH/2,SCREEN_HEIGHT/2+BASE_TEXTURE.height*CARD_SCALE + 15*SCREEN_SCALE,True)
 
 		svstack = self.get_drawable(card,"sv")
 		x = SCREEN_WIDTH/2
-		y = SCREEN_HEIGHT/2+2.125*(BASE_TEXTURE.height*CARD_SCALE + 15)
+		y = SCREEN_HEIGHT/2+2.125*(BASE_TEXTURE.height*CARD_SCALE + 15*SCREEN_SCALE)
 		if len(globe.boss.supervillain_stack.contents) > 0:
 			if globe.boss.supervillain_stack.current_sv == globe.boss.supervillain_stack.contents[-1]: 
 				svstack.draw(globe.boss.supervillain_stack.current_sv,x,y,1.25)
@@ -336,8 +339,8 @@ class boss(drawable):
 
 		deck = self.get_drawable(pile,"main_deck")
 		if len(globe.boss.main_deck.contents) > 0:
-			x = SCREEN_WIDTH/2+2*(BASE_TEXTURE.width*CARD_SCALE + 15)+50
-			y = SCREEN_HEIGHT/2+2*(BASE_TEXTURE.height*CARD_SCALE + 15)
+			x = SCREEN_WIDTH/2+2*(BASE_TEXTURE.width*CARD_SCALE + 15)+50*SCREEN_SCALE
+			y = SCREEN_HEIGHT/2+2*(BASE_TEXTURE.height*CARD_SCALE + 15*SCREEN_SCALE)
 			deck.draw_single_down(globe.boss.main_deck.contents,x,y)
 			draw_stack_size(globe.boss.main_deck,x,y)
 		else:
@@ -345,16 +348,16 @@ class boss(drawable):
 
 		weaknesses = self.get_drawable(card,"weakness")
 		if len(globe.boss.weakness_stack.contents) > 0:
-			x = SCREEN_WIDTH/2-(BASE_TEXTURE.width*CARD_SCALE + 15)-50
-			y = SCREEN_HEIGHT/2+2*(BASE_TEXTURE.height*CARD_SCALE + 15)
+			x = SCREEN_WIDTH/2-(BASE_TEXTURE.width*CARD_SCALE + 15*SCREEN_SCALE)-50*SCREEN_SCALE
+			y = SCREEN_HEIGHT/2+2*(BASE_TEXTURE.height*CARD_SCALE + 15*SCREEN_SCALE)
 			weaknesses.draw(globe.boss.weakness_stack.contents[-1],x,y)
 			draw_stack_size(globe.boss.weakness_stack,x,y)
 		weaknesses.set_gone()
 
 		kicks = self.get_drawable(card,"kicks")
 		if len(globe.boss.kick_stack.contents) > 0:
-			x = SCREEN_WIDTH/2-2*(BASE_TEXTURE.width*CARD_SCALE + 15)-50
-			y = SCREEN_HEIGHT/2+2*(BASE_TEXTURE.height*CARD_SCALE + 15)
+			x = SCREEN_WIDTH/2-2*(BASE_TEXTURE.width*CARD_SCALE + 15*SCREEN_SCALE)-50*SCREEN_SCALE
+			y = SCREEN_HEIGHT/2+2*(BASE_TEXTURE.height*CARD_SCALE + 15*SCREEN_SCALE)
 			kicks.draw(globe.boss.kick_stack.contents[-1],x,y)
 			draw_stack_size(globe.boss.kick_stack,x,y)
 		else:
@@ -363,8 +366,8 @@ class boss(drawable):
 
 		destroyed = self.get_drawable(pile,"destroyed")
 		if len(globe.boss.destroyed_stack.contents) > 0:
-			x = SCREEN_WIDTH/2+(BASE_TEXTURE.width*CARD_SCALE + 15)+50
-			y = SCREEN_HEIGHT/2+2*(BASE_TEXTURE.height*CARD_SCALE + 15)
+			x = SCREEN_WIDTH/2+(BASE_TEXTURE.width*CARD_SCALE + 15*SCREEN_SCALE)+50*SCREEN_SCALE
+			y = SCREEN_HEIGHT/2+2*(BASE_TEXTURE.height*CARD_SCALE + 15*SCREEN_SCALE)
 			destroyed.draw_single(globe.boss.destroyed_stack.contents,x,y)
 			draw_stack_size(globe.boss.destroyed_stack,x,y)
 		else:
@@ -377,7 +380,7 @@ class boss(drawable):
 			play.draw(p.played.contents,SCREEN_WIDTH/2,SCREEN_HEIGHT/2,True)
 
 		#Power display
-		arcade.draw_text(f"{globe.boss.players[globe.boss.whose_turn].played.power} Power", SCREEN_WIDTH*0.8,SCREEN_HEIGHT*0.9 , arcade.color.WHITE, 86)
+		arcade.draw_text(f"{globe.boss.players[globe.boss.whose_turn].played.power} Power", SCREEN_WIDTH*0.8,SCREEN_HEIGHT*0.9 , arcade.color.WHITE, 86*SCREEN_SCALE)
 
 		if globe.boss.whose_turn == 0:
 			for i,special_option in enumerate(globe.boss.players[globe.boss.whose_turn].played.special_options):
@@ -423,7 +426,7 @@ class boss(drawable):
 class player_icon(drawable): 
 	def draw(self,player,x,y,angle):
 		super().draw()
-		wid = 330
+		wid = 330*SCREEN_SCALE
 		hight = wid/1.96
 		arcade.draw_texture_rectangle(wid/2, y - hight/2+7, wid, \
 							  hight, CPU_TEXTURE, 0)
@@ -438,44 +441,44 @@ class player_icon(drawable):
 			if player.persona.texture == None:
 				player.persona.texture = arcade.load_texture(player.persona.image)
 			MC = self.get_drawable(personas,f"{self.name}-persona")
-			MC.draw(player.persona,x+player.persona.texture.width*0.2/2,y-player.persona.texture.height*0.2/2,0.2)
+			MC.draw(player.persona,x+player.persona.texture.width*0.2/2*SCREEN_SCALE,y-player.persona.texture.height*0.2/2*SCREEN_SCALE,0.2)
 
 			text_size = 20
 			#text_offset = 5
 			if player.vp>0:
 				text_offset = int(math.log(player.vp,10))*6 + 5
 				arcade.draw_circle_filled(x+player.persona.texture.width*0.2/2,y-player.persona.texture.height*0.2/2, 25, arcade.color.BLUE)
-				arcade.draw_text(f"{player.vp}",x+player.persona.texture.width*0.2/2 - text_offset,y-player.persona.texture.height*0.2/2-text_size*0.33,arcade.color.WHITE,text_size)
+				arcade.draw_text(f"{player.vp}",x+player.persona.texture.width*0.2/2*SCREEN_SCALE - text_offset,y-player.persona.texture.height*0.2/2*SCREEN_SCALE-text_size*0.33,arcade.color.WHITE,text_size)
 
 
 
 			discard = self.get_drawable(pile,f"{self.name}-discard")
 			if len(player.discard.contents) > 0:
-				discard.draw_single(player.discard.contents,x+player.persona.texture.width*0.2*1.25,y-BASE_TEXTURE.height*0.2*0.25,0.2)
+				discard.draw_single(player.discard.contents,x+player.persona.texture.width*0.2*1.25*SCREEN_SCALE,y-BASE_TEXTURE.height*0.2*0.25*SCREEN_SCALE,0.2)
 			else:
 				discard.set_gone()
 
 			deck = self.get_drawable(pile,f"{self.name}-deck")
 			if len(player.deck.contents) > 0:
-				deck.draw_single_down(player.deck.contents,x+player.persona.texture.width*0.2*1.25,y-player.persona.texture.height*0.2+BASE_TEXTURE.height*0.2*0.25,0.2)
+				deck.draw_single_down(player.deck.contents,x+player.persona.texture.width*0.2*1.25*SCREEN_SCALE,y-player.persona.texture.height*0.2*SCREEN_SCALE+BASE_TEXTURE.height*0.2*0.25*SCREEN_SCALE,0.2)
 			else:
 				deck.set_gone()
 
 			if len(player.ongoing.contents) > 0:
 				ongoing = self.get_drawable(pile,f"{self.name}-ongoing")
-				ongoing.draw_squished(player.ongoing.contents,x+player.persona.texture.width*0.2*1.75,y-BASE_TEXTURE.height*0.2*0.25,150,True,0.2)
+				ongoing.draw_squished(player.ongoing.contents,x+player.persona.texture.width*0.2*1.75*SCREEN_SCALE,y-BASE_TEXTURE.height*0.2*0.25*SCREEN_SCALE,150,True,0.2)
 
 			hand = self.get_drawable(pile,f"{self.name}-hand")
 			if len(player.hand.contents) > 0:
-				hand.draw_squished(player.hand.contents,x+player.persona.texture.width*0.2*1.75,y-player.persona.texture.height*0.2+BASE_TEXTURE.height*0.2*0.25,150,False,0.2)
+				hand.draw_squished(player.hand.contents,x+player.persona.texture.width*0.2*1.75*SCREEN_SCALE,y-player.persona.texture.height*0.2*SCREEN_SCALE+BASE_TEXTURE.height*0.2*0.25*SCREEN_SCALE,150,False,0.2)
 			else:
 				hand.set_gone()
 
-			arcade.draw_text(f"Score: {player.score}",x+400,y-player.persona.texture.height*0.1/2,arcade.color.WHITE,15)
+			arcade.draw_text(f"Score: {player.score}",x+400*SCREEN_SCALE,y-player.persona.texture.height*0.1/2*SCREEN_SCALE,arcade.color.WHITE,15)
 
 			on_top = self.get_drawable(pile,f"{self.name}-on_top")
 			if len(player.over_superhero.contents) > 0:
-				on_top.draw_squished(player.over_superhero.contents,x+player.persona.texture.width*0.2*3.5,y-player.persona.texture.height*0.2+BASE_TEXTURE.height*0.2*0.25,150,True,0.2)
+				on_top.draw_squished(player.over_superhero.contents,x+player.persona.texture.width*0.2*3.5*SCREEN_SCALE,y-player.persona.texture.height*0.2*SCREEN_SCALE+BASE_TEXTURE.height*0.2*0.25*SCREEN_SCALE,150,True,0.2)
 			else:
 				on_top.set_gone()
 
@@ -489,7 +492,7 @@ class player(drawable):
 		super().draw()
 
 
-		self.maxy = 2*(BASE_TEXTURE.height*CARD_SCALE+15) 
+		self.maxy = 2*(BASE_TEXTURE.height*CARD_SCALE+15*SCREEN_SCALE) 
 		self.miny = 0
 		buffx = 0
 		buffy = 0
@@ -498,22 +501,22 @@ class player(drawable):
 				player.persona.texture = arcade.load_texture(player.persona.image)
 
 			MC = self.get_drawable(personas,"persona")
-			MC.draw(player.persona,x+player.persona.texture.width/2,self.maxy/2,0.75)
-			buffx += player.persona.texture.width
+			MC.draw(player.persona,x+player.persona.texture.width*SCREEN_SCALE/2,self.maxy/2,0.75)
+			buffx += player.persona.texture.width*SCREEN_SCALE
 
 			text_size = 20
 			#text_offset = 5
 			if player.vp>0:
 				text_offset = int(math.log(player.vp,10))*6 + 5
-				arcade.draw_circle_filled(x+player.persona.texture.width/2,self.maxy/2, 50, arcade.color.BLUE)
-				arcade.draw_text(f"{player.vp}",x+player.persona.texture.width/2- text_offset,self.maxy/2-text_size*0.33,arcade.color.WHITE,text_size)
+				arcade.draw_circle_filled(x+player.persona.texture.width*SCREEN_SCALE/2,self.maxy/2, 50, arcade.color.BLUE)
+				arcade.draw_text(f"{player.vp}",x+player.persona.texture.width*SCREEN_SCALE/2- text_offset,self.maxy/2-text_size*0.33,arcade.color.WHITE,text_size)
 
-			arcade.draw_text(f"Score: {player.score}",x+player.persona.texture.width/2-15,self.maxy+60,arcade.color.WHITE,15)
+			arcade.draw_text(f"Score: {player.score}",x+player.persona.texture.width*SCREEN_SCALE/2-15,self.maxy+60,arcade.color.WHITE,15)
 
 
 			on_top = self.get_drawable(pile,"on_top")
 			if len(player.over_superhero.contents) > 0:
-				on_top.draw_squished(player.over_superhero.contents,x+player.persona.texture.width*0.25,self.maxy+60,150,True,0.2)
+				on_top.draw_squished(player.over_superhero.contents,x+player.persona.texture.width*0.25*SCREEN_SCALE,self.maxy+60,150,True,0.2)
 			else:
 				on_top.set_gone()
 
@@ -588,7 +591,7 @@ class scroller_right(drawable):
 		#arcade.draw_point(x+width/2-15/2,y-height/2,arcade.color.BLUE,10)
 		#arcade.draw_point(x+width+15/2,y+height/2,arcade.color.BLUE,10)
 
-		self.set_juristiction(x+width/2-15/2,y-height/2,x+width+15/2,y+height/2)
+		self.set_juristiction(x+width/2-15*SCREEN_SCALE/2,y-height/2,x+width+15*SCREEN_SCALE/2,y+height/2)
 
 	def mouse_up(self, mouse, x, y):
 		#print("PHANTOM CLICK RIGHT",)
@@ -635,8 +638,8 @@ class pile(drawable):
 
 		pos = x - BASE_TEXTURE.width*CARD_SCALE/2
 		if center:
-			pos = x + min(len(pile_contents),7)/2*(BASE_TEXTURE.width*CARD_SCALE + 15) 
-		seperation = BASE_TEXTURE.width*CARD_SCALE + 15
+			pos = x + min(len(pile_contents),7)/2*(BASE_TEXTURE.width*CARD_SCALE + 15*SCREEN_SCALE) 
+		seperation = BASE_TEXTURE.width*CARD_SCALE + 15*SCREEN_SCALE
 
 		if len(pile_contents) > 6:
 			self.max_offset = 1 + 2*(len(pile_contents)-7)
@@ -856,8 +859,8 @@ class personas(drawable):
 	def draw(self,persona,x,y,scale = 1):
 		super().draw()
 		#print(card.name)
-		width = persona.texture.width*scale
-		height = persona.texture.height*scale
+		width = persona.texture.width*scale*SCREEN_SCALE
+		height = persona.texture.height*scale*SCREEN_SCALE
 		if persona.active:
 			arcade.draw_texture_rectangle(x, y, width, height, persona.texture, 0)
 		else:
@@ -880,8 +883,8 @@ class button(drawable):
 		width = BASE_TEXTURE.width*CARD_SCALE*0.75
 		#golden ratio
 		height = width/1.61
-		text_offset = len(text)*6+4
-		text_size = 22
+		text_offset = (len(text)*6+4)*SCREEN_SCALE
+		text_size = 22*SCREEN_SCALE
 		if card_size:
 			width = BASE_TEXTURE.width*CARD_SCALE
 			height = BASE_TEXTURE.height*CARD_SCALE
@@ -967,16 +970,21 @@ def thread_game(thread_name,delay):
 	
 
 def main():
+	print("Setting up even bus...",flush = True)
 	globe.bus = event_bus.event_bus()
+	print("Setting up controlers...",flush = True)
 	globe.view = view.view_controler()
+	print("Setting up game...",flush = True)
 	globe.boss = model.model()
 	""" Main method """
+	print("Setting up window (1/2)...",flush = True)
 	window = MyGame()
+	print("Setting up window (2/2)...",flush = True)
 	window.setup()
 	
-	print("About to start game thread.")
+	print("About to start game thread.",flush = True)
 	_thread.start_new_thread(thread_game,("Game", 2, ))
-	print("Game thread started.")
+	print("Game thread started.",flush = True)
 	time.sleep(1)
 	arcade.run()
 	#globe.boss.start_game()
