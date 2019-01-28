@@ -195,7 +195,7 @@ class player:
 		self.deck.contents = deck_builder.get_starting_deck(self)
 		self.discard.contents = deck_builder.debug_discard(self)
 
-		for i in range(5):
+		for i in range(8):
 			self.hand.add(self.deck.draw())
 
 	def choose_persona(self,persona_list):

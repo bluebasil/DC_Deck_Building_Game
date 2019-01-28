@@ -317,6 +317,10 @@ class element_woman(card_frame.card):
 		self.being_played = False
 		return
 
+	def destroy(self,by_player):
+		self.being_played = False
+		super().destroy(by_player)
+
 
 
 #Done
@@ -476,6 +480,10 @@ class firestorm(card_frame.card):
 				self.pop_self()
 				location[0].contents.insert(location[1],self)
 			self.currently_played_by.over_superhero.contents.append(c.pop_self())
+
+	def destroy(self,by_player):
+		self.currently_played_by = None
+		super().destroy(by_player)
 
 
 class giant_growth(card_frame.card):

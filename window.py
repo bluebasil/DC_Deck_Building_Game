@@ -39,6 +39,14 @@ SCROLL_SPEED = 1
 
 display_special = None
 
+class preview_obj():
+	last_x = -1
+	last_y = -1
+	cur_card = None
+	consumed = False
+
+PREVIEW = preview_obj()
+
 #Constantly checks if car effects are duplicating or deleting cards
 
 
@@ -140,7 +148,16 @@ class MyGame(arcade.Window):
 
 
 	def on_mouse_motion(self, x, y, dx, dy):
-
+		#PREVIEW.last_x = x
+		#PREVIEW.last_y = y
+		PREVIEW.cur_card = None
+		move_move_obj = preview_obj()
+		move_move_obj.last_x = x
+		move_move_obj.last_y = y
+		self.game_board.mouse_move(move_move_obj,x,y)
+		#PREVIEW = move_move_obj
+		#print("MOVED",PREVIEW.cur_card,flush = True)
+		
 		""" Handle Mouse Motion """
 
 		# Move the center of the player sprite to match the mouse x, y
@@ -244,6 +261,15 @@ class drawable:
 		for c in self.children.values():
 			c.set_gone()
 
+	def mouse_move(self,preview,x,y):
+		if preview.consumed == False and self.check_collision(x,y):
+			vals = list(self.children.values())
+			vals.sort(key = sort_by_depth)
+			for c in vals:
+				#print(c,c.depth,flush = True)
+				if not c.gone:
+					c.mouse_move(preview,x,y)
+
 	def mouse_up(self,mouse,x,y):
 		if mouse.consumed == False and self.check_collision(x,y):
 			vals = list(self.children.values())
@@ -298,6 +324,13 @@ class boss(drawable):
 
 			angle += progress
 		"""
+		#PREVIEW.cur_card = None
+
+		if PREVIEW.cur_card != None:
+			card_ratio = BASE_TEXTURE.height/BASE_TEXTURE.width
+			#print("DRAWCARD",card_ratio,SCREEN_HEIGHT-(SCREEN_WIDTH*0.2*card_ratio)/2,SCREEN_WIDTH*0.2,SCREEN_WIDTH*0.2*card_ratio,flush = True)
+			arcade.draw_texture_rectangle(SCREEN_WIDTH*0.9, SCREEN_HEIGHT-(SCREEN_WIDTH*0.2*card_ratio)/2, SCREEN_WIDTH*0.2, \
+							  SCREEN_WIDTH*0.2*card_ratio, PREVIEW.cur_card.texture, 0)
 
 		
 
@@ -385,9 +418,7 @@ class boss(drawable):
 		if globe.boss.whose_turn == 0:
 			for i,special_option in enumerate(globe.boss.players[globe.boss.whose_turn].played.special_options):
 				option = self.get_drawable(button,f"special_action_{i}")
-				#print("A BUTTON SHOULD HAVE BEEN DRAWN 1",option.gone,flush = True)
 				option.draw(special_option,special_option.button_text,SCREEN_WIDTH*0.9,SCREEN_HEIGHT*0.8 - i*(option.jmaxy-option.jminy +15))
-				#print("A BUTTON SHOULD HAVE BEEN DRAWN 2",option.gone,flush = True)
 
 		
 		query = self.get_drawable(question,f"question")
@@ -416,7 +447,6 @@ class boss(drawable):
 		if not query.gone and not query.check_collision(x,y):
 			mouse.silent = True
 		custom = self.get_drawable(question,f"over_display")
-		#print(custom.gone,custom.check_collision(x,y),display_special)
 		if not custom.gone and not custom.check_collision(x,y):
 			display_special = None
 			custom.gone = True
@@ -574,8 +604,6 @@ class scroller_left(drawable):
 			
 			mouse.consumed = True
 			self.parent.scroll_offset = min(self.parent.scroll_offset + SCROLL_SPEED,self.parent.max_offset)
-			#print("CLICKED!",self.parent.scroll_offset,flush=True)
-			#print(pos,self.scroll_offset,(BASE_TEXTURE.width*CARD_SCALE + 15)/2,flush=True)
 
 class scroller_right(drawable):
 	depth = -60
@@ -594,13 +622,10 @@ class scroller_right(drawable):
 		self.set_juristiction(x+width/2-15*SCREEN_SCALE/2,y-height/2,x+width+15*SCREEN_SCALE/2,y+height/2)
 
 	def mouse_up(self, mouse, x, y):
-		#print("PHANTOM CLICK RIGHT",)
 		if not mouse.consumed and self.check_collision(x,y):
 			
 			mouse.consumed = True
 			self.parent.scroll_offset = max(self.parent.scroll_offset - SCROLL_SPEED,0)
-			#print("CLICKED!",self.parent.scroll_offset,flush=True)
-			#print(pos,self.scroll_offset,(BASE_TEXTURE.width*CARD_SCALE + 15)/2,flush=True)
 
 
 
@@ -615,7 +640,6 @@ class pile(drawable):
 		self.last_contents = []
 
 	def ready_card(self,c,x,y,i):
-		#print(type(c),"IS THE TYPE",flush = True)
 		if c == option.OK or c == option.NO or c == option.DONE or c == option.EVEN or c == option.ODD:
 			new_option = self.get_drawable(button,f"option {c}")
 			text = "No"
@@ -646,8 +670,7 @@ class pile(drawable):
 			left = self.get_drawable(scroller_left,f"{self.name}-left")
 			right = self.get_drawable(scroller_right,f"{self.name}-right")
 			start_pos = pos
-			pos += (self.scroll_offset%2)*(BASE_TEXTURE.width*CARD_SCALE + 15)/2 #- (BASE_TEXTURE.width*CARD_SCALE + 15)/2
-			#print(pos,self.scroll_offset,(BASE_TEXTURE.width*CARD_SCALE + 15)/2,flush=True)
+			pos += (self.scroll_offset%2)*(BASE_TEXTURE.width*CARD_SCALE + 15*SCREEN_SCALE)/2 #- (BASE_TEXTURE.width*CARD_SCALE + 15)/2
 			for i,c in enumerate(pile_contents):
 				#if i >= self.scroll_offset - 1 - (self.scroll_offset%2) and i <= self.scroll_offset + 6 - (self.scroll_offset%2):
 				if i >= int(self.scroll_offset/2) and i <= int(self.scroll_offset/2) + 6:
@@ -657,7 +680,7 @@ class pile(drawable):
 					#new_card.draw(c,pos,y)
 					#arcade.draw_text(f"{i}",pos,y,arcade.color.WHITE,14)
 					pos -= seperation
-			left.draw(self,start_pos-6*(BASE_TEXTURE.width*CARD_SCALE + 15),y)
+			left.draw(self,start_pos-6*(BASE_TEXTURE.width*CARD_SCALE + 15*SCREEN_SCALE),y)
 			right.draw(self,start_pos,y)
 		else:
 			self.scroll_offset = 0
@@ -666,7 +689,6 @@ class pile(drawable):
 				#new_card.draw(c,pos,y)
 				self.ready_card(c,pos,y,i)
 				pos -= seperation
-		#print(self.name,f"{len(self.children)} children")
 		#for c in self.children.values():
 		#	print(c.name,c.jminx,c.jminy,c.jmaxx,c.jmaxy)
 		
@@ -853,6 +875,13 @@ class card(drawable):
 			if not mouse.silent:
 				#print("(Card click)",flush = True)
 				globe.bus.card_clicked(self.card)
+
+	def mouse_move(self,preview, x, y):
+		if not preview.consumed and self.check_collision(x,y) and self.card != None:
+			preview.consumed = True
+			preview.cur_card = self.card
+			PREVIEW.cur_card = self.card
+
 
 
 class personas(drawable):
