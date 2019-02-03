@@ -75,8 +75,7 @@ class the_batmobile(card_frame.card):
 	def play_action(self,player):
 		if len(player.played.played_this_turn) == 1:
 			player.discard_hand()
-			for i in range(5):
-				player.draw_card()
+			player.draw_card(5)
 			return 0
 		else:
 			return 1
@@ -178,8 +177,7 @@ class the_cape_and_cowl(card_frame.card):
 
 	def defend(self,attacker = None,defender = None):
 		self.owner.discard_a_card(self)
-		for i in range(2):
-			self.owner.draw_card()
+		self.owner.draw_card(2)
 		return
 
 #done
@@ -354,8 +352,7 @@ class fastest_man_alive(card_frame.card):
 	image = "base/images/cards/The_Fastest_Man_Alive.jpeg"
 	
 	def play_action(self,player):
-		for i in range(2):
-			player.draw_card()
+		player.draw_card(2)
 		return 0
 
 #Done
@@ -532,8 +529,7 @@ class lasso_of_truth(card_frame.card):
 		return 1
 
 	def defend(self,attacker = None,defender = None):
-		self.pop_self()
-		self.owner.discard.add(self)
+		self.owner.discard_a_card(self)
 		self.owner.draw_card()
 		return
 
@@ -618,8 +614,7 @@ class the_penguin(card_frame.card):
 	image = "base/images/cards/The_Penguin.jpeg"
 	
 	def play_action(self,player):
-		for i in range(2):
-			player.draw_card()
+		player.draw_card(2)
 		for i in range(2):
 			if len(player.hand.contents) > 0:
 				result = effects.choose_one_of("Choose a card to discard.",player,player.hand.contents,ai_hint.WORST)
@@ -770,7 +765,8 @@ class solomon_grundy(card_frame.card):
 
 	def buy_action(self,player):
 		player.gain_redirect.append(self.solomon_grundy_redirect)
-		return
+		#Assume that card can be bought
+		return True
 
 
 #done
@@ -844,8 +840,7 @@ class super_speed(card_frame.card):
 
 	def defend(self,attacker = None,defender = None):
 		self.owner.discard_a_card(self)
-		for i in range(2):
-			self.owner.draw_card()
+		self.owner.draw_card(2)
 		return
 
 #Done
@@ -1461,8 +1456,7 @@ class lex_luther(card_frame.card):
 	image = "base/images/cards/Lex Luthor 10.jpg"
 	
 	def play_action(self,player):
-		for i in range(3):
-			player.draw_card()
+		player.draw_card(3)
 		return 0
 
 	def first_apearance(self):

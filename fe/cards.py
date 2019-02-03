@@ -238,8 +238,7 @@ class despero(card_frame.card):
 	image = "fe/images/cards/Despero.jpg"
 	
 	def play_action(self,player):
-		for i in range(2):
-			player.draw_card()
+		player.draw_card(2)
 		self.attack_action(player)
 		return 0
 
@@ -869,8 +868,7 @@ class royal_flush_gang(card_frame.card):
 	image = "fe/images/cards/Royal Flush Gang.jpg"
 	
 	def play_action(self,player):
-		for i in range(2):
-			player.draw_card()
+		player.draw_card(2)
 		for i in range(2):
 			if len(player.hand.contents) > 0:
 				instruction_text = f"Choose a card to discard ({i+1}/2)"
@@ -994,8 +992,7 @@ class steve_trevor(card_frame.card):
 	image = "fe/images/cards/Steve Trevor.jpg"
 	
 	def destroy(self,player_responsible):
-		for i in range(2):
-			player_responsible.draw_card()
+		player_responsible.draw_card(2)
 		assemble = player_responsible.hand.contents.copy()
 		if self in assemble:
 			assemble.remove(self)
@@ -1108,8 +1105,7 @@ class ultra_strength(card_frame.card):
 	image = "fe/images/cards/Ultra Strength.jpg"
 	
 	def play_action(self,player):
-		for i in range(2):
-			player.draw_card()
+		player.draw_card(2)
 		return 3
 
 
@@ -1835,8 +1831,7 @@ class the_flash(card_frame.card):
 	image = "fe/images/cards/The Flash 8.jpg"
 	
 	def play_action(self,player):
-		for i in range(3):
-			player.draw_card()
+		player.draw_card(3)
 		result = effects.choose_one_of("Choose a card to discard",player,player.hand.contents,ai_hint.WORST)
 		player.discard_a_card(result)
 		return 0

@@ -1,6 +1,7 @@
 from . import cards
+from . import persona
 import random
-
+import deck_frame
 
 
 def initialize_supervillains():
@@ -82,145 +83,7 @@ def initialize_deck():
 			assemble.append(card())
 	random.shuffle(assemble)
 	return assemble
-"""
-	for c in range(3):
-		assemble.append(cards.aquamans_trident())
-
-	for c in range(2):
-		assemble.append(cards.bane())
-
-	for c in range(3):
-		assemble.append(cards.the_batmobile())
-
-	for c in range(3):
-		assemble.append(cards.the_bat_signal())
-
-	assemble.append(cards.bizarro())
-
-	assemble.append(cards.blue_beetle())
-
-	for c in range(3):
-		assemble.append(cards.bulletproof())
-
-	for c in range(3):
-		assemble.append(cards.the_cape_and_cowl())
-
-	for c in range(3):
-		assemble.append(cards.catwoman())
-
-	for c in range(2):
-		assemble.append(cards.cheetah())
-
-	for c in range(2):
-		assemble.append(cards.clayface())
-
-	assemble.append(cards.the_dark_knight())
-
-	for c in range(2):
-		assemble.append(cards.doomsday())
-
-	assemble.append(cards.the_emerald_knight())
-
-	assemble.append(cards.fastest_man_alive())
-
-	for c in range(2):
-		assemble.append(cards.gorilla_grodd())
-
-	for c in range(3):
-		assemble.append(cards.green_arrow())
-
-	for c in range(3):
-		assemble.append(cards.green_arrows_bow())
-
-	for c in range(2):
-		assemble.append(cards.harley_quinn())
-
-	for c in range(3):
-		assemble.append(cards.heat_vision())
-
-	for c in range(3):
-		assemble.append(cards.high_tech_hero())
-
-	assemble.append(cards.jonn_jonzz())
-
-	for c in range(4):
-		assemble.append(cards.kid_flash())
-
-	assemble.append(cards.king_of_atlantis())
-
-	for c in range(3):
-		assemble.append(cards.lasso_of_truth())
-
-	assemble.append(cards.lobo())
-
-	assemble.append(cards.the_man_of_steel())
-
-	for c in range(2):
-		assemble.append(cards.mera())
-
-	for c in range(4):
-		assemble.append(cards.nth_metal())
-
-	for c in range(2):
-		assemble.append(cards.the_penguin())
-
-	for c in range(2):
-		assemble.append(cards.poison_ivy())
-
-	for c in range(3):
-		assemble.append(cards.power_ring())
-
-	assemble.append(cards.princess_diana_of_themyscira())
-
-	for c in range(2):
-		assemble.append(cards.the_riddler())
-
-	for c in range(3):
-		assemble.append(cards.robin())
-
-	for c in range(2):
-		assemble.append(cards.scarecrow())
-
-	for c in range(2):
-		assemble.append(cards.solomon_grundy())
-
-	assemble.append(cards.starro())
-
-	for c in range(6):
-		assemble.append(cards.suicide_squad())
-
-	for c in range(4):
-		assemble.append(cards.super_speed())
-
-	for c in range(3):
-		assemble.append(cards.super_strength())
-
-	for c in range(2):
-		assemble.append(cards.super_girl())
-
-	for c in range(2):
-		assemble.append(cards.swamp_thing())
-
-	for c in range(2):
-		assemble.append(cards.two_face())
-
-	for c in range(3):
-		assemble.append(cards.utility_belt())
-
-	for c in range(3):
-		assemble.append(cards.x_ray_vision())
-
-	for c in range(2):
-		assemble.append(cards.zatanna_zatara())
-
-	assemble.append(cards.arkham_asylum())
-	assemble.append(cards.the_batcave())
-	assemble.append(cards.fortress_of_solitude())
-	assemble.append(cards.titans_tower())
-	assemble.append(cards.the_watchtower())
-
-	random.shuffle(assemble)
-	return assemble
 
 
-"""
+this_set = deck_frame.deck_set("Base set",persona.get_personas,initialize_deck,initialize_supervillains,True)
+

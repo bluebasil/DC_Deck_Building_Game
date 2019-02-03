@@ -9,6 +9,11 @@ import deck_builder
 import globe
 import ai_hint
 import error_checker
+import json
+
+class MyEncoder(json.JSONEncoder):
+        def default(self, o):
+            return o.__dict__    
 
 
 class pile:
@@ -57,7 +62,7 @@ class pile:
 			#	or (self.visibility == visibilities.PRIVATE and self.owner.pid = pid)
 			count = 0
 			for c in self.contents:
-				if c.ctype == find_type:
+				if c.ctype_eq(find_type):
 					count += 1
 			return count
 
@@ -106,6 +111,14 @@ class playing(pile):
 
 
 	def play(self,card,ongoing = False):
+		if globe.DEBUG:
+			if card.owner != self.owner:
+				if card.owner_type == owners.PLAYER:
+					print(f"{self.owner.persona.name} playing {card.owner.persona.name}'s {card.name}",flush = True)
+				else:
+					print(f"{self.owner.persona.name} playing {card.owner.name}'s {card.name}",flush = True)
+			else:
+				print(f"{card.name} being played",flush = True)
 		if not ongoing:
 			card.times_played += 1
 			self.contents.append(card)
@@ -167,7 +180,16 @@ class player:
 
 	gain_redirect = []
 	gained_this_turn = []
+	discarded_this_turn = []
 	discount_on_sv = 0
+
+	#For cards to use on generic rare things
+	#like if they have to detect discarding cards and such
+	#I should switch the personas that detect drawing to use this as well
+	#and passing
+	#and discarding
+	#and gaining vps
+	triggers = []
 	
 	sv_bought_this_turn = False
 	# For cards like the riddler
@@ -191,11 +213,13 @@ class player:
 		#These should be reinitialized or they share values with all insatnces
 		self.gain_redirect = []
 		self.gained_this_turn = []
+		self.discarded_this_turn = []
+		self.triggers = []
 
 		self.deck.contents = deck_builder.get_starting_deck(self)
 		self.discard.contents = deck_builder.debug_discard(self)
 
-		for i in range(8):
+		for i in range(5):
 			self.hand.add(self.deck.draw())
 
 	def choose_persona(self,persona_list):
@@ -212,18 +236,33 @@ class player:
 			if self.pid in c.frozen:
 				c.frozen.remove(self.pid)
 
+		discarded_this_turn = []
+
 		self.persona.ready()
 		self.ongoing.begin_turn()
 		self.controler.turn()
 		#self.end_turn()
 
-	def draw_card(self):
-		if not self.manage_reveal():
-			return None
-		drawn_card = self.deck.draw()
-		self.hand.add(drawn_card)
-		self.persona.draw_power()
-
+	#Draws 'num' cards.  Returns the last card that was drawn
+	def draw_card(self,num = 1,from_card = True):
+		print("PLAYER HAS BEEN TOLD TO DRAW",self.persona.name,flush = True)
+		all_drawn = []
+		
+		if from_card:
+			self.persona.draw_power()
+		for i in range(num):
+			#Check that there is a card to draw
+			if not self.manage_reveal():
+				#This will break things, but is so rare it shoudlnt happen really
+				print("ERR: No more cards in deck",flush = True)
+				return None
+			drawn_card = self.deck.draw()
+			all_drawn.append(drawn_card)
+			self.hand.add(drawn_card)
+		
+		for t in self.triggers:
+			t("draw",[num,from_card,all_drawn],self)
+		
 		return drawn_card
 
 	def reveal_card(self,public = True):
@@ -249,10 +288,12 @@ class player:
 	def play(self, cardnum):
 		self.played.play(self.hand.contents.pop(cardnum))
 
+
 	def play_c(self, card):
 		if card in self.hand.contents:
 			self.hand.contents.remove(card)
 			self.played.play(card)
+
 
 	def play_and_return(self, card, pile):
 		self.played.play(card)
@@ -261,24 +302,25 @@ class player:
 		pile.add(card)
 
 	def buy_supervillain(self):
+		print("Trying to buy sv",globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv,flush = True)
 		if globe.boss.supervillain_stack.current_sv == globe.boss.supervillain_stack.contents[-1] \
 				and self.played.power >= globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv:
 			if globe.DEBUG:
 				print(f" {globe.boss.supervillain_stack.contents[-1].name} bought")
-			self.sv_bought_this_turn = True
-			self.played.power -= globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv
-			self.gain(globe.boss.supervillain_stack.contents[-1])
-			return True
+			#self.sv_bought_this_turn = True
+			#self.played.power -= globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv
+			return self.gain(globe.boss.supervillain_stack.contents[-1],bought = True,defeat = True)
+			#return True
 		return False
 
 	def buy_kick(self):
 		if globe.boss.kick_stack.size() > 0 and self.played.power >= globe.boss.kick_stack.contents[-1].cost:
 			if globe.DEBUG:
 				print(f"kick bought")
-			globe.boss.kick_stack.contents[-1].bought = True
-			self.played.power -= globe.boss.kick_stack.contents[-1].cost
-			self.gain(globe.boss.kick_stack.contents[-1])
-			return True
+			#globe.boss.kick_stack.contents[-1].bought = True
+			#self.played.power -= globe.boss.kick_stack.contents[-1].cost
+			return self.gain(globe.boss.kick_stack.contents[-1],bought = True)
+			#return True
 		return False
 
 	"""def riddle(self):
@@ -290,16 +332,21 @@ class player:
 
 	def gain_a_weakness(self):
 		if globe.boss.weakness_stack.size() > 0:
-			self.gain(globe.boss.weakness_stack.contents[-1])
-			return True
+			return self.gain(globe.boss.weakness_stack.contents[-1])
+			#return True
 		return False
 
 	def discard_a_card(self,card):
 		self.persona.discard_power()
+		for t in self.triggers:
+			t("discard",[card],self)
 		self.discard.add(card.pop_self())
+		self.discarded_this_turn.append(card)
 
 	def card_has_been_passed(self,card):
 		self.persona.card_pass_power()
+		for t in self.triggers:
+			t("pass",[card],self)
 
 #depreciated
 	def buy(self,cardnum):
@@ -307,32 +354,45 @@ class player:
 			return False
 		card = globe.boss.lineup.contents[cardnum]
 		if self.played.power >= card.cost:
-			card.bought = True
+			#card.bought = True
 			if globe.DEBUG:
 				print(f"{card.name} bought")
-			self.played.power -= card.cost
-			self.gain(globe.boss.lineup.contents[cardnum])
-			return True
+			#self.played.power -= card.cost
+			return self.gain(globe.boss.lineup.contents[cardnum],bought = True)
+			#return True
 		return False
 
 	def buy_c(self,card):
 		if self.played.power >= card.cost and len(card.frozen) == 0:
-			card.bought = True
+			#card.bought = True
 			if globe.DEBUG:
 				print(f"{card.name} bought")
-			self.played.power -= card.cost
-			self.gain(card)
-			return True
+			#self.played.power -= card.cost
+			return self.gain(card,bought = True)
+			#return True
 		return False
 
-	def gain(self, card):
-		if len(card.frozen) != 0:
-			return
+	def gain(self, card,bought = False,defeat = False):
+
+		#Trying to buy card. Have not payed yet, but funds have been secured
+		if bought:
+			#card is frozen, cannot buy
+			if len(card.frozen) != 0:
+				return False
+
+			#Trying to buy card.  Card may resist, if not, it may do other effects
+			if not card.buy_action(self,bought):
+				print("Rejected",flush = True)
+				return False
+			# All checks passed, paying
+			if defeat:
+				#avoids negative
+				self.played.power -= max(card.cost - self.discount_on_sv,0)
+			else:
+				self.played.power -= card.cost
 
 		card.pop_self()
-		
 		self.gained_this_turn.append(card)
-		card.buy_action(self)
 
 		redirected = False
 		if len(self.gain_redirect) > 0:
@@ -352,14 +412,16 @@ class player:
 
 		card.set_owner(player=self)
 
-
 		if not redirected:
 			self.discard.add(card)
-		return
+
+		return True
 
 	def gain_vp(self,amount):
 		self.vp += amount
 		self.persona.gain_vp_power()
+		for t in self.triggers:
+			t("gain_vp",[amount,self])
 			
 
 	def discard_hand(self):
@@ -370,23 +432,29 @@ class player:
 
 
 	def end_turn(self):
+		for t in self.triggers:
+			t("end_turn",[],self)
+		self.triggers = []
 		self.gain_redirect = []
 		self.discount_on_sv = 0
-		self.played_riddler = False
-		for c in self.played.contents:
+		for c in self.played.played_this_turn:
 			c.end_of_turn()
 		self.discard_hand()
+		for c in self.played.played_this_turn:
+			c.next_turn()
 		self.played.turn_end()
 		self.persona.reset()
 		self.gained_this_turn = []
-		for i in range(5):
-			self.draw_card()
+		self.discarded_this_turn = []
+		#for i in range(5):
+		self.draw_card(num=5, from_card = False)
 		self.sv_bought_this_turn = False
 		self.calculate_vp()
 
 
 	def calculate_vp(self):
 		assemble = []
+		#if None in self.discard.contents:
 		assemble.extend(self.deck.contents)
 		assemble.extend(self.discard.contents)
 		assemble.extend(self.hand.contents)
@@ -514,6 +582,12 @@ class model:
 
 			#self.players[self.whose_turn].turn()
 			current_turn = self.players[self.whose_turn]
+
+			#Stack ongoing
+			if len(self.supervillain_stack.contents) > 0 \
+					and self.supervillain_stack.current_sv.has_stack_ongoing:
+				self.supervillain_stack.current_sv.stack_ongoing(current_turn)
+
 			current_turn.turn()
 			#print(f"SUPER STACK:{len(self.supervillain_stack.contents)}")
 			save_whose_turn = self.whose_turn
@@ -533,8 +607,8 @@ class model:
 					card_to_add.set_owner(owners.LINEUP)
 				self.lineup.add(card_to_add)
 
-			if self.supervillain_stack.get_count() > 0 and \
-					self.supervillain_stack.current_sv != self.supervillain_stack.contents[-1]:
+			if self.supervillain_stack.get_count() > 0 \
+					and self.supervillain_stack.current_sv != self.supervillain_stack.contents[-1]:
 				self.supervillain_stack.current_sv = self.supervillain_stack.contents[-1]
 				#first apearance attack
 
@@ -544,6 +618,11 @@ class model:
 			self.whose_turn = save_whose_turn + 1
 			if self.whose_turn >= len(self.players):
 				self.whose_turn = 0
+
+
+			
+			#with open('data.txt', 'w') as f:
+			print(json.dumps(self,cls=MyEncoder))
 
 
 		for p in self.players:
@@ -556,3 +635,6 @@ class model:
 	def register(self,func):
 		self.notify = func
 
+
+def choose_sets():
+	deck_builder.choose_sets()

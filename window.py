@@ -302,29 +302,7 @@ class boss(drawable):
 	def draw(self,x,y):
 		global display_special
 		super().draw()
-		"""play_num = len(globe.boss.players)
-		progress = math.pi*2/play_num
-		angle = math.pi/2
-		hype1 = SCREEN_HEIGHT/2 - 1.5*(BASE_TEXTURE.height+15)*CARD_SCALE
-		hype2 = SCREEN_WIDTH/2 - 1.5*(BASE_TEXTURE.height+15)*CARD_SCALE
-		if hype1 < 0:
-			print(f"HYPE FAILED: {hype1}.  {SCREEN_HEIGHT}, {BASE_TEXTURE.height}")
-		cx = x - hype2*math.cos(angle)
-		cy = y - hype1*math.sin(angle)
 
-
-		for p in globe.boss.players:
-			cx = x - hype2*math.cos(angle)
-			cy = y - hype1*math.sin(angle)
-
-
-			new_player = player()
-			self.children.append(new_player)
-			new_player.draw(p,cx,cy,angle-math.pi/2)
-
-			angle += progress
-		"""
-		#PREVIEW.cur_card = None
 
 		if PREVIEW.cur_card != None:
 			card_ratio = BASE_TEXTURE.height/BASE_TEXTURE.width
@@ -767,76 +745,6 @@ class pile(drawable):
 
 
 		
-		#start_horizontal = -(10*BASE_TEXTURE.width/2)*CARD_SCALE
-		"""start_vertical = -(BASE_TEXTURE.height+15)*CARD_SCALE
-
-		start_horizontal = (7*BASE_TEXTURE.width/2)*CARD_SCALE
-		cx = x + start_horizontal*math.cos(angle) + start_vertical*math.sin(angle)
-		cy = y + start_horizontal*math.sin(angle) + start_vertical*math.cos(angle)
-		deck = pile()
-		self.children.append(deck)
-		deck.draw(player.deck,cx,cy,angle,False,False)
-
-		start_horizontal -= BASE_TEXTURE.width*CARD_SCALE + 15
-
-		cx = x + start_horizontal*math.cos(angle) + start_vertical*math.sin(angle)
-		cy = y + start_horizontal*math.sin(angle) + start_vertical*math.cos(angle)
-		discard = pile()
-		self.children.append(discard)
-		discard.draw(player.discard,cx,cy,angle,True,False)
-
-		start_vertical = 0
-		start_horizontal = 0
-
-		cx = x + start_horizontal*math.cos(angle) + start_vertical*math.sin(angle)
-		cy = y + start_horizontal*math.sin(angle) + start_vertical*math.cos(angle)
-		ongoing = pile()
-		self.children.append(ongoing)
-		ongoing.draw(player.ongoing,cx,cy,angle,True,True)
-
-		start_vertical = (BASE_TEXTURE.height+15)*CARD_SCALE
-		start_horizontal = 0
-
-		cx = x + start_horizontal*math.cos(angle) - start_vertical*math.sin(angle)
-		cy = y + start_horizontal*math.sin(angle) + start_vertical*math.cos(angle)
-		hand = pile()
-		self.children.append(hand)
-		hand.draw(player.hand,cx,cy,angle,True,True)
-
-		#Should i make the play area global?
-		start_vertical = 2*(BASE_TEXTURE.height+15)*CARD_SCALE
-		start_horizontal = 0
-
-		cx = x + start_horizontal*math.cos(angle) - start_vertical*math.sin(angle)
-		cy = y + start_horizontal*math.sin(angle) + start_vertical*math.cos(angle)
-		play = pile()
-		self.children.append(play)
-		play.draw(player.played,cx,cy,angle,True,True)
-
-		self.set_juristiction(x-(7*BASE_TEXTURE.width/2)*CARD_SCALE,y - (BASE_TEXTURE.height+15)*CARD_SCALE,x + (7*BASE_TEXTURE.width/2)*CARD_SCALE,y + 2*(BASE_TEXTURE.height+15)*CARD_SCALE,angle)
-		arcade.draw_point(x, y, arcade.color.RED, 10)"""
-
-
-"""class pile(drawable):
-	def draw(self,pile,x,y,angle,visible,spread):
-		siz = len(pile.contents)
-		start_horizontal = 0
-		if spread:
-			start_horizontal = -(siz/2)*(BASE_TEXTURE.width+5)*CARD_SCALE
-		else:
-			start_horizontal = BASE_TEXTURE.width*CARD_SCALE/2
-		for i,c in enumerate(pile.contents):
-			
-			cx = x + start_horizontal*math.cos(angle)
-			cy = y + start_horizontal*math.sin(angle)
-			new_drawable = card()
-			self.children.append(new_drawable)
-			new_drawable.draw(c,cx,cy,angle,i,visible)
-			if spread:
-				start_horizontal += (BASE_TEXTURE.width+5)*CARD_SCALE
-
-		self.set_juristiction(x-(siz/2)*(BASE_TEXTURE.width+5)*CARD_SCALE,y,x+(siz/2)*(BASE_TEXTURE.width+5)*CARD_SCALE,y+ BASE_TEXTURE.height*CARD_SCALE,angle)
-"""
 
 class card(drawable):
 	card = None
@@ -885,8 +793,10 @@ class card(drawable):
 
 
 class personas(drawable):
+	persona = None
 	def draw(self,persona,x,y,scale = 1):
 		super().draw()
+		self.persona = persona
 		#print(card.name)
 		width = persona.texture.width*scale*SCREEN_SCALE
 		height = persona.texture.height*scale*SCREEN_SCALE
@@ -896,6 +806,13 @@ class personas(drawable):
 			arcade.draw_texture_rectangle(x, y, width, height, BASE_TEXTURE, 0)
 		#arcade.draw_point(x, y, arcade.color.RED, 10)
 		self.set_juristiction(x-width/2,y-height/2,x+width/2,y+height/2)
+
+
+	def mouse_move(self,preview, x, y):
+		if not preview.consumed and self.check_collision(x,y) and self.persona != None:
+			preview.consumed = True
+			preview.cur_card = self.persona
+			PREVIEW.cur_card = self.persona
 
 
 
@@ -952,8 +869,14 @@ class question(drawable):
 		width = SCREEN_WIDTH
 		height = SCREEN_HEIGHT*0.5
 
-		arcade.draw_rectangle_filled(x, y, width, height,[0,0,0,225])
+		#arcade.draw_rectangle_filled(x, y, width, height,[0,0,0,225])
 		arcade.draw_texture_rectangle(x,y,width,height,QUESTION_TEXTURE,alpha = 0.8)
+
+		if PREVIEW.cur_card != None:
+			card_ratio = BASE_TEXTURE.height/BASE_TEXTURE.width
+			#print("DRAWCARD",card_ratio,SCREEN_HEIGHT-(SCREEN_WIDTH*0.2*card_ratio)/2,SCREEN_WIDTH*0.2,SCREEN_WIDTH*0.2*card_ratio,flush = True)
+			arcade.draw_texture_rectangle(SCREEN_WIDTH*0.2/2, y, SCREEN_WIDTH*0.2, \
+							  SCREEN_WIDTH*0.2*card_ratio, PREVIEW.cur_card.texture, 0)
 
 
 		text_size = 22
@@ -996,15 +919,17 @@ def thread_game(thread_name,delay):
 	#time.sleep(1)
 	#arcade.run()
 	
-	
-
 def main():
+	model.choose_sets()
 	print("Setting up even bus...",flush = True)
 	globe.bus = event_bus.event_bus()
 	print("Setting up controlers...",flush = True)
 	globe.view = view.view_controler()
 	print("Setting up game...",flush = True)
 	globe.boss = model.model()
+
+
+
 	""" Main method """
 	print("Setting up window (1/2)...",flush = True)
 	window = MyGame()
@@ -1028,66 +953,3 @@ if __name__ == "__main__":
 	main()
 
 
-
-
-"""class window_manager:
-	SCREEN_WIDTH = 1000
-	SCREEN_HEIGHT = 1000
-	CARD_SCALE = 0.5
-	def __init__(self,x,y):
-		self.SCREEN_HEIGHT = x
-		self.SCREEN_WIDTH = y
-		arcade.open_window(self.SCREEN_WIDTH, self.SCREEN_HEIGHT, "Drawing Example")
-		arcade.set_background_color(arcade.color.AMAZON)
-
-	def render(self):
-		arcade.start_render()
-
-
-		self.draw_pile(globe.boss.players[0].hand,1000,1000,0,True)
-
-		# Finish drawing and display the result
-		arcade.finish_render()
-
-	def draw_card(self,card,x,y,angle,i):
-		#coin = arcade.Sprite(card.image, 0.8)
-		texture = arcade.load_texture(card.image)
-		arcade.draw_texture_rectangle(x, y, texture.width*self.CARD_SCALE, \
-							  texture.height*self.CARD_SCALE, texture, angle)
-
-	def draw_back(self,x,y,angle):
-		texture = arcade.load_texture("base/images/cards/back.jpeg")
-		arcade.draw_texture_rectangle(x, y, texture.width*self.CARD_SCALE, \
-							  texture.height*self.CARD_SCALE, texture, angle)
-
-	def draw_pile(self,pile,x,y,angle,visible):
-		texture = arcade.load_texture("base/images/cards/back.jpeg")
-		siz = len(pile.contents)
-		start_horizontal = -(siz/2)*(texture.width-15)*self.CARD_SCALE
-		for i,c in enumerate(pile.contents):
-			cx = x + start_horizontal*math.sin((angle+90)/180*math.pi)
-			cy = y + start_horizontal*math.cos((angle+90)/180*math.pi)
-			if visible:
-				self.draw_card(c,cx,cy,angle,i)
-			else:
-				self.draw_back(cx,cy,angle)
-			start_horizontal += (texture.width-15)*self.CARD_SCALE
-
-	def draw_deck(self,pile,x,y,angle,visible):
-		self.draw_back(x,y,angle)
-
-
-
-
-	def run(self):
-		arcade.run()
-
-
-#window = window_manager(500,500)
-#window.render()
-#window.run()
-#input()
-#window.render2()
-#window.run()
-#input()
-"""

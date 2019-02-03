@@ -19,6 +19,7 @@ class card:
 	texture = None
 	#List of pid's of who has a frozen token on this card
 	frozen = []
+	has_stack_ongoing = False
 
 
 	#stats
@@ -63,8 +64,13 @@ class card:
 	def end_of_turn(self):
 		return
 
-	def buy_action(self,player):
+	def next_turn(self):
 		return
+
+	def buy_action(self,player,bought):
+		#Assume that card can be bought
+		return True
+
 
 	#defence = True must be set or this will not be an option
 	#pop_self will come in handy
@@ -75,10 +81,14 @@ class card:
 	def first_apearance(self):
 		return
 
+	def stack_ongoing(self,player):
+		return
+
 	def attack_action(self,by_player):
 		return
 
 	def destroy(self,player_responsible):
+		self.frozen = []
 		self.pop_self()
 		#if player_responsible != None:
 		player_responsible.persona.destory_power()
@@ -92,51 +102,6 @@ class card:
 		location[0].contents.remove(self)
 		return self
 
-		"""
-		#why am i not checking by ownership type?
-		if self in globe.boss.lineup.contents:
-			globe.boss.lineup.contents.remove(self)
-			if globe.DEBUG:
-				print(f"{self.name} pop from lineup")
-		elif self in globe.boss.destroyed_stack.contents:
-			globe.boss.destroyed_stack.contents.remove(self)
-			if globe.DEBUG:
-				print(f"{self.name} pop from destroyed")
-		elif self in globe.boss.main_deck.contents:
-			globe.boss.main_deck.contents.remove(self)
-			if globe.DEBUG:
-				print(f"{self.name} pop from main_deck")
-		elif self.owner_type == owners.PLAYER:
-			if self in self.owner.hand.contents:
-				self.owner.hand.contents.remove(self)
-				if globe.DEBUG:
-					print(f"{self.name} pop from hand")
-			elif self in self.owner.discard.contents:
-				self.owner.discard.contents.remove(self)
-				if globe.DEBUG:
-					print(f"{self.name} pop from discard")
-			elif self in self.owner.ongoing.contents:
-				self.owner.ongoing.contents.remove(self)
-				if globe.DEBUG:
-					print(f"{self.name} pop from ongoing")
-			elif self in self.owner.played.contents:
-				self.owner.played.contents.remove(self)
-				if globe.DEBUG:
-					print(f"{self.name} pop from played")
-			elif self in self.owner.deck.contents:
-				self.owner.deck.contents.remove(self)
-				if globe.DEBUG:
-					print(f"{self.name} pop from deck")
-			elif self in self.owner.under_superhero.contents:
-				self.owner.under_superhero.contents.remove(self)
-				if globe.DEBUG:
-					print(f"{self.name} pop from under_superhero")
-			#Firestorm.  May interact weirdly, firestorm always puts it back on superhero i think
-			elif self in self.owner.over_superhero.contents:
-				self.owner.over_superhero.contents.remove(self)
-				if globe.DEBUG:
-					print(f"{self.name} pop from over_superher")
-		return self"""
 
 	def find_self(self):
 		#why am i not checking by ownership type?

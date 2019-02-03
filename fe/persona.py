@@ -56,7 +56,7 @@ class bizarro(persona_frame.persona):
 						w.pop_self()
 						w.set_owner(owners.WEAKNESS)
 						globe.boss.weakness_stack.add(w)
-					self.player.draw_card()
+					self.player.draw_card(from_card = False)
 					self.player.played.special_options.remove(self.action)
 					return True
 		return False
@@ -81,13 +81,18 @@ class black_adam(persona_frame.persona):
 	text = "The first time you play a super power during each of your turns, you may destroy it.  If you do, draw a card and gain 1 VP."
 	image = "fe/images/personas/Black Adam MC.jpg"
 
+	def ai_overvalue(self,card):
+		if card.ctype_eq(cardtype.SUPERPOWER):
+			return persona_frame.overvalue()
+		return 0
+
 	def mod(self,card,player):
 		if card.ctype_eq(cardtype.SUPERPOWER): # and len(player.played.played_this_turn) == 0:
 			instruction_text = "Would you like to destory it? If you do, draw a card and gain 1 VP."
 			result = effects.ok_or_no(instruction_text,player,card,ai_hint.IFBAD)
 			if result:
 				card.destroy(player)
-				player.draw_card()
+				player.draw_card(from_card = False)
 				player.gain_vp(1)
 			self.player.played.card_mods.remove(self.mod)
 		return 0
@@ -131,13 +136,13 @@ class harley_quinn(persona_frame.persona):
 	def discard_power(self):
 		if self.active and globe.boss.whose_turn != -1 and self.last_seen_turn != globe.boss.whose_turn:
 			self.last_seen_turn = globe.boss.whose_turn
-			self.player.draw_card()
+			self.player.draw_card(from_card = False)
 		return
 
 	def card_pass_power(self):
 		if self.active and globe.boss.whose_turn != -1 and self.last_seen_turn != globe.boss.whose_turn:
 			self.last_seen_turn = globe.boss.whose_turn
-			self.player.draw_card()
+			self.player.draw_card(from_card = False)
 		return
 
 
@@ -156,7 +161,7 @@ class lex_luther(persona_frame.persona):
 		if self.active:
 			for c in self.player.gained_this_turn:
 				if c.ctype_eq(cardtype.HERO):
-					self.player.draw_card()
+					self.player.draw_card(from_card = False)
 
 
 class sinestro(persona_frame.persona):
@@ -168,7 +173,7 @@ class sinestro(persona_frame.persona):
 
 
 	def ai_overvalue(self,card):
-		if card.ctype_eq(cardtype.HERO):
+		if card.attack:
 			return persona_frame.overvalue()
 		return 0
 
@@ -179,7 +184,7 @@ class sinestro(persona_frame.persona):
 
 	def gain_vp_power(self):
 		if not self.ability_used and self.active and globe.boss.whose_turn == self.player.pid:
-			self.player.draw_card()
+			self.player.draw_card(from_card = False)
 			self.ability_used = True
 		return
 
@@ -217,7 +222,7 @@ class the_joker(persona_frame.persona):
 		result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.IFBAD)
 		if result != None:
 			result.destroy(player)
-			player.draw_card()
+			player.draw_card(from_card = False)
 			for p in globe.boss.players:
 				if p != player:
 					if effects.attack(p,self,player):

@@ -1,5 +1,7 @@
 from . import cards
+from . import persona
 import random
+import deck_frame
 
 
 def initialize_supervillains():
@@ -94,3 +96,6 @@ def initialize_deck():
 			assemble.append(card())
 	random.shuffle(assemble)
 	return assemble
+
+
+this_set = deck_frame.deck_set("Forever Evil",persona.get_personas,initialize_deck,initialize_supervillains,True)

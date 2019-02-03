@@ -1,19 +1,56 @@
 import random
-from fe import persona as base_personas
-from fe import cards as base_card
-from fe import deck as base_deck
+#from base import persona as base_personas
+from base import deck as base_deck
+#from hu import persona as hu_personas
+#from fe import persona as fe_personas
+from fe import deck as fe_deck
 #from base import deck as sv_deck
 #from base import cards as helper
+from crossover_1 import deck as c1_deck
+
+from crossover_1 import cards as custom
 import card_frame
 import arcade
 
-def load_textures(cards):
-	#for c in cards:
-	#	c.texture = arcade.load_texture(c.image)
-	pass
+
+decks = [base_deck.this_set,fe_deck.this_set,c1_deck.this_set]
+choosen_sets = []
+
+
+def choose_sets():
+	print("Which sets would you like to play with? type 'play' to start game.")
+	for i,d in enumerate(decks):
+		print(f"{i}  {d.name}    (large set:{d.large_set})")
+	x = input()
+	if x == 'play':
+		if len(choosen_sets) == 0:
+			print("You must choose at least 1 set.")
+			return choose_sets()
+		return
+	else:
+		intx = -1
+		safe = True
+		try:
+			intx = int(x)
+		except:
+			print("?")
+			safe = False
+		if safe and intx >= 0 and intx < len(decks):
+			choosen_sets.append(decks.pop(intx))
+		return choose_sets()
 
 def get_personas():
-	return base_personas.get_personas()
+	small_sets = []
+	large_sets = []
+	for d in choosen_sets:
+		print(f"Loading {d.name}'s personas...",flush = True)
+		if d.large_set:
+			large_sets.extend(d.load_personas())
+		else:
+			small_sets.extend(d.load_personas())
+	if len(small_sets) > 0:
+		return small_sets
+	return large_sets
 
 def get_starting_deck(player):
 	assemble = []
@@ -21,37 +58,16 @@ def get_starting_deck(player):
 		assemble.append(card_frame.vunerability(player))
 	for c in range(7):
 		assemble.append(card_frame.punch(player))
-	
-
-	#for c in range(5):
-	#	assemble.append(card_frame.weakness(player))
-	#assemble.append(helper.ras_al_ghul(player))
-	#assemble.append(base_card.cosmic_staff(player))
-	#assemble.append(helper.clayface(player))
-	#assemble.append(base_card.the_anti_monitor(player))
-	#assemble.append(base_card.man_bat_serum(player))
-	#assemble.append(card_frame.punch(player))
-	#assemble.append(card_frame.punch(player))
-	#assemble.append(card_frame.punch(player))
-	#assemble.append(card_frame.punch(player))
-	#assemble.append(card_frame.punch(player))
-	#assemble.append(card_frame.punch(player))
-	#assemble.append(base_card.element_woman(player))
-	#assemble.append(helper.clayface(player))
-	#assemble.append(base_card.firestorm(player))
 
 	random.shuffle(assemble)
-	load_textures(assemble)
+	assemble.append(custom.dr_mid_nite(player))
+	assemble.append(custom.citizen_steel(player))
+	assemble.append(custom.liberty_belle(player))
+
 	return assemble
 
 def debug_discard(player):
 	assemble = []
-	#assemble.append(cards.vunerability(player))
-	#assemble.append(cards.punch(player))
-	#assemble.append(cards.kick(player))
-
-	#random.shuffle(assemble)
-	load_textures(assemble)
 	return assemble
 
 
@@ -60,25 +76,77 @@ def initialize_weaknesses():
 	assemble = []
 	for c in range(20):
 		assemble.append(card_frame.weakness())
-	load_textures(assemble)
 	return assemble
 
 def initialize_kicks():
 	assemble = []
 	for c in range(16):
 		assemble.append(card_frame.kick())
-	load_textures(assemble)
 	return assemble
 
-
+#if there are any small sets, it only pulls SV's out of them
+#i will choose
+#the number of SV's to use is the most of the avalable sets of SV's
+#first and last SV is chosen from the first and last SV of one of the avalabel sets
 def initialize_supervillains():
-	assemble = base_deck.initialize_supervillains()
-	load_textures(assemble)
+	small_sets = []
+	large_sets = []
+	for d in choosen_sets:
+		print(f"Loading {d.name}'s SV's...",flush = True)
+		if d.large_set:
+			large_sets.append(d.load_supervilains())
+		else:
+			small_sets.append(d.load_supervilains())
+	prioritize = large_sets
+	if len(small_sets) > 0:
+		prioritize = small_sets
+	largest_villain_amount = 0
+	for d in prioritize:
+		largest_villain_amount = max(largest_villain_amount,len(d))
+	if len(prioritize) > 1:
+		assemble = []
+		#Set last SV
+		assemble.append(random.choice(prioritize)[0])
+		for d in prioritize:
+			d.pop(0)
+		#Set first SV
+		first_SV = random.choice(prioritize)[-1]
+		for d in prioritize:
+			d.pop()
+		while len(assemble) < largest_villain_amount - 1:
+			random_set = random.choice(prioritize)
+			if len(random_set) > 0:
+				choosen_SV = random.choice(random_set)
+				assemble.append(choosen_SV)
+				random_set.remove(choosen_SV)
+		assemble.append(first_SV)
+	else:
+		assemble = prioritize[0]
 	return assemble
 
 def initialize_deck():
-	assemble = base_deck.initialize_deck()
-	load_textures(assemble)
+	small_sets_cards = []
+	#large_sets = []
+	assemble = []
+	for d in choosen_sets:
+		print(f"Loading {d.name}'s deck...",flush = True)
+		if d.large_set:
+			assemble.extend(d.load_deck())
+		else:
+			small_sets_cards.extend(d.load_deck())
+	#All large sets should be shuffled (although there may be none)
+	random.shuffle(assemble)
+	random.shuffle(small_sets_cards)
+	if len(assemble) == 0:
+		return small_sets_cards
+	elif len(small_sets_cards) > 0:
+		bottom_split = assemble[:int(len(assemble)/2)]
+		top_split = assemble[int(len(assemble)/2):]
+		print("DID I DO THAT SPLIT RIGHT?",len(assemble),len(top_split) + len(bottom_split))
+		top_split.extend(small_sets_cards)
+		random.shuffle(top_split)
+		assemble = bottom_split
+		assemble.extend(top_split)
 	return assemble
 	
 

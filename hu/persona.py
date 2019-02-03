@@ -24,7 +24,7 @@ class batgirl(persona_frame.persona):
 			for c in self.player.hand.contents:
 				if c.name == "Punch" and self.action in self.player.played.special_options:
 					self.player.discard_a_card(c)
-					self.player.draw_card()
+					self.player.draw_card(from_card = False)
 					self.player.played.special_options.remove(self.action)
 					return True
 		return False
@@ -94,7 +94,7 @@ class booster_gold(persona_frame.persona):
 			self.player.played.card_mods.append(self.mod)
 
 	def avoided_attack(self):
-		self.player.draw_card()
+		self.player.draw_card(from_card = False)
 		return
 
 class hawkman(persona_frame.persona):
@@ -136,7 +136,7 @@ class nightwing(persona_frame.persona):
 			if number_played == 1:
 				return 1
 			elif number_played == 2:
-				self.player.draw_card()
+				self.player.draw_card(from_card = False)
 		return 0
 
 
@@ -246,7 +246,7 @@ class starfire(persona_frame.persona):
 		#We must ensure that we are doing this on our turn
 		if player.pid == globe.boss.whose_turn:
 			if globe.boss.lineup.get_count(cardtype.SUPERPOWER) == 0:
-				self.player.draw_card()
+				self.player.draw_card(from_card = False)
 				player.played.special_options.remove(self.action)
 				return True
 		return False

@@ -66,7 +66,7 @@ class cyborg(persona_frame.persona):
 				if c != card and c.ctype_eq(cardtype.EQUIPMENT):
 					already_played = True
 			if not already_played:
-				self.player.draw_card()
+				self.player.draw_card(from_card = False)
 		return 0
 
 
@@ -88,7 +88,7 @@ class the_flash(persona_frame.persona):
 	def draw_power(self):
 		if self.active and not self.accounted_for:
 			self.accounted_for = True
-			self.player.draw_card()
+			self.player.draw_card(from_card = False)
 		return
 
 	def reset(self):
@@ -187,7 +187,7 @@ class wonder_woman(persona_frame.persona):
 		if self.active:
 			for c in self.player.gained_this_turn:
 				if c.ctype_eq(cardtype.VILLAIN):
-					self.player.draw_card()
+					self.player.draw_card(from_card = False)
 
 class martian_manhunter(persona_frame.persona):
 	name = "Martian Manhunter"
