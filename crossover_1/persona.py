@@ -7,8 +7,8 @@ from frames import actions
 
 def get_personas():
 	#return [auquaman(),batman(),the_flash()]
-	return [alan_scott(),doctor_fate(),jay_garrick()]
-	#return [alan_scott(),doctor_fate(),jay_garrick(),mister_terricic(),power_girl(),stargirl(),wildcat()]
+	#return [alan_scott(),doctor_fate(),jay_garrick()]
+	return [alan_scott(),doctor_fate(),jay_garrick(),mister_terricic(),power_girl(),stargirl(),wildcat()]
 
 
 class alan_scott(persona_frame.persona):
@@ -58,7 +58,7 @@ class doctor_fate(persona_frame.persona):
 
 	def ai_overvalue(self,card):
 		card_costs = self.get_costcount()
-		all_relevant = sum(list(card_types.values()))
+		all_relevant = sum(list(card_costs.values()))
 		return 0.25/(card_costs[card.cost]/all_relevant) - 1
 		#print("MAKE SURE NONE OF THESE ARE 0",card.ctype,all_relevant,flush=True)
 		#if card.ctype in card_types:

@@ -454,7 +454,7 @@ class player_icon(drawable):
 			#text_offset = 5
 			if player.vp>0:
 				text_offset = int(math.log(player.vp,10))*6 + 5
-				arcade.draw_circle_filled(x+player.persona.texture.width*0.2/2,y-player.persona.texture.height*0.2/2, 25, arcade.color.BLUE)
+				arcade.draw_circle_filled(x+player.persona.texture.width*0.2/2*SCREEN_SCALE,y-player.persona.texture.height*0.2/2*SCREEN_SCALE, 25*SCREEN_SCALE, arcade.color.BLUE)
 				arcade.draw_text(f"{player.vp}",x+player.persona.texture.width*0.2/2*SCREEN_SCALE - text_offset,y-player.persona.texture.height*0.2/2*SCREEN_SCALE-text_size*0.33,arcade.color.WHITE,text_size)
 
 

@@ -60,9 +60,9 @@ def get_starting_deck(player):
 		assemble.append(card_frame.punch(player))
 
 	random.shuffle(assemble)
-	assemble.append(custom.gentleman_ghost(player))
-	assemble.append(custom.citizen_steel(player))
-	assemble.append(custom.liberty_belle(player))
+	#assemble.append(custom.gentleman_ghost(player))
+	#assemble.append(custom.citizen_steel(player))
+	#assemble.append(custom.liberty_belle(player))
 
 	return assemble
 

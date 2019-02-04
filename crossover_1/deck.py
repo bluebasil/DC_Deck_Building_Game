@@ -9,10 +9,10 @@ def initialize_supervillains():
 	assemble.append(cards.gog())
 	assemble.append(cards.eclipso())
 	assemble.append(cards.gentleman_ghost())
-	#assemble.append(cards.ultra_humanite())
-	#assemble.append(cards.kobra())
-	#assemble.append(cards.icicle())
-	#assemble.append(cards.mordru_the_merciless())
+	assemble.append(cards.ultra_humanite())
+	assemble.append(cards.kobra())
+	assemble.append(cards.icicle())
+	assemble.append(cards.mordru_the_merciless())
 	assemble.append(cards.solomon_grundy())
 	return assemble
 

@@ -67,7 +67,7 @@ class card:
 	def next_turn(self):
 		return
 
-	def buy_action(self,player,bought):
+	def buy_action(self,player,bought,defeat):
 		#Assume that card can be bought
 		return True
 

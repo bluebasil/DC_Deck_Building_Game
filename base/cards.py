@@ -763,7 +763,7 @@ class solomon_grundy(card_frame.card):
 			return (True,player.deck)
 		return (False,None)
 
-	def buy_action(self,player):
+	def buy_action(self,player,bought,defeat):
 		player.gain_redirect.append(self.solomon_grundy_redirect)
 		#Assume that card can be bought
 		return True
@@ -1216,11 +1216,13 @@ class atrocitus(card_frame.card):
 				p.under_superhero.add(selected_card.pop_self())
 		return
 
-	def buy_action(self,player):
-		for p in globe.boss.players:
-			for c in p.under_superhero.contents:
-				p.deck.add(c.pop_self())
-		return
+	def buy_action(self,player,bought,defeat):
+		#If cards are under the persona for other reasons, re-gaining this card should not free them
+		if defeat:
+			for p in globe.boss.players:
+				for c in p.under_superhero.contents:
+					p.deck.add(c.pop_self())
+		return True
 
 #done
 class black_manta(card_frame.card):
@@ -1313,10 +1315,11 @@ class captain_cold(card_frame.card):
 				p.persona.active = False
 		return
 
-	def buy_action(self,player):
-		for p in globe.boss.players:
-			p.persona.active = True
-		return
+	def buy_action(self,player,bought,defeat):
+		if defeat:
+			for p in globe.boss.players:
+				p.persona.active = True
+		return True
 
 #done
 class darkseid(card_frame.card):

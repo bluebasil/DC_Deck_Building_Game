@@ -437,14 +437,14 @@ class gog(card_frame.card):
 		destroyed_a_card = False
 		if len(player.discard.contents) > 0:
 			instruction_text = "Stack Ongoing: You may destroy a card in your discard pile.\n(If you do not, you will discard a card)."
-			result = effects.may_choose_one_of(instruction_text,player,player,discard.contents,ai_hint.IFBAD)
+			result = effects.may_choose_one_of(instruction_text,player,player.discard.contents,ai_hint.IFBAD)
 			if result != None:
 				result.destroy(player)
 				destroyed_a_card = True
 
 		if not destroyed_a_card:
 			if len(player.hand.contents) > 0:
-				result = effects.choose_one_of("Stack Ongoing: Discard a card.",player,player.hand.contents,WORST)
+				result = effects.choose_one_of("Stack Ongoing: Discard a card.",player,player.hand.contents,ai_hint.WORST)
 				player.discard_a_card(result)
 	
 	
@@ -461,7 +461,7 @@ class gog(card_frame.card):
 					highest_cost += 1
 
 		for p in discarded:
-			if discaded[p].cost == highest_cost:
+			if discarded[p].cost == highest_cost:
 				p.discard_a_card(random.choice(p.hand.contents))
 		return
 
@@ -598,8 +598,11 @@ class solomon_grundy(card_frame.card):
 
 
 	#cannot be bought unless a starter has been played
-	def buy_action(self,player,bought):
-		return self.played_starter
+	def buy_action(self,player,bought,defeat):
+		if defeat:
+			return self.played_starter
+		else:
+			return True
 
 	def calculate_vp(self,all_cards):
 		amount_of_starters = 0
