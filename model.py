@@ -483,7 +483,6 @@ class player:
 
 			#Trying to buy card.  Card may resist, if not, it may do other effects
 			if not card.buy_action(self,bought,defeat):
-				print("Rejected",flush = True)
 				return False
 			# All checks passed, paying
 			if defeat:
@@ -617,6 +616,8 @@ class model:
 
 	#initialize Game
 	def __init__(self,number_of_players=2):
+		self.players = []
+		self.player_score = []
 		#all piles assembled and initialized with the deck_builder
 		self.main_deck = pile("Main Deck")
 		self.main_deck.contents = deck_builder.initialize_deck()
@@ -645,7 +646,7 @@ class model:
 		#If they should not output to the terminal, set this to True
 		#False is usefull for debugging
 		#If a graphic display is used, this wont affect anything that the user sees
-		invisible = False
+		invisible = True
 		pid = 0
 
 		#player initialization
@@ -676,7 +677,13 @@ class model:
 		pid += 1
 
 		new_player = player(pid,None)
-		new_controler = controlers.cpu_greedy(new_player,invisible)
+		new_controler = controlers.cpu(new_player,invisible)
+		new_player.controler = new_controler
+		self.players.append(new_player)
+		pid += 1
+
+		new_player = player(pid,None)
+		new_controler = controlers.cpu(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 		pid += 1
@@ -686,7 +693,8 @@ class model:
 	def choose_personas(self):
 		for i,p in enumerate(self.players):
 			p.choose_persona(self.persona_list)
-			print(f"{i} choose {p.persona.name}")
+			if globe.DEBUG:
+				print(f"{i} choose {p.persona.name}")
 			if p.persona.name == "The Flash":
 				self.whose_turn = i
 
@@ -741,6 +749,7 @@ class model:
 				#The main deck is empty
 				if card_to_add == None:
 					print("MAIN DECK RAN OUT!")
+					output_persona_stats(self.players,"main_deck")
 					return
 				else:
 					card_to_add.set_owner(owners.LINEUP)
@@ -763,6 +772,8 @@ class model:
 		for p in self.players:
 			self.player_score.append(p.calculate_vp())
 
+		output_persona_stats(self.players,"regular")
+
 
 
 	def register(self,func):
@@ -772,3 +783,30 @@ class model:
 #just forwards with function
 def choose_sets():
 	deck_builder.choose_sets()
+
+def output_persona_stats(players,end_type,report = "empty"):
+	f = open("output2.csv","a+")
+	base = False
+	hu = False
+	fe = False
+	tt = False
+	crossover_1 = False
+	crossover_2 = False
+	for d in deck_builder.choosen_sets:
+		if d.name == "Base set":
+			base = True
+		elif d.name == "Forever Evil":
+			fe = True
+		elif d.name == "Crossover 1, Justice Society of America":
+			crossover_1 = True
+	ordered_players = sorted(players, key=lambda x: x.score, reverse=True)
+	line = f"0,{base},{hu},{fe},{tt},{crossover_1},{crossover_2}"
+	for p in ordered_players:
+		line += f",{p.persona.name},{p.score}"
+	line += f",{end_type}\n"
+	f.write(line)
+	f.close() 
+	if end_type == "crash":
+		f = open("crash_log.txt","a+")
+		f.write(report+"\n\n\n\n\n\n")
+		f.close() 

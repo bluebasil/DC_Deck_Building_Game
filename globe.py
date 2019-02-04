@@ -1,5 +1,5 @@
 boss = None
 view = None
-DEBUG = True
+DEBUG = False
 bus = None
 

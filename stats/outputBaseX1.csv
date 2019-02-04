@@ -1,0 +1,647 @@
+0,True,False,False,False,True,False,Doctor Fate,62,Wildcat,51,Jay Garrick,41,Stargirl,30,regular
+0,True,False,False,False,True,False,Wildcat,49,Stargirl,28,Alan Scott,18,Mister Terrific,14,regular
+0,True,False,False,False,True,False,Wildcat,50,Stargirl,32,Power Girl,27,Doctor Fate,20,regular
+0,True,False,False,False,True,False,Alan Scott,45,Wildcat,44,Jay Garrick,33,Power Girl,23,regular
+0,True,False,False,False,True,False,Wildcat,47,Jay Garrick,35,Alan Scott,34,Power Girl,24,regular
+0,True,False,False,False,True,False,Stargirl,50,Wildcat,40,Power Girl,34,Doctor Fate,32,regular
+0,True,False,False,False,True,False,Mister Terrific,61,Doctor Fate,57,Power Girl,52,Alan Scott,48,main_deck
+0,True,False,False,False,True,False,Doctor Fate,47,Wildcat,45,Jay Garrick,35,Power Girl,30,regular
+0,True,False,False,False,True,False,Wildcat,38,Power Girl,24,Stargirl,24,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Stargirl,42,Wildcat,35,Power Girl,31,Jay Garrick,14,regular
+0,True,False,False,False,True,False,Stargirl,62,Wildcat,56,Jay Garrick,51,Mister Terrific,36,regular
+0,True,False,False,False,True,False,Power Girl,64,Stargirl,36,Wildcat,30,Jay Garrick,28,regular
+0,True,False,False,False,True,False,Doctor Fate,42,Wildcat,36,Power Girl,25,Jay Garrick,23,regular
+0,True,False,False,False,True,False,Stargirl,67,Wildcat,57,Doctor Fate,52,Mister Terrific,40,regular
+0,True,False,False,False,True,False,Wildcat,48,Alan Scott,42,Doctor Fate,33,Stargirl,18,regular
+0,True,False,False,False,True,False,Alan Scott,50,Mister Terrific,45,Doctor Fate,39,Power Girl,34,regular
+0,True,False,False,False,True,False,Alan Scott,43,Wildcat,41,Mister Terrific,34,Power Girl,31,regular
+0,True,False,False,False,True,False,Jay Garrick,40,Alan Scott,33,Power Girl,30,Wildcat,26,regular
+0,True,False,False,False,True,False,Doctor Fate,55,Jay Garrick,41,Alan Scott,30,Stargirl,29,regular
+0,True,False,False,False,True,False,Jay Garrick,44,Alan Scott,39,Mister Terrific,27,Wildcat,22,regular
+0,True,False,False,False,True,False,Stargirl,66,Wildcat,60,Jay Garrick,40,Mister Terrific,9,regular
+0,True,False,False,False,True,False,Doctor Fate,49,Stargirl,34,Power Girl,32,Jay Garrick,24,regular
+0,True,False,False,False,True,False,Stargirl,55,Power Girl,49,Wildcat,46,Doctor Fate,37,regular
+0,True,False,False,False,True,False,Power Girl,55,Wildcat,47,Jay Garrick,36,Doctor Fate,25,regular
+0,True,False,False,False,True,False,Jay Garrick,47,Wildcat,40,Alan Scott,36,Mister Terrific,18,regular
+0,True,False,False,False,True,False,Wildcat,53,Power Girl,52,Jay Garrick,40,Mister Terrific,37,regular
+0,True,False,False,False,True,False,Wildcat,39,Power Girl,34,Alan Scott,29,Doctor Fate,17,regular
+0,True,False,False,False,True,False,Jay Garrick,45,Wildcat,32,Doctor Fate,27,Stargirl,24,regular
+0,True,False,False,False,True,False,Power Girl,39,Alan Scott,36,Wildcat,29,Mister Terrific,20,regular
+0,True,False,False,False,True,False,Doctor Fate,65,Stargirl,59,Jay Garrick,50,Mister Terrific,21,regular
+0,True,False,False,False,True,False,Power Girl,59,Wildcat,38,Doctor Fate,35,Mister Terrific,29,regular
+0,True,False,False,False,True,False,Stargirl,64,Doctor Fate,39,Alan Scott,37,Mister Terrific,32,regular
+0,True,False,False,False,True,False,Wildcat,39,Mister Terrific,34,Doctor Fate,28,Power Girl,27,regular
+0,True,False,False,False,True,False,Wildcat,52,Jay Garrick,39,Doctor Fate,37,Alan Scott,31,regular
+0,True,False,False,False,True,False,Power Girl,84,Stargirl,57,Mister Terrific,46,Doctor Fate,39,regular
+0,True,False,False,False,True,False,Doctor Fate,49,Alan Scott,41,Mister Terrific,37,Jay Garrick,11,regular
+0,True,False,False,False,True,False,Wildcat,72,Doctor Fate,47,Stargirl,39,Power Girl,23,regular
+0,True,False,False,False,True,False,Alan Scott,44,Power Girl,42,Stargirl,42,Wildcat,36,regular
+0,True,False,False,False,True,False,Wildcat,76,Doctor Fate,34,Alan Scott,30,Jay Garrick,19,regular
+0,True,False,False,False,True,False,Doctor Fate,57,Power Girl,39,Alan Scott,28,Mister Terrific,24,regular
+0,True,False,False,False,True,False,Doctor Fate,69,Wildcat,52,Mister Terrific,33,Jay Garrick,25,regular
+0,True,False,False,False,True,False,Stargirl,54,Wildcat,53,Jay Garrick,39,Mister Terrific,34,regular
+0,True,False,False,False,True,False,Alan Scott,51,Stargirl,49,Power Girl,42,Mister Terrific,41,regular
+0,True,False,False,False,True,False,Doctor Fate,80,Wildcat,74,Alan Scott,46,Mister Terrific,38,main_deck
+0,True,False,False,False,True,False,Wildcat,47,Doctor Fate,29,Stargirl,26,Jay Garrick,24,regular
+0,True,False,False,False,True,False,Doctor Fate,46,Power Girl,45,Wildcat,43,Stargirl,17,regular
+0,True,False,False,False,True,False,Alan Scott,50,Doctor Fate,43,Mister Terrific,38,Stargirl,37,regular
+0,True,False,False,False,True,False,Alan Scott,81,Doctor Fate,57,Mister Terrific,48,Jay Garrick,41,regular
+0,True,False,False,False,True,False,Power Girl,49,Wildcat,39,Stargirl,39,Jay Garrick,22,regular
+0,True,False,False,False,True,False,Wildcat,70,Power Girl,34,Jay Garrick,30,Stargirl,24,regular
+0,True,False,False,False,True,False,Doctor Fate,93,Jay Garrick,35,Power Girl,33,Alan Scott,25,regular
+0,True,False,False,False,True,False,Power Girl,55,Mister Terrific,50,Doctor Fate,47,Jay Garrick,17,regular
+0,True,False,False,False,True,False,Power Girl,58,Stargirl,50,Alan Scott,31,Mister Terrific,18,regular
+0,True,False,False,False,True,False,Alan Scott,53,Mister Terrific,47,Jay Garrick,32,Wildcat,30,regular
+0,True,False,False,False,True,False,Doctor Fate,56,Stargirl,55,Alan Scott,36,Mister Terrific,33,regular
+0,True,False,False,False,True,False,Doctor Fate,60,Wildcat,46,Alan Scott,43,Stargirl,34,regular
+0,True,False,False,False,True,False,Stargirl,54,Wildcat,46,Doctor Fate,43,Jay Garrick,27,regular
+0,True,False,False,False,True,False,Wildcat,71,Alan Scott,52,Stargirl,46,Power Girl,42,regular
+0,True,False,False,False,True,False,Wildcat,69,Mister Terrific,54,Stargirl,54,Jay Garrick,24,regular
+0,True,False,False,False,True,False,Doctor Fate,43,Mister Terrific,41,Wildcat,39,Alan Scott,35,regular
+0,True,False,False,False,True,False,Wildcat,51,Doctor Fate,40,Alan Scott,16,Mister Terrific,12,regular
+0,True,False,False,False,True,False,Wildcat,46,Power Girl,45,Alan Scott,44,Doctor Fate,44,regular
+0,True,False,False,False,True,False,Wildcat,65,Stargirl,45,Power Girl,39,Mister Terrific,28,regular
+0,True,False,False,False,True,False,Doctor Fate,50,Mister Terrific,45,Power Girl,31,Wildcat,30,regular
+0,True,False,False,False,True,False,Wildcat,38,Jay Garrick,36,Power Girl,35,Alan Scott,29,regular
+0,True,False,False,False,True,False,Power Girl,50,Jay Garrick,40,Wildcat,38,Mister Terrific,26,regular
+0,True,False,False,False,True,False,Wildcat,65,Jay Garrick,61,Doctor Fate,38,Mister Terrific,30,regular
+0,True,False,False,False,True,False,Alan Scott,78,Mister Terrific,47,Jay Garrick,46,Stargirl,46,regular
+0,True,False,False,False,True,False,Wildcat,50,Doctor Fate,40,Jay Garrick,40,Power Girl,29,regular
+0,True,False,False,False,True,False,Doctor Fate,56,Stargirl,35,Wildcat,35,Power Girl,30,regular
+0,True,False,False,False,True,False,Doctor Fate,41,Alan Scott,34,Stargirl,30,Mister Terrific,15,regular
+0,True,False,False,False,True,False,Wildcat,36,Doctor Fate,33,Mister Terrific,28,Alan Scott,24,regular
+0,True,False,False,False,True,False,Power Girl,49,Jay Garrick,43,Wildcat,32,Stargirl,30,regular
+0,True,False,False,False,True,False,Stargirl,56,Wildcat,50,Alan Scott,43,Mister Terrific,38,regular
+0,True,False,False,False,True,False,Stargirl,41,Wildcat,39,Power Girl,28,Mister Terrific,19,regular
+0,True,False,False,False,True,False,Stargirl,60,Alan Scott,58,Mister Terrific,56,Jay Garrick,52,regular
+0,True,False,False,False,True,False,Power Girl,46,Jay Garrick,42,Mister Terrific,38,Alan Scott,37,regular
+0,True,False,False,False,True,False,Wildcat,54,Power Girl,30,Mister Terrific,27,Jay Garrick,27,regular
+0,True,False,False,False,True,False,Wildcat,48,Power Girl,40,Jay Garrick,38,Doctor Fate,16,regular
+0,True,False,False,False,True,False,Alan Scott,55,Wildcat,51,Jay Garrick,36,Mister Terrific,34,regular
+0,True,False,False,False,True,False,Wildcat,45,Alan Scott,35,Jay Garrick,34,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Stargirl,39,Doctor Fate,37,Wildcat,33,Jay Garrick,24,crash
+0,True,False,False,False,True,False,Alan Scott,50,Stargirl,47,Power Girl,43,Mister Terrific,31,regular
+0,True,False,False,False,True,False,Stargirl,51,Alan Scott,50,Wildcat,38,Power Girl,28,regular
+0,True,False,False,False,True,False,Alan Scott,42,Stargirl,40,Power Girl,40,Doctor Fate,22,regular
+0,True,False,False,False,True,False,Stargirl,48,Power Girl,42,Wildcat,41,Doctor Fate,20,regular
+0,True,False,False,False,True,False,Wildcat,42,Power Girl,36,Doctor Fate,18,Mister Terrific,14,regular
+0,True,False,False,False,True,False,Alan Scott,46,Jay Garrick,45,Power Girl,39,Stargirl,34,regular
+0,True,False,False,False,True,False,Wildcat,53,Alan Scott,36,Doctor Fate,28,Power Girl,26,regular
+0,True,False,False,False,True,False,Wildcat,41,Jay Garrick,33,Power Girl,28,Stargirl,28,regular
+0,True,False,False,False,True,False,Power Girl,47,Jay Garrick,36,Stargirl,29,Alan Scott,24,regular
+0,True,False,False,False,True,False,Jay Garrick,47,Alan Scott,38,Power Girl,29,Stargirl,28,regular
+0,True,False,False,False,True,False,Wildcat,80,Alan Scott,61,Mister Terrific,51,Jay Garrick,35,regular
+0,True,False,False,False,True,False,Alan Scott,41,Doctor Fate,39,Mister Terrific,18,Jay Garrick,16,regular
+0,True,False,False,False,True,False,Alan Scott,48,Stargirl,43,Jay Garrick,37,Power Girl,26,regular
+0,True,False,False,False,True,False,Wildcat,45,Jay Garrick,42,Stargirl,26,Alan Scott,20,regular
+0,True,False,False,False,True,False,Wildcat,42,Doctor Fate,31,Stargirl,30,Power Girl,17,regular
+0,True,False,False,False,True,False,Power Girl,60,Alan Scott,48,Mister Terrific,44,Jay Garrick,29,regular
+0,True,False,False,False,True,False,Wildcat,77,Alan Scott,38,Power Girl,31,Jay Garrick,25,regular
+0,True,False,False,False,True,False,Wildcat,39,Power Girl,38,Stargirl,37,Jay Garrick,26,regular
+0,True,False,False,False,True,False,Alan Scott,46,Power Girl,34,Stargirl,32,Mister Terrific,12,regular
+0,True,False,False,False,True,False,Stargirl,61,Jay Garrick,47,Wildcat,43,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Doctor Fate,59,Power Girl,47,Alan Scott,44,Stargirl,43,regular
+0,True,False,False,False,True,False,Doctor Fate,40,Stargirl,37,Wildcat,24,Power Girl,15,regular
+0,True,False,False,False,True,False,Wildcat,49,Mister Terrific,35,Power Girl,33,Stargirl,28,regular
+0,True,False,False,False,True,False,Doctor Fate,70,Jay Garrick,56,Power Girl,47,Stargirl,32,regular
+0,True,False,False,False,True,False,Alan Scott,51,Stargirl,45,Power Girl,42,Jay Garrick,29,regular
+0,True,False,False,False,True,False,Stargirl,42,Jay Garrick,36,Doctor Fate,34,Alan Scott,33,regular
+0,True,False,False,False,True,False,Doctor Fate,43,Alan Scott,42,Wildcat,38,Mister Terrific,35,regular
+0,True,False,False,False,True,False,Doctor Fate,40,Power Girl,36,Wildcat,28,Mister Terrific,27,regular
+0,True,False,False,False,True,False,Alan Scott,48,Doctor Fate,40,Stargirl,32,Mister Terrific,26,regular
+0,True,False,False,False,True,False,Alan Scott,62,Jay Garrick,53,Power Girl,49,Mister Terrific,23,regular
+0,True,False,False,False,True,False,Doctor Fate,47,Stargirl,40,Wildcat,38,Mister Terrific,18,regular
+0,True,False,False,False,True,False,Alan Scott,70,Wildcat,54,Doctor Fate,36,Mister Terrific,29,regular
+0,True,False,False,False,True,False,Wildcat,42,Jay Garrick,36,Alan Scott,34,Mister Terrific,14,regular
+0,True,False,False,False,True,False,Wildcat,46,Doctor Fate,41,Power Girl,28,Jay Garrick,27,regular
+0,True,False,False,False,True,False,Stargirl,47,Doctor Fate,45,Power Girl,33,Mister Terrific,19,regular
+0,True,False,False,False,True,False,Mister Terrific,65,Jay Garrick,55,Alan Scott,52,Stargirl,43,regular
+0,True,False,False,False,True,False,Doctor Fate,55,Power Girl,53,Wildcat,35,Jay Garrick,25,regular
+0,True,False,False,False,True,False,Doctor Fate,56,Power Girl,54,Stargirl,53,Mister Terrific,49,regular
+0,True,False,False,False,True,False,Doctor Fate,54,Power Girl,34,Jay Garrick,33,Mister Terrific,12,regular
+0,True,False,False,False,True,False,Stargirl,41,Wildcat,34,Doctor Fate,27,Alan Scott,26,regular
+0,True,False,False,False,True,False,Stargirl,64,Wildcat,58,Power Girl,32,Mister Terrific,20,regular
+0,True,False,False,False,True,False,Alan Scott,51,Wildcat,47,Doctor Fate,17,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Wildcat,74,Alan Scott,43,Power Girl,42,Mister Terrific,24,regular
+0,True,False,False,False,True,False,Wildcat,57,Alan Scott,42,Mister Terrific,22,Stargirl,18,regular
+0,True,False,False,False,True,False,Doctor Fate,52,Alan Scott,51,Stargirl,37,Mister Terrific,35,regular
+0,True,False,False,False,True,False,Alan Scott,35,Jay Garrick,32,Stargirl,24,Mister Terrific,17,regular
+0,True,False,False,False,True,False,Alan Scott,57,Doctor Fate,38,Wildcat,33,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Doctor Fate,49,Stargirl,43,Power Girl,39,Jay Garrick,39,regular
+0,True,False,False,False,True,False,Power Girl,52,Alan Scott,46,Stargirl,40,Jay Garrick,37,regular
+0,True,False,False,False,True,False,Wildcat,46,Jay Garrick,36,Stargirl,33,Alan Scott,14,regular
+0,True,False,False,False,True,False,Power Girl,45,Stargirl,43,Wildcat,29,Doctor Fate,24,regular
+0,True,False,False,False,True,False,Alan Scott,69,Doctor Fate,52,Stargirl,36,Wildcat,30,regular
+0,True,False,False,False,True,False,Stargirl,54,Wildcat,48,Power Girl,27,Mister Terrific,14,regular
+0,True,False,False,False,True,False,Stargirl,47,Jay Garrick,27,Mister Terrific,22,Alan Scott,13,regular
+0,True,False,False,False,True,False,Doctor Fate,68,Mister Terrific,42,Alan Scott,42,Jay Garrick,18,regular
+0,True,False,False,False,True,False,Jay Garrick,43,Power Girl,38,Wildcat,36,Mister Terrific,20,regular
+0,True,False,False,False,True,False,Stargirl,48,Mister Terrific,39,Doctor Fate,37,Alan Scott,12,regular
+0,True,False,False,False,True,False,Wildcat,57,Stargirl,40,Power Girl,26,Doctor Fate,20,regular
+0,True,False,False,False,True,False,Stargirl,48,Doctor Fate,28,Jay Garrick,23,Alan Scott,7,regular
+0,True,False,False,False,True,False,Doctor Fate,52,Alan Scott,39,Stargirl,38,Mister Terrific,21,regular
+0,True,False,False,False,True,False,Wildcat,45,Alan Scott,43,Power Girl,37,Jay Garrick,29,regular
+0,True,False,False,False,True,False,Doctor Fate,55,Mister Terrific,29,Power Girl,27,Wildcat,16,regular
+0,True,False,False,False,True,False,Doctor Fate,55,Jay Garrick,45,Alan Scott,36,Mister Terrific,36,regular
+0,True,False,False,False,True,False,Power Girl,53,Alan Scott,37,Jay Garrick,36,Doctor Fate,31,regular
+0,True,False,False,False,True,False,Stargirl,75,Wildcat,50,Mister Terrific,49,Doctor Fate,49,main_deck
+0,True,False,False,False,True,False,Power Girl,42,Alan Scott,37,Doctor Fate,14,Wildcat,12,regular
+0,True,False,False,False,True,False,Jay Garrick,45,Wildcat,42,Power Girl,27,Alan Scott,17,regular
+0,True,False,False,False,True,False,Doctor Fate,43,Alan Scott,40,Stargirl,35,Power Girl,29,regular
+0,True,False,False,False,True,False,Doctor Fate,37,Alan Scott,37,Power Girl,23,Stargirl,15,regular
+0,True,False,False,False,True,False,Jay Garrick,51,Power Girl,29,Doctor Fate,25,Mister Terrific,21,regular
+0,True,False,False,False,True,False,Mister Terrific,56,Alan Scott,54,Power Girl,53,Stargirl,43,regular
+0,True,False,False,False,True,False,Power Girl,43,Jay Garrick,39,Stargirl,37,Alan Scott,31,regular
+0,True,False,False,False,True,False,Stargirl,54,Power Girl,51,Jay Garrick,41,Alan Scott,38,regular
+0,True,False,False,False,True,False,Alan Scott,71,Wildcat,36,Jay Garrick,31,Mister Terrific,30,regular
+0,True,False,False,False,True,False,Wildcat,47,Stargirl,40,Doctor Fate,28,Power Girl,26,regular
+0,True,False,False,False,True,False,Doctor Fate,54,Wildcat,47,Alan Scott,22,Power Girl,22,regular
+0,True,False,False,False,True,False,Alan Scott,49,Stargirl,44,Doctor Fate,26,Jay Garrick,18,regular
+0,True,False,False,False,True,False,Doctor Fate,44,Wildcat,40,Stargirl,36,Alan Scott,25,regular
+0,True,False,False,False,True,False,Wildcat,69,Jay Garrick,59,Doctor Fate,50,Mister Terrific,37,regular
+0,True,False,False,False,True,False,Stargirl,63,Alan Scott,58,Power Girl,45,Mister Terrific,36,regular
+0,True,False,False,False,True,False,Jay Garrick,64,Power Girl,44,Mister Terrific,38,Doctor Fate,28,regular
+0,True,False,False,False,True,False,Doctor Fate,54,Wildcat,30,Jay Garrick,29,Mister Terrific,25,regular
+0,True,False,False,False,True,False,Power Girl,53,Mister Terrific,36,Jay Garrick,36,Alan Scott,29,regular
+0,True,False,False,False,True,False,Wildcat,46,Mister Terrific,43,Doctor Fate,30,Power Girl,29,regular
+0,True,False,False,False,True,False,Wildcat,44,Jay Garrick,41,Doctor Fate,36,Mister Terrific,33,regular
+0,True,False,False,False,True,False,Doctor Fate,53,Stargirl,47,Jay Garrick,31,Mister Terrific,29,regular
+0,True,False,False,False,True,False,Wildcat,49,Jay Garrick,41,Mister Terrific,30,Doctor Fate,20,regular
+0,True,False,False,False,True,False,Power Girl,49,Mister Terrific,48,Stargirl,45,Doctor Fate,36,regular
+0,True,False,False,False,True,False,Wildcat,38,Doctor Fate,31,Power Girl,27,Mister Terrific,18,regular
+0,True,False,False,False,True,False,Stargirl,63,Wildcat,43,Alan Scott,34,Mister Terrific,20,regular
+0,True,False,False,False,True,False,Jay Garrick,55,Wildcat,55,Stargirl,41,Mister Terrific,28,regular
+0,True,False,False,False,True,False,Wildcat,64,Power Girl,30,Doctor Fate,27,Mister Terrific,7,regular
+0,True,False,False,False,True,False,Wildcat,65,Doctor Fate,37,Mister Terrific,24,Stargirl,12,regular
+0,True,False,False,False,True,False,Alan Scott,52,Wildcat,50,Jay Garrick,22,Doctor Fate,21,regular
+0,True,False,False,False,True,False,Doctor Fate,38,Alan Scott,38,Stargirl,35,Jay Garrick,23,regular
+0,True,False,False,False,True,False,Doctor Fate,71,Wildcat,36,Alan Scott,27,Mister Terrific,21,regular
+0,True,False,False,False,True,False,Doctor Fate,84,Alan Scott,53,Mister Terrific,52,Power Girl,33,regular
+0,True,False,False,False,True,False,Doctor Fate,40,Jay Garrick,34,Alan Scott,25,Power Girl,24,regular
+0,True,False,False,False,True,False,Doctor Fate,52,Stargirl,50,Jay Garrick,34,Power Girl,32,regular
+0,True,False,False,False,True,False,Wildcat,64,Doctor Fate,54,Mister Terrific,47,Power Girl,40,regular
+0,True,False,False,False,True,False,Wildcat,56,Alan Scott,44,Mister Terrific,27,Doctor Fate,18,regular
+0,True,False,False,False,True,False,Wildcat,64,Jay Garrick,55,Alan Scott,55,Stargirl,54,regular
+0,True,False,False,False,True,False,Alan Scott,44,Stargirl,39,Doctor Fate,29,Mister Terrific,23,regular
+0,True,False,False,False,True,False,Doctor Fate,40,Alan Scott,39,Power Girl,33,Jay Garrick,26,regular
+0,True,False,False,False,True,False,Alan Scott,58,Jay Garrick,51,Stargirl,41,Power Girl,36,regular
+0,True,False,False,False,True,False,Alan Scott,51,Wildcat,39,Doctor Fate,38,Power Girl,31,regular
+0,True,False,False,False,True,False,Wildcat,46,Stargirl,44,Alan Scott,39,Mister Terrific,34,regular
+0,True,False,False,False,True,False,Jay Garrick,49,Doctor Fate,40,Alan Scott,33,Mister Terrific,26,regular
+0,True,False,False,False,True,False,Wildcat,59,Power Girl,57,Mister Terrific,26,Jay Garrick,24,regular
+0,True,False,False,False,True,False,Doctor Fate,51,Stargirl,51,Power Girl,39,Mister Terrific,27,regular
+0,True,False,False,False,True,False,Power Girl,45,Alan Scott,37,Jay Garrick,31,Mister Terrific,21,regular
+0,True,False,False,False,True,False,Alan Scott,52,Wildcat,49,Power Girl,44,Stargirl,35,regular
+0,True,False,False,False,True,False,Alan Scott,56,Doctor Fate,55,Jay Garrick,49,Mister Terrific,17,regular
+0,True,False,False,False,True,False,Doctor Fate,62,Power Girl,31,Jay Garrick,31,Stargirl,25,regular
+0,True,False,False,False,True,False,Wildcat,50,Power Girl,42,Doctor Fate,28,Alan Scott,15,regular
+0,True,False,False,False,True,False,Mister Terrific,48,Power Girl,29,Stargirl,28,Doctor Fate,27,regular
+0,True,False,False,False,True,False,Power Girl,56,Doctor Fate,34,Jay Garrick,34,Alan Scott,23,regular
+0,True,False,False,False,True,False,Wildcat,64,Stargirl,46,Alan Scott,37,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Wildcat,56,Doctor Fate,36,Mister Terrific,21,Alan Scott,18,regular
+0,True,False,False,False,True,False,Wildcat,51,Stargirl,40,Doctor Fate,36,Mister Terrific,9,regular
+0,True,False,False,False,True,False,Alan Scott,39,Wildcat,37,Doctor Fate,35,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Doctor Fate,47,Jay Garrick,44,Alan Scott,39,Wildcat,38,regular
+0,True,False,False,False,True,False,Stargirl,36,Doctor Fate,34,Power Girl,26,Jay Garrick,25,regular
+0,True,False,False,False,True,False,Power Girl,54,Mister Terrific,52,Doctor Fate,47,Stargirl,23,regular
+0,True,False,False,False,True,False,Alan Scott,52,Stargirl,32,Wildcat,27,Jay Garrick,13,regular
+0,True,False,False,False,True,False,Mister Terrific,50,Stargirl,46,Power Girl,40,Jay Garrick,31,regular
+0,True,False,False,False,True,False,Wildcat,55,Jay Garrick,33,Power Girl,29,Doctor Fate,17,regular
+0,True,False,False,False,True,False,Wildcat,61,Stargirl,24,Alan Scott,18,Jay Garrick,3,regular
+0,True,False,False,False,True,False,Doctor Fate,54,Jay Garrick,45,Alan Scott,44,Mister Terrific,42,regular
+0,True,False,False,False,True,False,Stargirl,62,Power Girl,42,Alan Scott,32,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Power Girl,43,Mister Terrific,42,Alan Scott,33,Stargirl,30,regular
+0,True,False,False,False,True,False,Alan Scott,44,Jay Garrick,35,Power Girl,34,Wildcat,29,regular
+0,True,False,False,False,True,False,Wildcat,61,Mister Terrific,39,Alan Scott,36,Power Girl,36,regular
+0,True,False,False,False,True,False,Doctor Fate,41,Alan Scott,36,Power Girl,31,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Stargirl,47,Jay Garrick,44,Doctor Fate,40,Mister Terrific,30,regular
+0,True,False,False,False,True,False,Power Girl,55,Wildcat,48,Alan Scott,35,Stargirl,33,regular
+0,True,False,False,False,True,False,Jay Garrick,54,Wildcat,47,Stargirl,40,Mister Terrific,23,regular
+0,True,False,False,False,True,False,Power Girl,53,Alan Scott,53,Mister Terrific,39,Jay Garrick,35,regular
+0,True,False,False,False,True,False,Stargirl,44,Wildcat,41,Power Girl,29,Alan Scott,24,regular
+0,True,False,False,False,True,False,Stargirl,69,Jay Garrick,48,Alan Scott,42,Doctor Fate,25,regular
+0,True,False,False,False,True,False,Wildcat,44,Power Girl,38,Stargirl,22,Doctor Fate,17,regular
+0,True,False,False,False,True,False,Jay Garrick,53,Stargirl,51,Alan Scott,43,Wildcat,36,regular
+0,True,False,False,False,True,False,Power Girl,38,Wildcat,37,Mister Terrific,29,Alan Scott,17,regular
+0,True,False,False,False,True,False,Alan Scott,55,Wildcat,42,Power Girl,23,Jay Garrick,23,regular
+0,True,False,False,False,True,False,Wildcat,58,Power Girl,50,Alan Scott,39,Doctor Fate,17,regular
+0,True,False,False,False,True,False,Doctor Fate,43,Jay Garrick,29,Alan Scott,24,Mister Terrific,18,regular
+0,True,False,False,False,True,False,Doctor Fate,54,Mister Terrific,37,Wildcat,34,Stargirl,10,regular
+0,True,False,False,False,True,False,Mister Terrific,47,Alan Scott,44,Wildcat,37,Doctor Fate,32,regular
+0,True,False,False,False,True,False,Jay Garrick,37,Stargirl,29,Wildcat,24,Mister Terrific,8,regular
+0,True,False,False,False,True,False,Wildcat,50,Power Girl,41,Jay Garrick,33,Doctor Fate,32,regular
+0,True,False,False,False,True,False,Jay Garrick,45,Alan Scott,40,Stargirl,33,Mister Terrific,25,regular
+0,True,False,False,False,True,False,Stargirl,34,Doctor Fate,22,Jay Garrick,17,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Stargirl,52,Jay Garrick,32,Power Girl,26,Doctor Fate,15,regular
+0,True,False,False,False,True,False,Doctor Fate,64,Power Girl,48,Mister Terrific,26,Jay Garrick,19,regular
+0,True,False,False,False,True,False,Jay Garrick,56,Wildcat,35,Alan Scott,29,Power Girl,20,regular
+0,True,False,False,False,True,False,Jay Garrick,43,Wildcat,32,Mister Terrific,27,Stargirl,23,regular
+0,True,False,False,False,True,False,Alan Scott,45,Wildcat,42,Stargirl,40,Mister Terrific,33,regular
+0,True,False,False,False,True,False,Wildcat,44,Doctor Fate,37,Power Girl,23,Jay Garrick,18,regular
+0,True,False,False,False,True,False,Power Girl,65,Doctor Fate,57,Wildcat,44,Stargirl,31,regular
+0,True,False,False,False,True,False,Jay Garrick,48,Alan Scott,39,Power Girl,16,Mister Terrific,15,regular
+0,True,False,False,False,True,False,Wildcat,51,Doctor Fate,31,Jay Garrick,25,Alan Scott,16,regular
+0,True,False,False,False,True,False,Stargirl,47,Wildcat,44,Mister Terrific,35,Jay Garrick,29,regular
+0,True,False,False,False,True,False,Alan Scott,61,Wildcat,51,Doctor Fate,45,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Wildcat,70,Alan Scott,41,Mister Terrific,34,Power Girl,23,regular
+0,True,False,False,False,True,False,Doctor Fate,52,Power Girl,45,Wildcat,39,Jay Garrick,22,regular
+0,True,False,False,False,True,False,Alan Scott,58,Wildcat,58,Stargirl,36,Mister Terrific,20,regular
+0,True,False,False,False,True,False,Alan Scott,59,Wildcat,46,Power Girl,30,Mister Terrific,19,regular
+0,True,False,False,False,True,False,Wildcat,68,Doctor Fate,56,Alan Scott,39,Mister Terrific,35,regular
+0,True,False,False,False,True,False,Doctor Fate,41,Mister Terrific,40,Power Girl,38,Wildcat,32,regular
+0,True,False,False,False,True,False,Jay Garrick,44,Doctor Fate,39,Stargirl,25,Mister Terrific,7,regular
+0,True,False,False,False,True,False,Power Girl,79,Doctor Fate,54,Wildcat,48,Stargirl,17,regular
+0,True,False,False,False,True,False,Doctor Fate,36,Jay Garrick,27,Wildcat,25,Power Girl,16,regular
+0,True,False,False,False,True,False,Doctor Fate,54,Alan Scott,42,Jay Garrick,35,Power Girl,34,regular
+0,True,False,False,False,True,False,Wildcat,43,Jay Garrick,31,Doctor Fate,21,Mister Terrific,21,regular
+0,True,False,False,False,True,False,Wildcat,77,Alan Scott,58,Stargirl,51,Power Girl,45,regular
+0,True,False,False,False,True,False,Wildcat,78,Power Girl,64,Stargirl,39,Alan Scott,23,crash
+0,True,False,False,False,True,False,Stargirl,49,Doctor Fate,38,Jay Garrick,28,Alan Scott,26,regular
+0,True,False,False,False,True,False,Mister Terrific,55,Power Girl,54,Doctor Fate,48,Stargirl,44,regular
+0,True,False,False,False,True,False,Wildcat,47,Stargirl,35,Alan Scott,26,Doctor Fate,12,regular
+0,True,False,False,False,True,False,Alan Scott,51,Doctor Fate,51,Jay Garrick,51,Stargirl,47,regular
+0,True,False,False,False,True,False,Power Girl,89,Stargirl,60,Alan Scott,47,Mister Terrific,47,main_deck
+0,True,False,False,False,True,False,Wildcat,45,Doctor Fate,44,Stargirl,36,Mister Terrific,20,regular
+0,True,False,False,False,True,False,Mister Terrific,57,Jay Garrick,49,Alan Scott,46,Wildcat,30,regular
+0,True,False,False,False,True,False,Power Girl,50,Alan Scott,44,Doctor Fate,34,Mister Terrific,28,regular
+0,True,False,False,False,True,False,Alan Scott,54,Doctor Fate,37,Jay Garrick,35,Mister Terrific,14,regular
+0,True,False,False,False,True,False,Wildcat,61,Doctor Fate,45,Power Girl,30,Mister Terrific,26,regular
+0,True,False,False,False,True,False,Stargirl,47,Doctor Fate,33,Mister Terrific,32,Power Girl,29,regular
+0,True,False,False,False,True,False,Stargirl,74,Alan Scott,56,Power Girl,47,Mister Terrific,32,regular
+0,True,False,False,False,True,False,Wildcat,57,Doctor Fate,41,Jay Garrick,31,Mister Terrific,21,regular
+0,True,False,False,False,True,False,Doctor Fate,48,Stargirl,40,Jay Garrick,24,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Jay Garrick,49,Stargirl,39,Power Girl,33,Wildcat,30,regular
+0,True,False,False,False,True,False,Stargirl,66,Doctor Fate,30,Jay Garrick,19,Mister Terrific,14,regular
+0,True,False,False,False,True,False,Stargirl,55,Alan Scott,46,Mister Terrific,37,Wildcat,36,regular
+0,True,False,False,False,True,False,Alan Scott,74,Doctor Fate,57,Mister Terrific,56,Jay Garrick,34,regular
+0,True,False,False,False,True,False,Wildcat,47,Alan Scott,34,Power Girl,25,Mister Terrific,13,regular
+0,True,False,False,False,True,False,Wildcat,49,Power Girl,40,Jay Garrick,25,Mister Terrific,19,regular
+0,True,False,False,False,True,False,Wildcat,51,Power Girl,36,Stargirl,34,Mister Terrific,30,regular
+0,True,False,False,False,True,False,Doctor Fate,51,Alan Scott,38,Power Girl,30,Mister Terrific,25,regular
+0,True,False,False,False,True,False,Wildcat,46,Alan Scott,31,Jay Garrick,20,Stargirl,19,regular
+0,True,False,False,False,True,False,Doctor Fate,48,Power Girl,36,Alan Scott,34,Stargirl,24,regular
+0,True,False,False,False,True,False,Wildcat,56,Jay Garrick,23,Power Girl,17,Doctor Fate,15,regular
+0,True,False,False,False,True,False,Jay Garrick,52,Power Girl,47,Mister Terrific,41,Stargirl,41,regular
+0,True,False,False,False,True,False,Doctor Fate,70,Stargirl,38,Wildcat,32,Jay Garrick,28,regular
+0,True,False,False,False,True,False,Power Girl,54,Wildcat,33,Alan Scott,27,Mister Terrific,17,regular
+0,True,False,False,False,True,False,Alan Scott,34,Jay Garrick,31,Doctor Fate,19,Mister Terrific,15,regular
+0,True,False,False,False,True,False,Power Girl,52,Doctor Fate,37,Wildcat,31,Jay Garrick,19,regular
+0,True,False,False,False,True,False,Wildcat,41,Doctor Fate,32,Alan Scott,25,Mister Terrific,17,regular
+0,True,False,False,False,True,False,Doctor Fate,37,Wildcat,36,Power Girl,34,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Power Girl,48,Jay Garrick,44,Mister Terrific,36,Stargirl,34,regular
+0,True,False,False,False,True,False,Alan Scott,60,Wildcat,59,Power Girl,50,Stargirl,47,regular
+0,True,False,False,False,True,False,Stargirl,39,Doctor Fate,31,Alan Scott,29,Wildcat,26,regular
+0,True,False,False,False,True,False,Mister Terrific,48,Jay Garrick,43,Alan Scott,42,Doctor Fate,28,regular
+0,True,False,False,False,True,False,Jay Garrick,48,Stargirl,43,Power Girl,42,Mister Terrific,41,regular
+0,True,False,False,False,True,False,Doctor Fate,42,Stargirl,40,Wildcat,29,Mister Terrific,14,regular
+0,True,False,False,False,True,False,Wildcat,42,Alan Scott,38,Doctor Fate,34,Stargirl,27,regular
+0,True,False,False,False,True,False,Doctor Fate,78,Jay Garrick,49,Power Girl,47,Mister Terrific,43,regular
+0,True,False,False,False,True,False,Stargirl,55,Power Girl,24,Doctor Fate,22,Jay Garrick,20,regular
+0,True,False,False,False,True,False,Wildcat,51,Alan Scott,43,Doctor Fate,34,Stargirl,22,regular
+0,True,False,False,False,True,False,Wildcat,54,Alan Scott,28,Doctor Fate,25,Stargirl,19,regular
+0,True,False,False,False,True,False,Wildcat,52,Alan Scott,18,Doctor Fate,18,Jay Garrick,17,regular
+0,True,False,False,False,True,False,Wildcat,67,Power Girl,54,Jay Garrick,34,Alan Scott,30,regular
+0,True,False,False,False,True,False,Doctor Fate,51,Power Girl,45,Alan Scott,42,Jay Garrick,27,regular
+0,True,False,False,False,True,False,Stargirl,71,Wildcat,61,Alan Scott,47,Mister Terrific,35,regular
+0,True,False,False,False,True,False,Alan Scott,46,Stargirl,36,Doctor Fate,30,Mister Terrific,20,regular
+0,True,False,False,False,True,False,Wildcat,58,Jay Garrick,47,Mister Terrific,19,Power Girl,17,regular
+0,True,False,False,False,True,False,Wildcat,50,Stargirl,43,Alan Scott,29,Doctor Fate,12,regular
+0,True,False,False,False,True,False,Stargirl,49,Jay Garrick,38,Doctor Fate,17,Wildcat,13,regular
+0,True,False,False,False,True,False,Doctor Fate,51,Alan Scott,35,Wildcat,23,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Jay Garrick,65,Stargirl,57,Power Girl,56,Alan Scott,42,regular
+0,True,False,False,False,True,False,Doctor Fate,42,Power Girl,35,Alan Scott,30,Mister Terrific,15,regular
+0,True,False,False,False,True,False,Jay Garrick,59,Doctor Fate,32,Alan Scott,25,Stargirl,24,regular
+0,True,False,False,False,True,False,Doctor Fate,55,Wildcat,31,Mister Terrific,17,Alan Scott,16,regular
+0,True,False,False,False,True,False,Alan Scott,69,Power Girl,45,Jay Garrick,34,Wildcat,29,regular
+0,True,False,False,False,True,False,Alan Scott,38,Stargirl,38,Mister Terrific,37,Doctor Fate,29,regular
+0,True,False,False,False,True,False,Stargirl,53,Power Girl,50,Wildcat,34,Alan Scott,17,regular
+0,True,False,False,False,True,False,Stargirl,62,Power Girl,43,Jay Garrick,41,Wildcat,32,regular
+0,True,False,False,False,True,False,Doctor Fate,40,Mister Terrific,32,Jay Garrick,30,Alan Scott,22,regular
+0,True,False,False,False,True,False,Power Girl,45,Wildcat,33,Doctor Fate,30,Stargirl,28,regular
+0,True,False,False,False,True,False,Alan Scott,56,Wildcat,39,Power Girl,35,Mister Terrific,19,regular
+0,True,False,False,False,True,False,Power Girl,74,Stargirl,59,Mister Terrific,46,Jay Garrick,40,main_deck
+0,True,False,False,False,True,False,Doctor Fate,50,Wildcat,40,Jay Garrick,34,Stargirl,31,regular
+0,True,False,False,False,True,False,Power Girl,51,Wildcat,40,Mister Terrific,27,Stargirl,23,regular
+0,True,False,False,False,True,False,Alan Scott,64,Stargirl,54,Doctor Fate,42,Power Girl,28,regular
+0,True,False,False,False,True,False,Stargirl,57,Wildcat,52,Alan Scott,47,Power Girl,36,regular
+0,True,False,False,False,True,False,Wildcat,68,Jay Garrick,41,Alan Scott,41,Mister Terrific,20,regular
+0,True,False,False,False,True,False,Doctor Fate,45,Wildcat,39,Stargirl,39,Power Girl,16,regular
+0,True,False,False,False,True,False,Alan Scott,45,Power Girl,30,Wildcat,29,Mister Terrific,19,regular
+0,True,False,False,False,True,False,Doctor Fate,44,Mister Terrific,31,Power Girl,31,Stargirl,23,regular
+0,True,False,False,False,True,False,Jay Garrick,45,Stargirl,44,Doctor Fate,37,Mister Terrific,24,regular
+0,True,False,False,False,True,False,Mister Terrific,45,Stargirl,45,Alan Scott,36,Doctor Fate,31,regular
+0,True,False,False,False,True,False,Alan Scott,47,Wildcat,46,Mister Terrific,22,Stargirl,20,regular
+0,True,False,False,False,True,False,Mister Terrific,44,Doctor Fate,37,Jay Garrick,32,Stargirl,28,regular
+0,True,False,False,False,True,False,Doctor Fate,40,Wildcat,38,Jay Garrick,35,Mister Terrific,27,regular
+0,True,False,False,False,True,False,Power Girl,82,Doctor Fate,63,Jay Garrick,49,Mister Terrific,37,main_deck
+0,True,False,False,False,True,False,Jay Garrick,64,Wildcat,49,Stargirl,34,Doctor Fate,21,regular
+0,True,False,False,False,True,False,Wildcat,45,Jay Garrick,35,Stargirl,28,Mister Terrific,23,regular
+0,True,False,False,False,True,False,Jay Garrick,93,Alan Scott,66,Stargirl,45,Mister Terrific,31,main_deck
+0,True,False,False,False,True,False,Wildcat,67,Doctor Fate,62,Alan Scott,43,Stargirl,43,regular
+0,True,False,False,False,True,False,Wildcat,58,Alan Scott,51,Stargirl,41,Mister Terrific,23,regular
+0,True,False,False,False,True,False,Stargirl,75,Doctor Fate,55,Jay Garrick,33,Alan Scott,31,regular
+0,True,False,False,False,True,False,Stargirl,70,Wildcat,38,Alan Scott,23,Jay Garrick,22,regular
+0,True,False,False,False,True,False,Stargirl,47,Wildcat,47,Jay Garrick,27,Mister Terrific,12,regular
+0,True,False,False,False,True,False,Power Girl,50,Alan Scott,44,Wildcat,29,Doctor Fate,22,regular
+0,True,False,False,False,True,False,Alan Scott,40,Stargirl,39,Doctor Fate,33,Mister Terrific,18,regular
+0,True,False,False,False,True,False,Doctor Fate,56,Wildcat,52,Jay Garrick,34,Mister Terrific,20,regular
+0,True,False,False,False,True,False,Wildcat,55,Power Girl,40,Jay Garrick,17,Doctor Fate,16,regular
+0,True,False,False,False,True,False,Power Girl,40,Wildcat,38,Mister Terrific,37,Stargirl,30,regular
+0,True,False,False,False,True,False,Alan Scott,49,Stargirl,43,Jay Garrick,42,Doctor Fate,31,regular
+0,True,False,False,False,True,False,Wildcat,63,Power Girl,62,Stargirl,27,Jay Garrick,25,regular
+0,True,False,False,False,True,False,Power Girl,57,Alan Scott,37,Doctor Fate,32,Mister Terrific,25,regular
+0,True,False,False,False,True,False,Wildcat,63,Stargirl,46,Power Girl,38,Alan Scott,36,regular
+0,True,False,False,False,True,False,Stargirl,49,Mister Terrific,21,Wildcat,19,Power Girl,16,regular
+0,True,False,False,False,True,False,Alan Scott,59,Power Girl,48,Wildcat,43,Mister Terrific,32,regular
+0,True,False,False,False,True,False,Wildcat,69,Stargirl,66,Power Girl,55,Mister Terrific,41,regular
+0,True,False,False,False,True,False,Stargirl,43,Jay Garrick,38,Mister Terrific,30,Doctor Fate,21,regular
+0,True,False,False,False,True,False,Jay Garrick,36,Stargirl,35,Wildcat,18,Mister Terrific,13,regular
+0,True,False,False,False,True,False,Alan Scott,53,Wildcat,50,Jay Garrick,48,Mister Terrific,40,regular
+0,True,False,False,False,True,False,Doctor Fate,61,Wildcat,47,Jay Garrick,33,Stargirl,22,regular
+0,True,False,False,False,True,False,Wildcat,41,Alan Scott,41,Power Girl,29,Doctor Fate,26,regular
+0,True,False,False,False,True,False,Wildcat,49,Doctor Fate,32,Alan Scott,29,Stargirl,17,regular
+0,True,False,False,False,True,False,Jay Garrick,70,Power Girl,24,Wildcat,22,Mister Terrific,20,regular
+0,True,False,False,False,True,False,Doctor Fate,58,Wildcat,53,Mister Terrific,30,Power Girl,19,regular
+0,True,False,False,False,True,False,Power Girl,59,Alan Scott,42,Doctor Fate,31,Jay Garrick,22,regular
+0,True,False,False,False,True,False,Stargirl,46,Alan Scott,38,Power Girl,24,Mister Terrific,20,regular
+0,True,False,False,False,True,False,Jay Garrick,49,Mister Terrific,40,Wildcat,27,Doctor Fate,24,regular
+0,True,False,False,False,True,False,Stargirl,43,Power Girl,42,Wildcat,31,Doctor Fate,28,regular
+0,True,False,False,False,True,False,Alan Scott,57,Stargirl,43,Doctor Fate,41,Mister Terrific,27,regular
+0,True,False,False,False,True,False,Wildcat,39,Alan Scott,30,Stargirl,13,Power Girl,11,regular
+0,True,False,False,False,True,False,Alan Scott,54,Doctor Fate,36,Jay Garrick,35,Stargirl,29,regular
+0,True,False,False,False,True,False,Wildcat,58,Mister Terrific,57,Alan Scott,54,Jay Garrick,52,regular
+0,True,False,False,False,True,False,Wildcat,43,Power Girl,33,Mister Terrific,30,Stargirl,22,regular
+0,True,False,False,False,True,False,Alan Scott,57,Power Girl,46,Mister Terrific,40,Wildcat,37,regular
+0,True,False,False,False,True,False,Wildcat,42,Alan Scott,38,Jay Garrick,29,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Wildcat,48,Alan Scott,39,Stargirl,26,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Power Girl,45,Alan Scott,44,Mister Terrific,40,Stargirl,33,regular
+0,True,False,False,False,True,False,Power Girl,36,Stargirl,35,Alan Scott,34,Jay Garrick,18,regular
+0,True,False,False,False,True,False,Stargirl,52,Jay Garrick,41,Mister Terrific,33,Alan Scott,29,regular
+0,True,False,False,False,True,False,Mister Terrific,58,Power Girl,53,Wildcat,47,Jay Garrick,43,regular
+0,True,False,False,False,True,False,Power Girl,45,Stargirl,36,Alan Scott,36,Jay Garrick,35,regular
+0,True,False,False,False,True,False,Wildcat,54,Doctor Fate,38,Power Girl,35,Jay Garrick,23,regular
+0,True,False,False,False,True,False,Doctor Fate,46,Alan Scott,42,Mister Terrific,34,Jay Garrick,28,regular
+0,True,False,False,False,True,False,Alan Scott,58,Doctor Fate,54,Power Girl,43,Jay Garrick,41,regular
+0,True,False,False,False,True,False,Wildcat,53,Jay Garrick,50,Alan Scott,40,Stargirl,26,regular
+0,True,False,False,False,True,False,Power Girl,52,Mister Terrific,45,Jay Garrick,34,Doctor Fate,27,regular
+0,True,False,False,False,True,False,Doctor Fate,42,Alan Scott,39,Jay Garrick,38,Wildcat,31,regular
+0,True,False,False,False,True,False,Alan Scott,51,Power Girl,37,Jay Garrick,27,Mister Terrific,23,regular
+0,True,False,False,False,True,False,Wildcat,58,Doctor Fate,54,Jay Garrick,30,Alan Scott,27,regular
+0,True,False,False,False,True,False,Stargirl,55,Doctor Fate,39,Power Girl,33,Jay Garrick,22,regular
+0,True,False,False,False,True,False,Mister Terrific,62,Stargirl,50,Doctor Fate,44,Jay Garrick,30,regular
+0,True,False,False,False,True,False,Jay Garrick,49,Doctor Fate,40,Power Girl,25,Stargirl,16,regular
+0,True,False,False,False,True,False,Alan Scott,47,Stargirl,46,Wildcat,30,Jay Garrick,26,regular
+0,True,False,False,False,True,False,Mister Terrific,48,Power Girl,46,Alan Scott,39,Jay Garrick,34,regular
+0,True,False,False,False,True,False,Jay Garrick,61,Alan Scott,41,Stargirl,29,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Stargirl,62,Wildcat,52,Alan Scott,37,Mister Terrific,10,regular
+0,True,False,False,False,True,False,Stargirl,53,Doctor Fate,48,Jay Garrick,39,Wildcat,35,regular
+0,True,False,False,False,True,False,Alan Scott,55,Jay Garrick,37,Stargirl,31,Mister Terrific,23,regular
+0,True,False,False,False,True,False,Jay Garrick,61,Stargirl,43,Wildcat,41,Mister Terrific,21,regular
+0,True,False,False,False,True,False,Wildcat,54,Alan Scott,53,Doctor Fate,32,Stargirl,21,regular
+0,True,False,False,False,True,False,Doctor Fate,44,Stargirl,38,Alan Scott,20,Mister Terrific,18,regular
+0,True,False,False,False,True,False,Stargirl,56,Doctor Fate,43,Alan Scott,26,Mister Terrific,24,regular
+0,True,False,False,False,True,False,Wildcat,59,Doctor Fate,28,Stargirl,21,Mister Terrific,6,regular
+0,True,False,False,False,True,False,Stargirl,46,Wildcat,35,Jay Garrick,32,Power Girl,24,regular
+0,True,False,False,False,True,False,Stargirl,59,Doctor Fate,48,Alan Scott,43,Mister Terrific,33,regular
+0,True,False,False,False,True,False,Jay Garrick,35,Power Girl,33,Wildcat,27,Mister Terrific,9,regular
+0,True,False,False,False,True,False,Wildcat,57,Doctor Fate,51,Mister Terrific,38,Power Girl,35,regular
+0,True,False,False,False,True,False,Wildcat,44,Power Girl,44,Jay Garrick,28,Mister Terrific,23,regular
+0,True,False,False,False,True,False,Wildcat,62,Alan Scott,44,Jay Garrick,38,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Power Girl,53,Jay Garrick,45,Mister Terrific,21,Stargirl,19,regular
+0,True,False,False,False,True,False,Alan Scott,62,Stargirl,59,Power Girl,53,Mister Terrific,52,main_deck
+0,True,False,False,False,True,False,Jay Garrick,45,Wildcat,36,Doctor Fate,33,Alan Scott,25,regular
+0,True,False,False,False,True,False,Alan Scott,51,Wildcat,47,Jay Garrick,41,Power Girl,29,regular
+0,True,False,False,False,True,False,Stargirl,50,Jay Garrick,45,Alan Scott,16,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Stargirl,70,Power Girl,62,Alan Scott,61,Jay Garrick,41,regular
+0,True,False,False,False,True,False,Alan Scott,56,Stargirl,41,Jay Garrick,28,Mister Terrific,28,regular
+0,True,False,False,False,True,False,Stargirl,69,Jay Garrick,62,Mister Terrific,39,Power Girl,39,regular
+0,True,False,False,False,True,False,Jay Garrick,64,Wildcat,25,Power Girl,23,Doctor Fate,20,regular
+0,True,False,False,False,True,False,Wildcat,60,Power Girl,51,Mister Terrific,39,Stargirl,17,regular
+0,True,False,False,False,True,False,Power Girl,56,Doctor Fate,47,Mister Terrific,39,Alan Scott,36,regular
+0,True,False,False,False,True,False,Wildcat,67,Power Girl,55,Mister Terrific,47,Stargirl,39,regular
+0,True,False,False,False,True,False,Jay Garrick,50,Stargirl,47,Power Girl,46,Alan Scott,41,regular
+0,True,False,False,False,True,False,Power Girl,59,Wildcat,48,Doctor Fate,41,Mister Terrific,31,regular
+0,True,False,False,False,True,False,Doctor Fate,50,Stargirl,39,Power Girl,33,Jay Garrick,27,regular
+0,True,False,False,False,True,False,Power Girl,65,Jay Garrick,50,Mister Terrific,49,Alan Scott,47,regular
+0,True,False,False,False,True,False,Jay Garrick,61,Power Girl,50,Mister Terrific,40,Doctor Fate,38,regular
+0,True,False,False,False,True,False,Jay Garrick,55,Stargirl,50,Mister Terrific,39,Power Girl,25,regular
+0,True,False,False,False,True,False,Jay Garrick,50,Doctor Fate,40,Power Girl,35,Wildcat,30,regular
+0,True,False,False,False,True,False,Doctor Fate,46,Alan Scott,44,Stargirl,44,Jay Garrick,24,regular
+0,True,False,False,False,True,False,Wildcat,40,Alan Scott,34,Jay Garrick,30,Stargirl,24,regular
+0,True,False,False,False,True,False,Wildcat,51,Power Girl,29,Jay Garrick,27,Mister Terrific,18,regular
+0,True,False,False,False,True,False,Wildcat,63,Jay Garrick,38,Power Girl,31,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Alan Scott,41,Power Girl,34,Mister Terrific,33,Doctor Fate,25,regular
+0,True,False,False,False,True,False,Alan Scott,51,Stargirl,40,Doctor Fate,27,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Power Girl,45,Doctor Fate,34,Jay Garrick,33,Mister Terrific,30,regular
+0,True,False,False,False,True,False,Power Girl,50,Wildcat,46,Stargirl,45,Alan Scott,37,regular
+0,True,False,False,False,True,False,Power Girl,48,Wildcat,39,Alan Scott,26,Mister Terrific,23,regular
+0,True,False,False,False,True,False,Jay Garrick,58,Alan Scott,39,Power Girl,38,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Power Girl,52,Alan Scott,44,Jay Garrick,33,Mister Terrific,32,regular
+0,True,False,False,False,True,False,Stargirl,70,Power Girl,63,Jay Garrick,49,Mister Terrific,35,main_deck
+0,True,False,False,False,True,False,Jay Garrick,42,Doctor Fate,41,Alan Scott,40,Mister Terrific,32,regular
+0,True,False,False,False,True,False,Jay Garrick,46,Alan Scott,46,Power Girl,32,Doctor Fate,28,regular
+0,True,False,False,False,True,False,Doctor Fate,48,Wildcat,40,Stargirl,16,Jay Garrick,9,regular
+0,True,False,False,False,True,False,Wildcat,54,Power Girl,26,Jay Garrick,17,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Doctor Fate,74,Alan Scott,42,Power Girl,40,Jay Garrick,27,regular
+0,True,False,False,False,True,False,Doctor Fate,53,Power Girl,43,Stargirl,35,Alan Scott,34,regular
+0,True,False,False,False,True,False,Power Girl,51,Alan Scott,38,Stargirl,35,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Wildcat,49,Doctor Fate,41,Jay Garrick,21,Power Girl,15,regular
+0,True,False,False,False,True,False,Jay Garrick,67,Wildcat,60,Alan Scott,50,Mister Terrific,36,regular
+0,True,False,False,False,True,False,Stargirl,48,Mister Terrific,35,Jay Garrick,30,Doctor Fate,24,regular
+0,True,False,False,False,True,False,Doctor Fate,49,Jay Garrick,34,Power Girl,32,Mister Terrific,17,regular
+0,True,False,False,False,True,False,Doctor Fate,45,Stargirl,36,Wildcat,24,Power Girl,19,regular
+0,True,False,False,False,True,False,Alan Scott,41,Mister Terrific,40,Stargirl,25,Wildcat,23,regular
+0,True,False,False,False,True,False,Jay Garrick,54,Mister Terrific,43,Power Girl,41,Stargirl,36,regular
+0,True,False,False,False,True,False,Mister Terrific,49,Alan Scott,38,Power Girl,25,Doctor Fate,14,regular
+0,True,False,False,False,True,False,Wildcat,85,Mister Terrific,56,Stargirl,47,Jay Garrick,46,regular
+0,True,False,False,False,True,False,Wildcat,46,Power Girl,42,Jay Garrick,23,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Stargirl,53,Mister Terrific,46,Alan Scott,40,Jay Garrick,34,regular
+0,True,False,False,False,True,False,Stargirl,38,Alan Scott,37,Jay Garrick,34,Power Girl,28,regular
+0,True,False,False,False,True,False,Power Girl,34,Jay Garrick,32,Doctor Fate,21,Wildcat,15,regular
+0,True,False,False,False,True,False,Alan Scott,46,Mister Terrific,35,Jay Garrick,32,Wildcat,21,regular
+0,True,False,False,False,True,False,Wildcat,42,Doctor Fate,40,Power Girl,33,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Wildcat,52,Doctor Fate,47,Jay Garrick,29,Mister Terrific,28,regular
+0,True,False,False,False,True,False,Stargirl,43,Doctor Fate,38,Power Girl,29,Alan Scott,22,regular
+0,True,False,False,False,True,False,Wildcat,38,Alan Scott,32,Power Girl,31,Stargirl,20,regular
+0,True,False,False,False,True,False,Power Girl,50,Doctor Fate,38,Alan Scott,37,Wildcat,34,regular
+0,True,False,False,False,True,False,Alan Scott,59,Doctor Fate,52,Power Girl,46,Mister Terrific,31,regular
+0,True,False,False,False,True,False,Power Girl,49,Alan Scott,45,Jay Garrick,32,Mister Terrific,13,regular
+0,True,False,False,False,True,False,Power Girl,50,Stargirl,39,Doctor Fate,31,Wildcat,24,regular
+0,True,False,False,False,True,False,Doctor Fate,64,Wildcat,46,Mister Terrific,28,Alan Scott,24,regular
+0,True,False,False,False,True,False,Doctor Fate,56,Power Girl,38,Alan Scott,34,Mister Terrific,25,regular
+0,True,False,False,False,True,False,Jay Garrick,41,Wildcat,38,Power Girl,33,Mister Terrific,28,regular
+0,True,False,False,False,True,False,Alan Scott,48,Power Girl,43,Stargirl,31,Doctor Fate,24,regular
+0,True,False,False,False,True,False,Doctor Fate,58,Wildcat,45,Alan Scott,25,Mister Terrific,23,regular
+0,True,False,False,False,True,False,Power Girl,64,Alan Scott,40,Doctor Fate,37,Jay Garrick,24,regular
+0,True,False,False,False,True,False,Doctor Fate,71,Wildcat,53,Power Girl,35,Jay Garrick,30,regular
+0,True,False,False,False,True,False,Doctor Fate,53,Alan Scott,40,Stargirl,40,Mister Terrific,28,regular
+0,True,False,False,False,True,False,Doctor Fate,68,Jay Garrick,57,Wildcat,40,Alan Scott,38,regular
+0,True,False,False,False,True,False,Power Girl,60,Wildcat,36,Stargirl,29,Mister Terrific,27,regular
+0,True,False,False,False,True,False,Wildcat,47,Power Girl,40,Doctor Fate,28,Alan Scott,22,regular
+0,True,False,False,False,True,False,Alan Scott,58,Power Girl,53,Doctor Fate,47,Stargirl,29,regular
+0,True,False,False,False,True,False,Wildcat,51,Power Girl,36,Mister Terrific,30,Stargirl,29,regular
+0,True,False,False,False,True,False,Power Girl,37,Mister Terrific,29,Wildcat,29,Jay Garrick,28,regular
+0,True,False,False,False,True,False,Power Girl,76,Stargirl,48,Jay Garrick,46,Doctor Fate,36,regular
+0,True,False,False,False,True,False,Power Girl,71,Jay Garrick,45,Alan Scott,30,Stargirl,22,regular
+0,True,False,False,False,True,False,Jay Garrick,60,Doctor Fate,38,Wildcat,36,Mister Terrific,13,regular
+0,True,False,False,False,True,False,Wildcat,55,Doctor Fate,54,Jay Garrick,34,Mister Terrific,33,regular
+0,True,False,False,False,True,False,Jay Garrick,50,Doctor Fate,45,Wildcat,25,Mister Terrific,17,regular
+0,True,False,False,False,True,False,Jay Garrick,47,Doctor Fate,45,Mister Terrific,32,Alan Scott,27,regular
+0,True,False,False,False,True,False,Mister Terrific,53,Power Girl,53,Jay Garrick,41,Alan Scott,29,regular
+0,True,False,False,False,True,False,Wildcat,64,Doctor Fate,39,Power Girl,36,Mister Terrific,19,regular
+0,True,False,False,False,True,False,Wildcat,60,Power Girl,38,Jay Garrick,31,Doctor Fate,18,regular
+0,True,False,False,False,True,False,Jay Garrick,54,Mister Terrific,43,Power Girl,42,Alan Scott,26,regular
+0,True,False,False,False,True,False,Wildcat,59,Stargirl,45,Jay Garrick,36,Mister Terrific,14,regular
+0,True,False,False,False,True,False,Doctor Fate,56,Jay Garrick,36,Stargirl,29,Power Girl,22,regular
+0,True,False,False,False,True,False,Alan Scott,46,Doctor Fate,40,Jay Garrick,28,Mister Terrific,17,regular
+0,True,False,False,False,True,False,Power Girl,54,Jay Garrick,47,Doctor Fate,40,Mister Terrific,35,regular
+0,True,False,False,False,True,False,Wildcat,42,Doctor Fate,40,Jay Garrick,38,Mister Terrific,27,regular
+0,True,False,False,False,True,False,Stargirl,48,Jay Garrick,39,Power Girl,28,Alan Scott,18,regular
+0,True,False,False,False,True,False,Jay Garrick,41,Wildcat,30,Doctor Fate,28,Alan Scott,23,regular
+0,True,False,False,False,True,False,Wildcat,46,Alan Scott,38,Power Girl,37,Stargirl,25,regular
+0,True,False,False,False,True,False,Power Girl,50,Doctor Fate,48,Jay Garrick,30,Wildcat,27,regular
+0,True,False,False,False,True,False,Wildcat,72,Mister Terrific,32,Stargirl,32,Doctor Fate,28,regular
+0,True,False,False,False,True,False,Stargirl,51,Doctor Fate,49,Alan Scott,36,Mister Terrific,17,regular
+0,True,False,False,False,True,False,Wildcat,61,Stargirl,59,Power Girl,55,Alan Scott,42,regular
+0,True,False,False,False,True,False,Power Girl,63,Jay Garrick,62,Stargirl,48,Mister Terrific,32,regular
+0,True,False,False,False,True,False,Stargirl,64,Power Girl,55,Alan Scott,48,Jay Garrick,27,regular
+0,True,False,False,False,True,False,Stargirl,46,Wildcat,34,Alan Scott,24,Power Girl,23,regular
+0,True,False,False,False,True,False,Jay Garrick,65,Wildcat,54,Mister Terrific,36,Power Girl,33,regular
+0,True,False,False,False,True,False,Alan Scott,47,Doctor Fate,33,Power Girl,26,Mister Terrific,19,regular
+0,True,False,False,False,True,False,Doctor Fate,53,Wildcat,29,Mister Terrific,22,Alan Scott,21,regular
+0,True,False,False,False,True,False,Power Girl,61,Jay Garrick,47,Stargirl,25,Mister Terrific,18,regular
+0,True,False,False,False,True,False,Jay Garrick,55,Mister Terrific,42,Alan Scott,36,Stargirl,24,regular
+0,True,False,False,False,True,False,Wildcat,44,Jay Garrick,42,Mister Terrific,37,Stargirl,25,regular
+0,True,False,False,False,True,False,Doctor Fate,44,Stargirl,41,Jay Garrick,36,Alan Scott,27,regular
+0,True,False,False,False,True,False,Jay Garrick,67,Wildcat,56,Doctor Fate,47,Stargirl,30,regular
+0,True,False,False,False,True,False,Doctor Fate,62,Wildcat,40,Stargirl,31,Jay Garrick,25,regular
+0,True,False,False,False,True,False,Alan Scott,40,Wildcat,38,Doctor Fate,35,Jay Garrick,23,crash
+0,True,False,False,False,True,False,Doctor Fate,65,Alan Scott,30,Jay Garrick,19,Wildcat,18,regular
+0,True,False,False,False,True,False,Wildcat,63,Jay Garrick,40,Mister Terrific,39,Alan Scott,30,regular
+0,True,False,False,False,True,False,Doctor Fate,53,Alan Scott,47,Jay Garrick,36,Mister Terrific,26,regular
+0,True,False,False,False,True,False,Wildcat,67,Stargirl,66,Mister Terrific,51,Alan Scott,34,regular
+0,True,False,False,False,True,False,Wildcat,49,Power Girl,40,Doctor Fate,29,Mister Terrific,25,regular
+0,True,False,False,False,True,False,Wildcat,38,Jay Garrick,33,Alan Scott,33,Doctor Fate,27,regular
+0,True,False,False,False,True,False,Wildcat,57,Power Girl,55,Jay Garrick,42,Mister Terrific,33,regular
+0,True,False,False,False,True,False,Doctor Fate,54,Stargirl,39,Alan Scott,28,Jay Garrick,22,regular
+0,True,False,False,False,True,False,Wildcat,60,Power Girl,35,Jay Garrick,35,Doctor Fate,22,regular
+0,True,False,False,False,True,False,Jay Garrick,36,Power Girl,36,Doctor Fate,24,Mister Terrific,19,regular
+0,True,False,False,False,True,False,Alan Scott,37,Mister Terrific,37,Jay Garrick,29,Stargirl,19,regular
+0,True,False,False,False,True,False,Power Girl,61,Stargirl,53,Doctor Fate,31,Mister Terrific,21,regular
+0,True,False,False,False,True,False,Stargirl,52,Alan Scott,46,Doctor Fate,43,Power Girl,38,regular
+0,True,False,False,False,True,False,Wildcat,62,Alan Scott,55,Stargirl,51,Doctor Fate,48,regular
+0,True,False,False,False,True,False,Stargirl,57,Jay Garrick,48,Power Girl,46,Alan Scott,41,regular
+0,True,False,False,False,True,False,Wildcat,62,Stargirl,38,Alan Scott,27,Power Girl,27,regular
+0,True,False,False,False,True,False,Wildcat,58,Alan Scott,52,Stargirl,40,Mister Terrific,38,regular
+0,True,False,False,False,True,False,Power Girl,46,Stargirl,43,Wildcat,32,Doctor Fate,29,regular
+0,True,False,False,False,True,False,Wildcat,69,Alan Scott,56,Stargirl,47,Mister Terrific,29,regular
+0,True,False,False,False,True,False,Power Girl,42,Wildcat,31,Stargirl,27,Doctor Fate,15,regular
+0,True,False,False,False,True,False,Jay Garrick,58,Alan Scott,50,Mister Terrific,40,Power Girl,28,regular
+0,True,False,False,False,True,False,Stargirl,45,Power Girl,41,Wildcat,32,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Doctor Fate,74,Power Girl,42,Jay Garrick,35,Mister Terrific,18,regular
+0,True,False,False,False,True,False,Doctor Fate,67,Wildcat,29,Jay Garrick,25,Alan Scott,14,regular
+0,True,False,False,False,True,False,Stargirl,57,Wildcat,31,Power Girl,30,Jay Garrick,16,regular
+0,True,False,False,False,True,False,Alan Scott,37,Doctor Fate,35,Mister Terrific,19,Wildcat,17,regular
+0,True,False,False,False,True,False,Wildcat,36,Jay Garrick,30,Doctor Fate,13,Mister Terrific,7,regular
+0,True,False,False,False,True,False,Stargirl,51,Power Girl,50,Alan Scott,38,Mister Terrific,32,regular
+0,True,False,False,False,True,False,Mister Terrific,39,Power Girl,36,Doctor Fate,28,Stargirl,19,regular
+0,True,False,False,False,True,False,Stargirl,52,Wildcat,35,Alan Scott,27,Doctor Fate,19,regular
+0,True,False,False,False,True,False,Wildcat,69,Stargirl,52,Jay Garrick,45,Mister Terrific,21,regular
+0,True,False,False,False,True,False,Wildcat,54,Jay Garrick,53,Doctor Fate,45,Mister Terrific,23,regular
+0,True,False,False,False,True,False,Jay Garrick,35,Mister Terrific,28,Stargirl,27,Power Girl,18,regular
+0,True,False,False,False,True,False,Doctor Fate,92,Mister Terrific,49,Alan Scott,39,Power Girl,36,regular
+0,True,False,False,False,True,False,Jay Garrick,46,Power Girl,36,Doctor Fate,36,Alan Scott,22,regular
+0,True,False,False,False,True,False,Wildcat,58,Stargirl,36,Alan Scott,34,Power Girl,19,regular
+0,True,False,False,False,True,False,Doctor Fate,52,Wildcat,47,Power Girl,39,Mister Terrific,33,regular
+0,True,False,False,False,True,False,Doctor Fate,49,Jay Garrick,47,Alan Scott,37,Mister Terrific,29,regular
+0,True,False,False,False,True,False,Wildcat,57,Power Girl,49,Alan Scott,44,Jay Garrick,41,regular
+0,True,False,False,False,True,False,Wildcat,57,Stargirl,55,Alan Scott,18,Power Girl,15,regular
+0,True,False,False,False,True,False,Jay Garrick,66,Wildcat,55,Stargirl,54,Alan Scott,31,regular
+0,True,False,False,False,True,False,Wildcat,67,Stargirl,49,Power Girl,37,Alan Scott,34,regular
+0,True,False,False,False,True,False,Doctor Fate,46,Power Girl,28,Wildcat,19,Alan Scott,12,regular
+0,True,False,False,False,True,False,Doctor Fate,61,Power Girl,45,Jay Garrick,42,Alan Scott,34,regular
+0,True,False,False,False,True,False,Wildcat,49,Alan Scott,46,Jay Garrick,22,Mister Terrific,19,regular
+0,True,False,False,False,True,False,Mister Terrific,43,Stargirl,40,Alan Scott,27,Power Girl,26,regular
+0,True,False,False,False,True,False,Jay Garrick,49,Wildcat,29,Mister Terrific,26,Alan Scott,19,regular
+0,True,False,False,False,True,False,Jay Garrick,43,Doctor Fate,32,Wildcat,28,Power Girl,24,regular
+0,True,False,False,False,True,False,Wildcat,54,Jay Garrick,52,Doctor Fate,34,Stargirl,20,regular
+0,True,False,False,False,True,False,Doctor Fate,61,Wildcat,53,Jay Garrick,36,Mister Terrific,21,regular
+0,True,False,False,False,True,False,Stargirl,61,Doctor Fate,46,Mister Terrific,29,Jay Garrick,28,regular
+0,True,False,False,False,True,False,Wildcat,49,Stargirl,46,Doctor Fate,23,Jay Garrick,17,regular
+0,True,False,False,False,True,False,Stargirl,58,Alan Scott,43,Power Girl,43,Doctor Fate,40,regular
+0,True,False,False,False,True,False,Power Girl,58,Alan Scott,41,Stargirl,36,Doctor Fate,28,regular
+0,True,False,False,False,True,False,Doctor Fate,54,Power Girl,44,Wildcat,42,Alan Scott,37,regular
+0,True,False,False,False,True,False,Stargirl,52,Mister Terrific,38,Power Girl,21,Doctor Fate,18,regular
+0,True,False,False,False,True,False,Stargirl,95,Doctor Fate,44,Alan Scott,34,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Doctor Fate,51,Stargirl,37,Jay Garrick,25,Mister Terrific,16,regular
+0,True,False,False,False,True,False,Stargirl,48,Wildcat,43,Alan Scott,23,Jay Garrick,14,regular
+0,True,False,False,False,True,False,Power Girl,50,Wildcat,50,Doctor Fate,32,Jay Garrick,18,regular
+0,True,False,False,False,True,False,Stargirl,58,Mister Terrific,54,Wildcat,52,Jay Garrick,32,regular
+0,True,False,False,False,True,False,Alan Scott,58,Stargirl,52,Jay Garrick,51,Power Girl,47,regular
+0,True,False,False,False,True,False,Doctor Fate,52,Wildcat,44,Alan Scott,36,Mister Terrific,30,regular
+0,True,False,False,False,True,False,Stargirl,48,Alan Scott,43,Wildcat,38,Jay Garrick,37,regular
+0,True,False,False,False,True,False,Wildcat,58,Power Girl,36,Doctor Fate,34,Stargirl,23,regular
+0,True,False,False,False,True,False,Stargirl,59,Doctor Fate,49,Wildcat,36,Mister Terrific,33,regular
+0,True,False,False,False,True,False,Power Girl,46,Mister Terrific,40,Doctor Fate,39,Jay Garrick,31,regular
+0,True,False,False,False,True,False,Power Girl,49,Wildcat,39,Mister Terrific,24,Alan Scott,18,regular
+0,True,False,False,False,True,False,Wildcat,44,Doctor Fate,44,Alan Scott,43,Stargirl,27,regular
+0,True,False,False,False,True,False,Alan Scott,65,Wildcat,56,Mister Terrific,24,Jay Garrick,18,regular
+0,True,False,False,False,True,False,Alan Scott,48,Wildcat,47,Mister Terrific,21,Jay Garrick,18,regular
+0,True,False,False,False,True,False,Wildcat,72,Stargirl,59,Power Girl,41,Alan Scott,37,regular
+0,True,False,False,False,True,False,Wildcat,52,Stargirl,51,Alan Scott,44,Jay Garrick,24,regular
+0,True,False,False,False,True,False,Jay Garrick,48,Doctor Fate,43,Power Girl,34,Alan Scott,18,regular
+0,True,False,False,False,True,False,Stargirl,49,Power Girl,44,Wildcat,37,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Alan Scott,36,Stargirl,32,Power Girl,30,Mister Terrific,10,regular
+0,True,False,False,False,True,False,Jay Garrick,64,Wildcat,33,Power Girl,19,Mister Terrific,10,regular
+0,True,False,False,False,True,False,Mister Terrific,65,Doctor Fate,54,Alan Scott,31,Wildcat,10,regular
+0,True,False,False,False,True,False,Alan Scott,67,Jay Garrick,57,Power Girl,54,Mister Terrific,33,regular
+0,True,False,False,False,True,False,Alan Scott,44,Stargirl,27,Doctor Fate,25,Jay Garrick,23,regular
+0,True,False,False,False,True,False,Mister Terrific,37,Doctor Fate,33,Jay Garrick,33,Power Girl,25,regular
+0,True,False,False,False,True,False,Alan Scott,52,Power Girl,38,Doctor Fate,37,Mister Terrific,36,regular
+0,True,False,False,False,True,False,Wildcat,40,Stargirl,36,Alan Scott,14,Mister Terrific,8,regular
+0,True,False,False,False,True,False,Doctor Fate,68,Alan Scott,64,Stargirl,35,Mister Terrific,34,regular
+0,True,False,False,False,True,False,Jay Garrick,53,Alan Scott,38,Mister Terrific,36,Power Girl,23,regular
+0,True,False,False,False,True,False,Wildcat,48,Doctor Fate,42,Stargirl,42,Jay Garrick,22,regular
+0,True,False,False,False,True,False,Doctor Fate,48,Power Girl,47,Mister Terrific,33,Jay Garrick,31,regular
+0,True,False,False,False,True,False,Power Girl,71,Doctor Fate,60,Mister Terrific,48,Jay Garrick,39,regular
+0,True,False,False,False,True,False,Power Girl,64,Jay Garrick,56,Stargirl,37,Alan Scott,32,regular
+0,True,False,False,False,True,False,Wildcat,41,Jay Garrick,33,Power Girl,18,Alan Scott,16,regular
+0,True,False,False,False,True,False,Stargirl,55,Wildcat,50,Alan Scott,44,Doctor Fate,29,regular
+0,True,False,False,False,True,False,Doctor Fate,42,Alan Scott,36,Stargirl,34,Wildcat,18,regular
+0,True,False,False,False,True,False,Stargirl,41,Doctor Fate,41,Power Girl,37,Jay Garrick,26,regular
+0,True,False,False,False,True,False,Doctor Fate,64,Power Girl,40,Wildcat,34,Mister Terrific,18,regular
+0,True,False,False,False,True,False,Alan Scott,54,Jay Garrick,51,Doctor Fate,43,Mister Terrific,24,regular
+0,True,False,False,False,True,False,Alan Scott,54,Wildcat,54,Power Girl,44,Jay Garrick,26,regular
+0,True,False,False,False,True,False,Stargirl,67,Alan Scott,66,Power Girl,54,Jay Garrick,43,regular
+0,True,False,False,False,True,False,Power Girl,40,Jay Garrick,34,Doctor Fate,28,Stargirl,7,regular
+0,True,False,False,False,True,False,Power Girl,72,Doctor Fate,60,Stargirl,52,Jay Garrick,39,regular
+0,True,False,False,False,True,False,Power Girl,48,Doctor Fate,46,Jay Garrick,28,Mister Terrific,20,regular
+0,True,False,False,False,True,False,Power Girl,53,Stargirl,44,Doctor Fate,33,Mister Terrific,19,regular
+0,True,False,False,False,True,False,Mister Terrific,58,Jay Garrick,36,Doctor Fate,33,Alan Scott,32,regular
+0,True,False,False,False,True,False,Doctor Fate,52,Mister Terrific,43,Alan Scott,40,Stargirl,31,regular
+0,True,False,False,False,True,False,Power Girl,50,Wildcat,39,Alan Scott,37,Mister Terrific,22,regular
+0,True,False,False,False,True,False,Doctor Fate,71,Power Girl,52,Alan Scott,36,Mister Terrific,23,regular
+0,True,False,False,False,True,False,Doctor Fate,39,Wildcat,35,Stargirl,35,Power Girl,17,regular
+0,True,False,False,False,True,False,Wildcat,70,Stargirl,59,Alan Scott,44,Power Girl,34,regular
+0,True,False,False,False,True,False,Stargirl,51,Power Girl,32,Jay Garrick,32,Wildcat,23,regular
+0,True,False,False,False,True,False,Alan Scott,43,Wildcat,30,Doctor Fate,28,Power Girl,10,regular
+0,True,False,False,False,True,False,Alan Scott,43,Mister Terrific,39,Power Girl,28,Jay Garrick,23,regular
+0,True,False,False,False,True,False,Wildcat,72,Alan Scott,42,Power Girl,40,Stargirl,29,regular
+0,True,False,False,False,True,False,Stargirl,69,Alan Scott,55,Jay Garrick,45,Mister Terrific,40,regular
+0,True,False,False,False,True,False,Doctor Fate,41,Power Girl,39,Stargirl,29,Wildcat,27,regular
+0,True,False,False,False,True,False,Doctor Fate,58,Jay Garrick,38,Alan Scott,23,Stargirl,22,regular
+0,True,False,False,False,True,False,Doctor Fate,63,Jay Garrick,36,Wildcat,26,Power Girl,21,regular
+0,True,False,False,False,True,False,Mister Terrific,54,Alan Scott,40,Stargirl,40,Wildcat,32,regular
+0,True,False,False,False,True,False,Stargirl,48,Doctor Fate,34,Alan Scott,29,Power Girl,24,regular
+0,True,False,False,False,True,False,Wildcat,72,Mister Terrific,49,Stargirl,35,Power Girl,31,regular
+0,True,False,False,False,True,False,Stargirl,46,Jay Garrick,36,Doctor Fate,29,Alan Scott,14,regular
+0,True,False,False,False,True,False,Wildcat,40,Stargirl,31,Power Girl,27,Jay Garrick,21,regular
+0,True,False,False,False,True,False,Doctor Fate,58,Stargirl,41,Mister Terrific,41,Jay Garrick,39,regular
+0,True,False,False,False,True,False,Doctor Fate,52,Alan Scott,48,Jay Garrick,33,Mister Terrific,28,regular
+0,True,False,False,False,True,False,Jay Garrick,70,Power Girl,54,Alan Scott,54,Doctor Fate,34,regular
+0,True,False,False,False,True,False,Doctor Fate,63,Stargirl,53,Mister Terrific,51,Wildcat,50,regular
+0,True,False,False,False,True,False,Wildcat,69,Power Girl,39,Stargirl,37,Jay Garrick,36,regular
+0,True,False,False,False,True,False,Alan Scott,60,Power Girl,53,Wildcat,47,Stargirl,46,regular
+0,True,False,False,False,True,False,Alan Scott,69,Wildcat,58,Jay Garrick,44,Stargirl,38,regular
+0,True,False,False,False,True,False,Wildcat,44,Doctor Fate,29,Stargirl,27,Jay Garrick,15,regular
+0,True,False,False,False,True,False,Wildcat,68,Alan Scott,67,Stargirl,48,Doctor Fate,37,regular
