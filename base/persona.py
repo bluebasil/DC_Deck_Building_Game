@@ -1,8 +1,8 @@
-import cardtype
+from constants import cardtype
 import effects
-import ai_hint
+from constants import ai_hint
 import globe
-import persona_frame
+from frames import persona_frame
 
 def get_personas():
 	#return [auquaman(),batman(),the_flash()]

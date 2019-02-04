@@ -1,10 +1,10 @@
-import option
-import ai_hint
+from constants import option
+from constants import ai_hint
 import time
 import random
 import globe
-import cardtype
-import actions
+from constants import cardtype
+from frames import actions
 
 view = None
 def set_view(vi):

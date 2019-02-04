@@ -1,4 +1,3 @@
-
 import arcade
 import os
 import globe
@@ -9,8 +8,8 @@ import model
 import random
 import time
 import event_bus
-import actions
-import option
+from frames import actions
+from constants import option
 import controlers
 import sys, traceback
 

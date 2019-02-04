@@ -1,6 +1,6 @@
 import globe
-import cardtype
-import owners
+from constants import cardtype
+from constants import owners
 import arcade
 
 class card:

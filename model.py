@@ -1,33 +1,24 @@
 #Constants
 import random
-import cardtype
-import visibilities
-import owners
+from constants import cardtype
+from constants import owners
 import controlers
 import effects
 import deck_builder
 import globe
-import ai_hint
+from constants import ai_hint
 import error_checker
-import json
-
-class MyEncoder(json.JSONEncoder):
-        def default(self, o):
-            return o.__dict__    
-
 
 class pile:
 	#List of cards
 	contents = None
-	visibility = visibilities.PUBLIC
 	owner = None
 	name = ""
 
 	#I'll start the deck empty
-	def __init__(self,name,owner = None,visibility = visibilities.PUBLIC):
+	def __init__(self,name,owner = None):
 		self.name = name
 		self.owner = owner
-		self.visibility = visibility
 		self.contents = []
 
 	def shuffle(self):
@@ -58,8 +49,6 @@ class pile:
 		if find_type == cardtype.ANY:
 			return self.size()
 		else:
-			#if self.visibility == visibilities.PUBLIC \
-			#	or (self.visibility == visibilities.PRIVATE and self.owner.pid = pid)
 			count = 0
 			for c in self.contents:
 				if c.ctype_eq(find_type):
@@ -77,10 +66,9 @@ class playing(pile):
 	def no_mod(self,card,player):
 		return card.play_action(player)
 
-	def __init__(self,name,owner = None,visibility = visibilities.PUBLIC):
+	def __init__(self,name,owner = None):
 		self.name = name
 		self.owner = owner
-		self.visibility = visibility
 		self.contents = []
 		self.played_this_turn = []
 		self.special_options = []
@@ -200,8 +188,8 @@ class player:
 		self.controler = controler
 		self.pid = pid
 
-		self.deck = pile("Deck",self, visibilities.SECRET)
-		self.hand = pile("Hand",self, visibilities.PRIVATE)
+		self.deck = pile("Deck",self)
+		self.hand = pile("Hand",self)
 		self.discard = pile("Discard",self)
 		self.under_superhero = pile("Under Persona",self)
 		self.over_superhero = pile("Over Persona",self)
@@ -622,7 +610,7 @@ class model:
 
 			
 			#with open('data.txt', 'w') as f:
-			print(json.dumps(self,cls=MyEncoder))
+			#print(json.dumps(self,cls=MyEncoder))
 
 
 		for p in self.players:

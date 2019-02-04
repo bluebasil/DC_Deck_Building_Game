@@ -1,6 +1,6 @@
 import model
 import time
-import cardtype
+from constants import cardtype
 import controlers
 import globe
 

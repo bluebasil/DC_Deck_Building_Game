@@ -1,14 +1,14 @@
-import cardtype
-import owners
+from constants import cardtype
+from constants import owners
 import effects
-import option
+from constants import option
 import globe
-import ai_hint
+from constants import ai_hint
 import random
 import arcade
-import actions
-import card_frame
-import persona_frame
+from frames import actions
+from frames import card_frame
+from frames import persona_frame
 
 
 

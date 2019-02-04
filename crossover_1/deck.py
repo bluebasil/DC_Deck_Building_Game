@@ -1,7 +1,7 @@
 from . import cards
 from . import persona
 import random
-import deck_frame
+from frames import deck_frame
 
 #There are in order
 def initialize_supervillains():

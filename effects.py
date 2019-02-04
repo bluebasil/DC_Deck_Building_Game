@@ -1,7 +1,7 @@
-import option
+from constants import option
 import globe
-import cardtype
-import ai_hint
+from constants import cardtype
+from constants import ai_hint
 
 
 def new_assemble(list):

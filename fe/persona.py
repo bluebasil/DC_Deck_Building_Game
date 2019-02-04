@@ -1,10 +1,10 @@
-import cardtype
+from constants import cardtype
 import effects
-import ai_hint
+from constants import ai_hint
 import globe
-import persona_frame
-import actions
-import owners
+from frames import persona_frame
+from frames import actions
+from constants import owners
 
 
 
