@@ -16,6 +16,7 @@ import error_checker
 from constants import cardtype
 from constants import owners
 from constants import ai_hint
+from constants import trigger
 
 #Custom exception for ending the game early
 class MainDeckEmpty(Exception):
@@ -369,8 +370,7 @@ class player:
 				all_drawn.append(drawn_card)
 				self.hand.add(drawn_card)
 		
-		for t in self.triggers.copy():
-			t("draw",[num,from_card,all_drawn],self)
+		trigger.all(trigger.DRAW,[num,from_card,all_drawn],self)
 
 		#Used for cards that say "The first time a card tells you to draw on each of your turns..."
 		self.drawn_card = True
@@ -429,8 +429,7 @@ class player:
 		card.pop_self()
 		if valid_tigger:
 			self.persona.discard_power()
-			for t in self.triggers:
-				t("discard",[card],self)
+			trigger.all(trigger.DISCARD,[card],self)
 			self.discarded_this_turn.append(card)
 
 		#Put cards back into their respective locations
@@ -453,8 +452,7 @@ class player:
 	#I would like to create a 'move' method on a card that automatically calls this is a card changes owners
 	def card_has_been_passed(self,card):
 		self.persona.card_pass_power()
-		for t in self.triggers:
-			t("pass",[card],self)
+		trigger.all(trigger.PASS,[card],self)
 
 #The following buy or gain functions return False is they are unsucsesfull, and True if the card is gained
 
@@ -532,13 +530,11 @@ class player:
 		#I can replace redirecting with triggers.  
 		#Right now I will have both features untill I patch the other sets
 		redirected = False
-		for t in self.triggers:
-			#the gain trigger should return true if the card has already been redirected!
-			redirected = t("gain",[card,bought,defeat,redirected],self) or redirected
-
+		results = trigger.all(trigger.GAIN_CARD,[redirected,card,bought,defeat],self,pay_forward = True)
+		if True in results:
+			redirected = True
 		#Redirects the card if nessesary
 		#I would like to change the redirect functionallity to be more plyable
-		redirected = False
 		if len(self.gain_redirect) > 0:
 
 			for re in self.gain_redirect.copy():
@@ -567,8 +563,7 @@ class player:
 	def gain_vp(self,amount):
 		self.vp += amount
 		self.persona.gain_vp_power()
-		for t in self.triggers:
-			t("gain_vp",[amount],self)
+		trigger.all(trigger.GAIN_VP,[amount],self)
 			
 
 	#for ending the turn, or other cards like the batmobile
@@ -583,8 +578,7 @@ class player:
 	#but after self.discard_hand and played.turn_end so that Wonder Woman can properly 
 	#add cards to the next hand
 	def end_turn(self):
-		for t in self.triggers:
-			t("end_turn",[],self)
+		trigger.all(trigger.END_TURN,[],self)
 		self.triggers = []
 		self.gain_redirect = []
 		self.discount_on_sv = 0
@@ -599,7 +593,7 @@ class player:
 		#must be before persona.reset()
 		self.played.turn_end()
 		self.persona.reset()
-		#must be after persona.reset
+		#must be after persona.reset for abilities like wonder woman
 		self.gained_this_turn = []
 		self.discarded_this_turn = []
 		self.draw_card(num=5, from_card = False)

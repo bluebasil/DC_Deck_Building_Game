@@ -2,6 +2,7 @@ from constants import option
 import globe
 from constants import cardtype
 from constants import ai_hint
+from constants import trigger
 
 
 def new_assemble(list):
@@ -29,13 +30,13 @@ def attack_all(card):
 #Returns true if hit by attack
 def attack(player,card,by_player = None,avoid_twise = False):
 	if by_player != None:
-		for t in by_player.triggers.copy():
-			result = t("attacking",[player,card],by_player)
-			#The attacking trigger will return true or false, but nested
-			#So that it can be distinquished from other triggers
-			#I should probbaly set up a uniform trigger responce
-			if result != False:
-				return result[0]
+		#Triggers that dosn't affect the parent code return None
+		#if the trigger wants to override this attack, it returns
+		#True or False
+		result = trigger.all(trigger.ATTACKING,[player,card],by_player,first_result = True)
+		if result != None:
+			return result
+
 
 	assemble = []
 	for c in player.hand.contents:

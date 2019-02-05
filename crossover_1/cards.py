@@ -9,6 +9,7 @@ import arcade
 from frames import actions
 from frames import card_frame
 from frames import persona_frame
+from constants import trigger
 
 
 
@@ -194,7 +195,7 @@ class per_degaton(card_frame.card):
 	image = "crossover_1/images/cards/Per Degaton 5.jpg"
 
 	def trigger(self,ttype,data,player):
-		if ttype == "discard":
+		if ttype == trigger.DISCARD:
 			player.played.plus_power(1)
 	
 	def play_action(self,player):
@@ -485,7 +486,7 @@ class icicle(card_frame.card):
 	image = "crossover_1/images/cards/Icicle 10.jpg"
 
 	def trigger(self,ttype,data,player):
-		if ttype == "end_turn":
+		if ttype == trigger.END_TURN:
 			player.persona.active = True
 
 	def play_action(self,player):

@@ -9,6 +9,7 @@ import arcade
 from frames import actions
 from frames import card_frame
 from frames import persona_frame
+from constants import trigger
 
 
 class arrows_bow(card_frame.card):
@@ -169,8 +170,8 @@ class huntress(card_frame.card):
 	image = "crossover_2/images/cards/Huntress 5.jpg"
 
 	def trigger(self,ttype,data,player):
-		if ttype == "gain":
-			if data[0].ctype_eq(cardtype.VILLAIN):
+		if ttype == trigger.GAIN_CARD:
+			if data[1].ctype_eq(cardtype.VILLAIN):
 				assemble = []
 				assemble.extend(player.discard.contents)
 				assemble.extend(player.hand.contents)
@@ -178,7 +179,6 @@ class huntress(card_frame.card):
 					result = effects.may_choose_one_of("You may destory a card in your hand or disscard pile.",player,assemble,ai_hint.IFBAD)
 					if result != None:
 						result.destroy(player)
-		return False
 
 
 	def play_action(self,player):
@@ -293,9 +293,9 @@ class promise_to_a_friend(card_frame.card):
 
 	#Returning ture stops the destory
 	def trigger(self,ttype,data,player):
-		if ttype == "destroy" and globe.boss.whose_turn == player.pid:
+		if ttype == trigger.DESTROY \
+				and globe.boss.whose_turn == player.pid:
 			return True
-		return False
 	
 	
 	def play_action(self,player):
@@ -503,11 +503,9 @@ class deadshot(card_frame.card):
 	image = "crossover_2/images/cards/Deadshot 10.jpg"
 
 	def trigger(self,ttype,data,player):
-		if ttype == "attacking":
-			#nested to distinguish non attacking and defended
+		if ttype == trigger.ATTACKING:
 			player.triggers.remove(self.trigger)
-			return [effects.attack(data[0],data[1],by_player = player,avoid_twise = True)]
-		return False
+			return effects.attack(data[0],data[1],by_player = player,avoid_twise = True)
 
 	def play_action(self,player):
 		player.played.plus_power(3)
@@ -549,14 +547,15 @@ class edward_fyers(card_frame.card):
 	#data[1] is from_card
 	#data[2] are the cards drawn
 	def trigger(self,ttype,data,player):
-		if ttype == "draw" and globe.boss.whose_turn == player.pid and data[1]:
+		if ttype == trigger.DRAW \
+				and globe.boss.whose_turn == player.pid \
+				and data[1]:
 			player.triggers.remove(self.trigger)
 			instruction_text = "Would you like to put one drawn cards under your Super Hero?"
 			result = effects.may_choose_one_of(instruction_text,player,data[2])
 			if result != None:
 				result.pop_self()
 				player.under_superhero.contents.append(result)
-		return False
 
 	
 	def play_action(self,player):

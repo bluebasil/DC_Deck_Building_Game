@@ -1,6 +1,7 @@
 import globe
 from constants import cardtype
 from constants import owners
+from constants import trigger
 import arcade
 
 class card:
@@ -88,10 +89,8 @@ class card:
 		return
 
 	def destroy(self,player_responsible):
-		stop = False
-		for t in player_responsible.triggers:
-			stop = t("destroy",[self],player_responsible) or stop
-		if not stop:
+		stop = trigger.all(trigger.DESTROY,[self],player_responsible,first_result = True)
+		if stop != None:
 			self.frozen = []
 			self.pop_self()
 			#if player_responsible != None:

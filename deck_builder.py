@@ -111,15 +111,21 @@ def initialize_supervillains():
 	prioritize = large_sets
 	if len(small_sets) > 0:
 		prioritize = small_sets
-	largest_villain_amount = 0
+	smallest_villain_amount = 99
 	for d in prioritize:
-		largest_villain_amount = max(largest_villain_amount,len(d))
+		smallest_villain_amount = min(smallest_villain_amount,len(d))
 	if len(prioritize) > 1:
 		assemble = []
 		#Set last SV
 		assemble.append(random.choice(prioritize)[0])
 		for d in prioritize:
 			d.pop(0)
+
+		while len(assemble) < smallest_villain_amount:
+			count_from_end = smallest_villain_amount - len(assemble)
+			assemble.append(random.choice(prioritize)[-count_from_end])
+
+		"""
 		#Set first SV
 		first_SV = random.choice(prioritize)[-1]
 		for d in prioritize:
@@ -131,6 +137,7 @@ def initialize_supervillains():
 				assemble.append(choosen_SV)
 				random_set.remove(choosen_SV)
 		assemble.append(first_SV)
+		"""
 	else:
 		assemble = prioritize[0]
 	return assemble

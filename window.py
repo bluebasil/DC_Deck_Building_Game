@@ -316,20 +316,19 @@ class boss(drawable):
 		new_player.draw(globe.boss.players[0],0,0,0)
 		siz = 200*SCREEN_SCALE
 		start = SCREEN_HEIGHT-25*SCREEN_SCALE
+		point_scale = 0.25*SCREEN_SCALE
 		#Other players
 		for i,p in enumerate(globe.boss.players[1:]):
 			new_player = self.get_drawable(player_icon,f"player{i}")
 			new_player.draw(p,0,start,0)
 			#enumerate will start at 0
 			if i+1 == globe.boss.whose_turn:
-				point_scale = 0.25
-				arcade.draw_texture_rectangle(400*SCREEN_SCALE, start-100*SCREEN_SCALE, POINT_TEXTURE.width*point_scale, \
+				arcade.draw_texture_rectangle(400*SCREEN_SCALE+100*SCREEN_SCALE, start-100*SCREEN_SCALE, POINT_TEXTURE.width*point_scale, \
 							  POINT_TEXTURE.height*point_scale, POINT_TEXTURE, 0)
 			start -= siz +25*SCREEN_SCALE
 
 		if 0 == globe.boss.whose_turn:
-			point_scale = 0.25*SCREEN_SCALE
-			arcade.draw_texture_rectangle(400*SCREEN_SCALE, 800*SCREEN_SCALE, POINT_TEXTURE.width*point_scale, \
+			arcade.draw_texture_rectangle(400*SCREEN_SCALE+100*SCREEN_SCALE, 800*SCREEN_SCALE, POINT_TEXTURE.width*point_scale, \
 						  POINT_TEXTURE.height*point_scale, POINT_TEXTURE, 90)
 
 
@@ -518,8 +517,7 @@ class player(drawable):
 				arcade.draw_circle_filled(x+player.persona.texture.width*SCREEN_SCALE/2,self.maxy/2, 50, arcade.color.BLUE)
 				arcade.draw_text(f"{player.vp}",x+player.persona.texture.width*SCREEN_SCALE/2- text_offset,self.maxy/2-text_size*0.33,arcade.color.WHITE,text_size)
 
-			arcade.draw_text(f"Score: {player.score}",x+player.persona.texture.width*SCREEN_SCALE/2-15,self.maxy+60,arcade.color.WHITE,15)
-
+			
 
 			on_top = self.get_drawable(pile,"on_top")
 			if len(player.over_superhero.contents) > 0:
@@ -529,9 +527,12 @@ class player(drawable):
 
 			on_top = self.get_drawable(pile,"under")
 			if len(player.under_superhero.contents) > 0:
-				on_top.draw_squished(player.under_superhero.contents,x+player.persona.texture.width*0.25*SCREEN_SCALE,self.maxy+60,150,True,0.2)
+				on_top.draw_squished(player.under_superhero.contents,x+player.persona.texture.width*0.25*SCREEN_SCALE,self.maxy,150,True,0.2)
 			else:
 				on_top.set_gone()
+
+			#Score should be written over the other card piles
+			arcade.draw_text(f"Score: {player.score}",x+player.persona.texture.width*SCREEN_SCALE/2-15*SCREEN_SCALE,self.maxy+60*SCREEN_SCALE,arcade.color.WHITE,15)
 
 		discard = self.get_drawable(pile,"discard")
 		if len(player.discard.contents) > 0:
@@ -743,7 +744,7 @@ class pile(drawable):
 		if not self.single:
 			super().mouse_up(mouse,x,y)
 		elif not self.gone and self.check_collision(x,y) and len(self.last_contents) > 0 and not mouse.consumed:
-			print(f"(Opening display)",flush = True)
+			#print(f"(Opening display)",flush = True)
 			mouse.consumed = True
 			display_special = self
 			
