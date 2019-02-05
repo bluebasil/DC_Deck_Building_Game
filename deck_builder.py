@@ -9,17 +9,17 @@ from fe import deck as fe_deck
 #from base import deck as sv_deck
 #from base import cards as helper
 from crossover_1 import deck as c1_deck
-
-from crossover_1 import cards as custom
+from crossover_2 import deck as c2_deck
+#from crossover_1 import cards as custom
 from frames import card_frame
 import arcade
 import globe
 
 
-decks = [base_deck.this_set,fe_deck.this_set,c1_deck.this_set]
+decks = [base_deck.this_set,fe_deck.this_set,c1_deck.this_set,c2_deck.this_set]
 choosen_sets = []
 #Specifies wether small set personas muct be picked when playing with small sets
-any_pick = True
+any_pick = False
 
 
 def choose_sets():

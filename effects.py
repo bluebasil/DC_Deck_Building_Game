@@ -30,7 +30,7 @@ def attack_all(card):
 def attack(player,card,by_player = None,avoid_twise = False):
 	if by_player != None:
 		for t in by_player.triggers.copy():
-			result = t("attacking",[player,card],by_player):
+			result = t("attacking",[player,card],by_player)
 			#The attacking trigger will return true or false, but nested
 			#So that it can be distinquished from other triggers
 			#I should probbaly set up a uniform trigger responce
@@ -62,7 +62,7 @@ def attack(player,card,by_player = None,avoid_twise = False):
 				else:
 					#If you avoid the attack but not twise when nessesary (crossover 2's deadshot)
 					#do you get to trigger your avoided attack abilities?
-					player.persona.avoided_attack(result[1])
+					player.persona.avoided_attack(assemble[result[1]])
 					return False
 		elif result[0] == option.NO:
 			if by_player != None:

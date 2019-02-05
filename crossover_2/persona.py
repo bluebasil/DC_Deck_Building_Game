@@ -5,9 +5,10 @@ import globe
 from frames import persona_frame
 from frames import actions
 import random
+from constants import owners
 
 def get_personas():
-	return []
+	return [felicity_smoak(),john_diggle(),oliver_queen(),roy_harper(),sara_lance()]
 
 
 class felicity_smoak(persona_frame.persona):
@@ -33,9 +34,8 @@ class felicity_smoak(persona_frame.persona):
 				if len(player.under_superhero.contents) > 0:
 					hint = ai_hint.NEVER
 					instruction_text += "\nif not, put a card from under your superhero\ninto your hand"
-				if result = effects.ok_or_no(instruction_text,player,None,hint):
-					top_card = globe.main_deck.draw()
-					top_card.pop_self()
+				if effects.ok_or_no(instruction_text,player,None,hint):
+					top_card = globe.boss.main_deck.draw()
 					top_card.set_owner(player)
 					player.under_superhero.contents.append(top_card)
 				elif len(player.under_superhero.contents) > 0:
@@ -69,7 +69,7 @@ class john_diggle(persona_frame.persona):
 				assemble.append(c)
 		if len(assemble) > 0:
 			instruction_text = "Would you like to put a defence from under your\nsuper hero, on top of your deck?"
-			result = effects.may_choose_one_of(instruction_text,player,assemble.ai_hint.BEST):
+			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			if result != None:
 				result.pop_self()
 				player.deck.contents.append(result)
@@ -79,8 +79,8 @@ class john_diggle(persona_frame.persona):
 
 	def avoided_attack(self,defending):
 		instruction_text = f"Would you like to that {defending.name} on top of your deck?"
-		if effects.ok_or_no(instruction_text,player,defending,ai_hint.ALWAYS):
-			if defending.owner = self.player:
+		if effects.ok_or_no(instruction_text,self.player,defending,ai_hint.ALWAYS):
+			if defending.owner == self.player:
 				defending.pop_self()
 				self.player.under_superhero.contents.append(defending)
 		return
@@ -109,15 +109,16 @@ class oliver_queen(persona_frame.persona):
 
 	def ready(self):
 		if self.active:
-			instruction_text = "You may discard a card from your hand]\n. If it's an Equipment, you may put it under your Super Hero. if it's\nnot, put a random card from under your Super Hero into your hand."
-			result = effects.may_choose_one_of(instruction_text,self.player,self.player.contents,ai_hint.IFBAD)
-			if result != None:
-				if result.ctype_eq(cardtype.EQUIPMENT):
-					result.pop_self()
-					self.player.under_superhero.contents.append(result)
-				else:
-					if len(self.player.under_superhero.contents) > 0:
-						self.player.hand.contents.append(random.choice(self.player.under_superhero.contents).pop_self())
+			if len(self.player.hand.contents) > 0:
+				instruction_text = "You may discard a card from your hand]\n. If it's an Equipment, you may put it under your Super Hero. if it's\nnot, put a random card from under your Super Hero into your hand."
+				result = effects.may_choose_one_of(instruction_text,self.player,self.player.hand.contents,ai_hint.IFBAD)
+				if result != None:
+					if result.ctype_eq(cardtype.EQUIPMENT):
+						result.pop_self()
+						self.player.under_superhero.contents.append(result)
+					else:
+						if len(self.player.under_superhero.contents) > 0:
+							self.player.hand.contents.append(random.choice(self.player.under_superhero.contents).pop_self())
 
 
 class roy_harper(persona_frame.persona):
@@ -133,7 +134,7 @@ class roy_harper(persona_frame.persona):
 
 	def special_action_click(self,player):
 		assemble = []
-		for c in globe.lineup.contents:
+		for c in globe.boss.lineup.contents:
 			if c.ctype_eq(cardtype.SUPERPOWER):
 				assemble.append(c)
 		if len(assemble) > 0:
@@ -143,6 +144,7 @@ class roy_harper(persona_frame.persona):
 				result.pop_self()
 				result.set_owner(player)
 				player.under_superhero.contents.append(result)
+				player.played.special_options.remove(self.action)
 		return False
 
 	def ready(self):
@@ -152,7 +154,7 @@ class roy_harper(persona_frame.persona):
 				if len(self.player.under_superhero.contents) > 4:
 					for i in range(4):
 						instruction_text = f"Choose a card to destroy from under your super hero ({i+1}/4)"
-						result = effects.choose_one_of(instruction_text,player,self.player.under_superhero.contents)
+						result = effects.choose_one_of(instruction_text,self.player,self.player.under_superhero.contents)
 						result.destroy(self.player)
 				else:
 					for c in self.player.under_superhero.contents.copy():
@@ -181,7 +183,10 @@ class sara_lance(persona_frame.persona):
 		return 0
 
 	def sara_lance_redirect(self,player,card):
-		if globe.boss.whose_turn == self.player.pid and card.owner_type == owners.LINEUP and casrd.ctype_eq(cardtype.VILLAIN) and effects.ok_or_no(f"Would you like to put {card.name} under your Super Hero?",player,card,ai_hint.ALWAYS):
+		if globe.boss.whose_turn == self.player.pid \
+				and card.owner_type == owners.LINEUP \
+				and card.ctype_eq(cardtype.VILLAIN) \
+				and effects.ok_or_no(f"Would you like to put {card.name} under your Super Hero?",player,card,ai_hint.ALWAYS):
 			return [True,player.under_superhero]
 		return (False,None)
 

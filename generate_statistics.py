@@ -6,7 +6,7 @@ import deck_builder
 
 
 #model.choose_sets()
-deck_builder.choosen_sets = [deck_builder.decks[0],deck_builder.decks[1],deck_builder.decks[2]]
+deck_builder.choosen_sets = [deck_builder.decks[0],deck_builder.decks[3]]
 #globe.view = view.view_controler()
 
 while True:

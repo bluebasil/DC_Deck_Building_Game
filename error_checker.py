@@ -62,9 +62,9 @@ class dupe_checker:
 							print("ERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO",flush = True)
 							print(f"Owner not set properly.",c.name,c,c.owner,p.name,p.owner,flush = True)
 							if c.owner	!= None:
-								print(c.owner.persona.name)
+								print("card owner:",c.owner.persona.name,flush = True)
 							if p.owner	!= None:
-								print(p.owner.persona.name)
+								print("pile owner:",p.owner.persona.name,flush = True)
 							self.keep_checking = False
 					count += add
 				if count != 1:
@@ -72,7 +72,8 @@ class dupe_checker:
 					print("ERROR card number unexpected:",c.name,count,c.owner,flush = True)
 					for p in found:
 						print("pile ",p.name,flush = True)
-
+						if p.owner != None:
+							print("-",p.owner.persona.name,flush = True)
 					self.keep_checking = False
 
 			if self.keep_checking == False and self.displayed == False:

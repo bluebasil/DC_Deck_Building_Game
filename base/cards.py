@@ -602,7 +602,7 @@ class nth_metal(card_frame.card):
 	
 	def play_action(self,player):
 		top_card = player.reveal_card(public = False)
-		if effects.ok_or_no(f"A {top_card.name} is on top of your deck, would you like to destroy it? (ok/no)",player,top_card,ai_hint.IFBAD):
+		if top_card != None and effects.ok_or_no(f"A {top_card.name} is on top of your deck, would you like to destroy it? (ok/no)",player,top_card,ai_hint.IFBAD):
 			top_card.destroy(player)
 		return 0
 
@@ -642,9 +642,10 @@ class poison_ivy(card_frame.card):
 		for p in globe.boss.players:
 			if p != by_player and effects.attack(p,self,by_player):
 				card_to_discard = p.reveal_card(public = False)
-				p.discard_a_card(card_to_discard)
-				if card_to_discard.cost >= 1:
-					p.gain_a_weakness()
+				if card_to_discard != None:
+					p.discard_a_card(card_to_discard)
+					if card_to_discard.cost >= 1:
+						p.gain_a_weakness()
 		return
 
 
@@ -659,7 +660,7 @@ class power_ring(card_frame.card):
 	
 	def play_action(self,player):
 		top_card = player.reveal_card()
-		if top_card.cost >= 1:
+		if top_card != None and top_card.cost >= 1:
 			return 3
 		return 2
 
@@ -790,11 +791,12 @@ class starro(card_frame.card):
 		for p in globe.boss.players:
 			if p != by_player and effects.attack(p,self,by_player):
 				card_to_discard = p.reveal_card(public = False)
-				p.discard_a_card(card_to_discard)
-				if not card_to_discard.ctype_eq(cardtype.LOCATION):
-					result = effects.ok_or_no(f"Would you like to play a {card_to_discard.name}?",by_player,card_to_discard,ai_hint.ALWAYS)
-					if result:
-						by_player.play_and_return(card_to_discard.pop_self(),p.discard)
+				if card_to_discard != None:
+					p.discard_a_card(card_to_discard)
+					if not card_to_discard.ctype_eq(cardtype.LOCATION):
+						result = effects.ok_or_no(f"Would you like to play a {card_to_discard.name}?",by_player,card_to_discard,ai_hint.ALWAYS)
+						if result:
+							by_player.play_and_return(card_to_discard.pop_self(),p.discard)
 		return
 
 #test vp
@@ -902,14 +904,15 @@ class two_face(card_frame.card):
 		choose_even = effects.choose_even_or_odd("Choose even or odd, then reveal the top card of your deck.  If its cost matches your choice, draw it.  If not, discard it.",player)
 		
 		on_top = player.reveal_card()
-		if on_top.cost%2 == 0:
-			card_is_even = True
-		else:
-			card_is_even = False
-		if card_is_even == choose_even:
-			player.draw_card()
-		else:
-			player.discard_a_card(on_top)
+		if on_top != None:
+			if on_top.cost%2 == 0:
+				card_is_even = True
+			else:
+				card_is_even = False
+			if card_is_even == choose_even:
+				player.draw_card()
+			else:
+				player.discard_a_card(on_top)
 
 		return 1
 
@@ -1245,13 +1248,14 @@ class black_manta(card_frame.card):
 		for p in globe.boss.players:
 			if effects.attack(p,self):
 				discarded = p.reveal_card(public = False)
-				p.discard_a_card(discarded)
-				if discarded.cost >= 1:
-					instruction_text = f"Would you like to destroy this card?  If not, you hand will be discarded."
-					if effects.ok_or_no(instruction_text,p,card = discarded,hint = ai_hint.IFBAD):
-						discarded.destroy(p)
-					else:
-						p.discard_hand()
+				if discarded != None:
+					p.discard_a_card(discarded)
+					if discarded.cost >= 1:
+						instruction_text = f"Would you like to destroy this card?  If not, you hand will be discarded."
+						if effects.ok_or_no(instruction_text,p,card = discarded,hint = ai_hint.IFBAD):
+							discarded.destroy(p)
+						else:
+							p.discard_hand()
 		return
 
 #done
@@ -1442,8 +1446,8 @@ class the_joker(card_frame.card):
 		if len(cards_to_shuffle) > 0:
 			for i,p in enumerate(participating_players):
 				card_recived = cards_to_shuffle[i-1]
-				p.discard_a_card(card_recived)
 				card_recived.set_owner(p)
+				p.discard_a_card(card_recived)
 				if card_recived.cost > 0:
 					p.gain_a_weakness()
 				

@@ -50,14 +50,17 @@ class dr_mid_nite(card_frame.card):
 	def play_action(self,player):
 		assemble = []
 		for i in range(2):
-			assemble.append(player.reveal_card(public = False))
-			player.deck.contents.pop()
-		result = effects.choose_however_many("Choose any number to discard",player,assemble,ai_hint.IFBAD)
-		if result != None:
-			for c in result:
-				player.deck.contents.append(c)
-				player.discard_a_card(c)
-				assemble.remove(c)
+			to_add = player.reveal_card(public = False)
+			if to_add != None:
+				assemble.append(to_add)
+				player.deck.contents.pop()
+		if len(assemble) > 0:
+			result = effects.choose_however_many("Choose any number to discard",player,assemble,ai_hint.IFBAD)
+			if result != None:
+				for c in result:
+					player.deck.contents.append(c)
+					player.discard_a_card(c)
+					assemble.remove(c)
 
 		total_times = len(assemble)
 		while len(assemble) > 0:
@@ -264,9 +267,11 @@ class t_spheres(card_frame.card):
 		revealed = []
 		for i in range(3):
 			revealing = player.reveal_card(public = False)
-			revealing.pop_self()
-			revealed.append(revealing)
-		effects.reveal(f"These were on top of {player.persona.name}'s deck",player,revealed)
+			if revealing != None:
+				revealing.pop_self()
+				revealed.append(revealing)
+		if len(revealed) > 0:
+			effects.reveal(f"These were on top of {player.persona.name}'s deck",player,revealed)
 		for c in revealed.copy():
 			if c.name == chosen_name:
 				player.hand.contents.append(c)
@@ -347,8 +352,9 @@ class eclipso(card_frame.card):
 		for p in globe.boss.players:
 			if p != player:
 				card_to_discard = p.reveal_card(public = False)
-				self.discarded_cards.append(card_to_discard)
-				p.discard_a_card(card_to_discard)
+				if card_to_discard != None:
+					self.discarded_cards.append(card_to_discard)
+					p.discard_a_card(card_to_discard)
 		if len(self.discarded_cards) > 0:
 			self.action = actions.special_action("Eclipso",self.special_action_click)
 			player.played.special_options.append(self.action)
@@ -526,8 +532,9 @@ class kobra(card_frame.card):
 				revealed = []
 				for i in range(5):
 					to_reveal = p.reveal_card(public = False)
-					revealed.append(to_reveal)
-					to_reveal.pop_self()
+					if to_reveal != None:
+						revealed.append(to_reveal)
+						to_reveal.pop_self()
 				effects.reveal(f"These were on the top of {p.persona.name}'s deck.",p,revealed)
 				for c in revealed.copy():
 					if c.cost >= 1:

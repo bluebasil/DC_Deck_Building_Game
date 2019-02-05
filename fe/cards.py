@@ -372,32 +372,33 @@ class firestorm_matrix(card_frame.card):
 	
 	def play_action(self,player):
 		drawn = player.reveal_card(public = False)
-		player.played.play(drawn.pop_self())
-		if drawn.cost <= 5:
-			instruction_text = "Would you like to destroy the Firestorm Matrix and make this card ongoing?"
-			if effects.ok_or_no(instruction_text,player,drawn,hint = ai_hint.IFGOOD):
-				self.destroy(player)
-				player.ongoing.contents.append(drawn.pop_self())
-				#Here comes the scary stuff
+		if drawn != None:
+			player.played.play(drawn.pop_self())
+			if drawn.cost <= 5:
+				instruction_text = "Would you like to destroy the Firestorm Matrix and make this card ongoing?"
+				if effects.ok_or_no(instruction_text,player,drawn,hint = ai_hint.IFGOOD):
+					self.destroy(player)
+					player.ongoing.contents.append(drawn.pop_self())
+					#Here comes the scary stuff
 
-				def firestorm_special_action_click(player,actual_self = drawn):
-					#print("SPECIAL ACTION CLICK",actual_self.name,flush=True)
-					if actual_self.action in player.played.special_options:
-						player.played.special_options.remove(actual_self.action)
-						backup_play_action = actual_self.play_action
-						actual_self.play_action = actual_self.original_play_action
-						player.played.play(actual_self)
-						player.played.contents.remove(actual_self)
-						actual_self.play_action = backup_play_action
+					def firestorm_special_action_click(player,actual_self = drawn):
+						#print("SPECIAL ACTION CLICK",actual_self.name,flush=True)
+						if actual_self.action in player.played.special_options:
+							player.played.special_options.remove(actual_self.action)
+							backup_play_action = actual_self.play_action
+							actual_self.play_action = actual_self.original_play_action
+							player.played.play(actual_self)
+							player.played.contents.remove(actual_self)
+							actual_self.play_action = backup_play_action
 
-				def replace_play_action(player,actual_self = drawn):
-					#print("REPLACE PLAY ACTION",actual_self.name,flush=True)
-					actual_self.action = actions.special_action(f"Firestorm-{actual_self.name}",actual_self.firestorm_special_action_click)
-					player.played.special_options.append(actual_self.action)
-					return 0
-				drawn.original_play_action = drawn.play_action
-				drawn.firestorm_special_action_click = firestorm_special_action_click
-				drawn.play_action = replace_play_action
+					def replace_play_action(player,actual_self = drawn):
+						#print("REPLACE PLAY ACTION",actual_self.name,flush=True)
+						actual_self.action = actions.special_action(f"Firestorm-{actual_self.name}",actual_self.firestorm_special_action_click)
+						player.played.special_options.append(actual_self.action)
+						return 0
+					drawn.original_play_action = drawn.play_action
+					drawn.firestorm_special_action_click = firestorm_special_action_click
+					drawn.play_action = replace_play_action
 		return 0
 
 #DOne
@@ -414,7 +415,8 @@ class firestorm(card_frame.card):
 		#print(player,"AHAHAHAHAH")
 		self.currently_played_by = player
 		drawn = player.reveal_card(public = False)
-		player.over_superhero.contents.append(drawn.pop_self())
+		if drawn != None:
+			player.over_superhero.contents.append(drawn.pop_self())
 		#Should i remove the owner?
 		total = 0
 		assemble = player.over_superhero.contents.copy()
@@ -630,16 +632,17 @@ class mallet(card_frame.card):
 	
 	def play_action(self,player):
 		top_card = player.reveal_card()
-		instruction_text = f"Would you like to draw this card? If not, pass it to any players discard pile."
-		if effects.ok_or_no(instruction_text,player,top_card,hint = ai_hint.IFGOOD):
-			player.draw_card()
-		else:
-			instruction_text = f"Which players discard pile would you like to pass the {top_card.name} to?"
-			result = effects.choose_a_player(instruction_text,player,includes_self = True,hint = ai_hint.WORST)
-			top_card.pop_self()
-			top_card.set_owner(result)
-			result.discard.contents.append(top_card)
-			player.persona.card_pass_power()
+		if top_card != None:
+			instruction_text = f"Would you like to draw this card? If not, pass it to any players discard pile."
+			if effects.ok_or_no(instruction_text,player,top_card,hint = ai_hint.IFGOOD):
+				player.draw_card()
+			else:
+				instruction_text = f"Which players discard pile would you like to pass the {top_card.name} to?"
+				result = effects.choose_a_player(instruction_text,player,includes_self = True,hint = ai_hint.WORST)
+				top_card.pop_self()
+				top_card.set_owner(result)
+				result.discard.contents.append(top_card)
+				player.persona.card_pass_power()
 		return 0
 
 
@@ -1214,7 +1217,7 @@ class blackgate_prison(card_frame.card):
 
 	def special_action_click(self,player):
 		revealed = player.reveal_card()
-		if revealed.name == "Vulnerability" or revealed.name == "Weakness":
+		if revealed != None and revealed.name == "Vulnerability" or revealed.name == "Weakness":
 			revealed.destroy(player)
 			player.gain_vp(1)
 		player.played.special_options.remove(self.action)
@@ -1262,7 +1265,7 @@ class earth_3(card_frame.card):
 
 	def special_action_click(self,player):
 		revealed = player.reveal_card()
-		if revealed.name == "Punch":
+		if revealed != None and revealed.name == "Punch":
 			revealed.destroy(player)
 			player.gain_vp(1)
 		player.played.special_options.remove(self.action)
@@ -1454,32 +1457,39 @@ class constantine(card_frame.card):
 	def play_action(self,player):
 		assemble = []
 		for i in range(3):
-			assemble.append(player.reveal_card(public = False))
-			#I take the card off to get fresh cards properly (the shuffling the discard pile if neccessary)
-			player.deck.contents.pop()
+			to_add = player.reveal_card(public = False)
+			if to_add != None:
+				assemble.append(to_add)
+				#I take the card off to get fresh cards properly (the shuffling the discard pile if neccessary)
+				player.deck.contents.pop()
 		# I put the cards back, otherwise they cannot be destroyed because they cannot be found, +the last card has to go back anyways
-		player.deck.contents.extend(assemble)
-		effects.reveal(f"These were the top 3 cards on {player.persona.name}'s deck",player,assemble)
-		result = effects.choose_one_of("Choose one of these to draw.",player,assemble,ai_hint.BEST)
-		assemble.remove(result)
-		result.pop_self()
-		player.hand.contents.append(result)
-		result = effects.choose_one_of("Choose one of these to destroy.  You will gain the destroyed costs VP value.",player,assemble,ai_hint.WORST)
-		vp_to_gain = result.vp
-		if vp_to_gain == '*':
-			vp_to_gain = 3
-		elif isinstance(vp_to_gain, str):
-			vp_to_gain = vp_to_gain.replace('*','')
-			try:
-				vp_to_gain = int(vp_to_gain)
-			except:
-				if globe.DEBUG:
-					print(f"Error converting {vp_to_gain} to an int, defaulting to 3.")
-				vp_to_gain = 3
-		else:
+		if len(assemble) > 0:
+			player.deck.contents.extend(assemble)
+			effects.reveal(f"These were the top 3 cards on {player.persona.name}'s deck",player,assemble)
+			result = effects.choose_one_of("Choose one of these to draw.",player,assemble,ai_hint.BEST)
+			assemble.remove(result)
+			result.pop_self()
+			player.hand.contents.append(result)
+		if len(assemble) > 0:
+			result = effects.choose_one_of("Choose one of these to destroy.  You will gain the destroyed costs VP value.",player,assemble,ai_hint.WORST)
 			vp_to_gain = result.vp
-		player.gain_vp(vp_to_gain)
-		result.destroy(player)
+			#Ive seen conflicting ruling on wether 10* is 10 or 3
+			if isinstance(vp_to_gain, str):
+				vp_to_gain = 3
+			#if vp_to_gain == '*':
+			#	vp_to_gain = 3
+			#elif isinstance(vp_to_gain, str):
+			#	vp_to_gain = vp_to_gain.replace('*','')
+			#	try:
+			#		vp_to_gain = int(vp_to_gain)
+			#	except:
+			#		if globe.DEBUG:
+			#			print(f"Error converting {vp_to_gain} to an int, defaulting to 3.")
+			#		vp_to_gain = 3
+			else:
+				vp_to_gain = result.vp
+			player.gain_vp(vp_to_gain)
+			result.destroy(player)
 		#The last card stays on the top of the deck
 		return 0
 

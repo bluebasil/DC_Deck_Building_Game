@@ -62,6 +62,10 @@ class bronze_tiger(card_frame.card):
 					p.under_superhero.contents.append(result)
 				else:
 					did_not_reveal_costly_card = True
+			#This is a rulebook specific ruling.  I had guessed that avoiding that attack did
+			#not count towards not revealing a costly card, but the rulebook says it does
+			else:
+				did_not_reveal_costly_card = True
 		if did_not_reveal_costly_card:
 			by_player.draw_card(2)
 		return
@@ -147,11 +151,11 @@ class explosive_arrow(card_frame.card):
 		return 0
 
 	def attack_action(self,by_player):
-		p = effects.choose_a_player("Choose a player.\nYou will destory a card under that players Super Hero.",by_player,includes_self = False,ai_hint.BEST)
+		p = effects.choose_a_player("Choose a player.\nYou will destory a card under that players Super Hero.",by_player,includes_self = False,hint=ai_hint.BEST)
 		if effects.attack(p,self,by_player):
 			if len(p.under_superhero.contents) > 0:
 				result = effects.choose_one_of(f"Choose a card to destory from uder {p.persona.name}'s Superhero",by_player,p.under_superhero.contents,ai_hint.BEST)
-				result.destroy()
+				result.destroy(p)
 			self.pop_self()
 			by_player.under_superhero.contents.append(self)
 
@@ -173,7 +177,7 @@ class huntress(card_frame.card):
 				if len(assemble) > 0:
 					result = effects.may_choose_one_of("You may destory a card in your hand or disscard pile.",player,assemble,ai_hint.IFBAD)
 					if result != None:
-						result.destroy()
+						result.destroy(player)
 		return False
 
 
@@ -201,9 +205,9 @@ class laurel_lance(card_frame.card):
 				if len(player.under_superhero.contents) > 0:
 					instruction_text = "You may put a card from under your suprhero into your hand."
 					result = effects.may_choose_one_of(instruction_text,player,player.under_superhero.contents,ai_hint.BEST)
-						if result != None:
-							result.pop_self()
-							player.hand.contents.append(result)
+					if result != None:
+						result.pop_self()
+						player.hand.contents.append(result)
 		return 0
 
 class mirakuru(card_frame.card):
@@ -269,7 +273,7 @@ class mr_blank(card_frame.card):
 		return 0
 
 	def attack_action(self,by_player):
-		p = effects.choose_a_player("Choose a player.\nYou will put a card from under their Super Hero, under your Super Hero",by_player,includes_self = False,ai_hint.BEST)
+		p = effects.choose_a_player("Choose a player.\nYou will put a card from under their Super Hero, under your Super Hero",by_player,includes_self = False,hint=ai_hint.BEST)
 		if effects.attack(p,self,by_player):
 			if len(p.under_superhero.contents) > 0:
 				result = effects.choose_one_of(f"Put one of these cards from {p.persona.name} under your Super Hero.",by_player,p.under_superhero.contents,ai_hint.BEST)
@@ -289,7 +293,7 @@ class promise_to_a_friend(card_frame.card):
 
 	#Returning ture stops the destory
 	def trigger(self,ttype,data,player):
-		if ttype == "destroy" and globe.boss.whoes_turn == player.pid:
+		if ttype == "destroy" and globe.boss.whose_turn == player.pid:
 			return True
 		return False
 	
@@ -309,7 +313,7 @@ class shado(card_frame.card):
 	ctype = cardtype.HERO
 	defence = True
 	text = "+1 Power and draw a card\nDefence:: You may put this card under your Super Hero to\navoid an Attack. If you do, draw two cards and you may put\na card from your hand under your Super Hero."
-	image = "crossover_1/images/cards/Shado 4.jpg"
+	image = "crossover_2/images/cards/Shado 4.jpg"
 	
 	def play_action(self,player):
 		player.played.plus_power(1)
@@ -366,7 +370,7 @@ class you_have_failed_this_city(card_frame.card):
 		return 0
 
 	def attack_action(self,by_player):
-		p = effects.choose_a_player("Choose a player.\nThey will discard a random card.",by_player,includes_self = False,ai_hint.BEST)
+		p = effects.choose_a_player("Choose a player.\nThey will discard a random card.",by_player,includes_self = False,hint=ai_hint.BEST)
 		if effects.attack(p,self,by_player):
 			if len(p.hand.contents) > 0:
 				result = random.choice(p.hand.contents)
@@ -447,16 +451,17 @@ class count_vertigo(card_frame.card):
 	cost = 11
 	ctype = cardtype.VILLAIN
 	owner_type = owners.VILLAINDECK
-	text = "+3 Power and you may destory a card in your hand or discard\npile."
+	text = "Draw three cards and then put one of them under your superhero."
 	attack_text = "First Appearance - Attack: Reveal the top two cards of your deck.\nPut one of them under your Super Hero, and put the other under the Super Hero of the player on your left."
 	image = "crossover_2/images/cards/Count Vertigo 11.jpg"
 	
 	def play_action(self,player):
 		drawn_cards = player.draw_card(3)
-		instruction_text = "Put one of there under your super hero."
-		result = effects.choose_one_of(instruction_text,player,drawn_cards,ai_hint.WORST)
-		result.pop_self()
-		player.under_superhero.contents.append(result)
+		if len(drawn_cards) > 0:
+			instruction_text = "Put one of there under your super hero."
+			result = effects.choose_one_of(instruction_text,player,drawn_cards,ai_hint.WORST)
+			result.pop_self()
+			player.under_superhero.contents.append(result)
 		return 0
 
 	def first_apearance(self):
@@ -465,21 +470,25 @@ class count_vertigo(card_frame.card):
 				top_cards = []
 				for i in range(2):
 					next_card = p.reveal_card(public = False)
-					next_card.pop_self()
-					top_cards.append(next_card)
-				effects.reveal("There were what {} drew.",p,top_cards)
-				to_left = None
-				if p.pid + 1 == len(globe.boss.players):
-					to_left = globe.boss.players[0]
-				else:
-					to_left = globe.boss.players[p.pid+1]
-				instruction_text = f"Choose one to put under your Super Hero,\nthe other will go under {to_left.persona.name}'s Super Hero."
-				result = effects.choose_one_of(instruction_text,p,top_cards,ai_hint.BEST)
-				p.under_superhero.contents.append(result)
-				top_cards.remove(result)
-				result = top_cards[0]
-				result.set_owner(to_left)
-				to_left.under_superhero.contents.append(result)
+					if next_card != None:
+						next_card.pop_self()
+						top_cards.append(next_card)
+				if len(top_cards) > 0:
+					effects.reveal("There were what {} drew.",p,top_cards)
+					to_left = None
+					if p.pid + 1 == len(globe.boss.players):
+						to_left = globe.boss.players[0]
+					else:
+						to_left = globe.boss.players[p.pid+1]
+					
+					instruction_text = f"Choose one to put under your Super Hero,\nthe other will go under {to_left.persona.name}'s Super Hero."
+					result = effects.choose_one_of(instruction_text,p,top_cards,ai_hint.BEST)
+					p.under_superhero.contents.append(result)
+					top_cards.remove(result)
+				if len(top_cards) > 0:
+					result = top_cards[0]
+					result.set_owner(to_left)
+					to_left.under_superhero.contents.append(result)
 		return
 
 
@@ -540,7 +549,7 @@ class edward_fyers(card_frame.card):
 	#data[1] is from_card
 	#data[2] are the cards drawn
 	def trigger(self,ttype,data,player):
-		if ttype == "draw" and globe.boss.whoes_turn == player.pid and data[1]:
+		if ttype == "draw" and globe.boss.whose_turn == player.pid and data[1]:
 			player.triggers.remove(self.trigger)
 			instruction_text = "Would you like to put one drawn cards under your Super Hero?"
 			result = effects.may_choose_one_of(instruction_text,player,data[2])
@@ -611,7 +620,7 @@ class malcolm_merlyn(card_frame.card):
 	defence = True
 
 	def play_action(self,player):
-		player.plus_power(3)
+		player.played.plus_power(3)
 		return 0
 
 	def defend(self,attacker = None,defender = None):
@@ -653,7 +662,7 @@ class slade_wilson(card_frame.card):
 				if len(assemble) > 0:
 					instruction_text = f"Destroy six cards with different\ncard types under your Super Hero. ({i+1}/6)"
 					result = effects.choose_one_of(instruction_text,p,assemble,ai_hint.WORST)
-					result.destory()
+					result.destroy(p)
 				elif len(p.hand.contents) > 0:
 					instruction_text = f"Discard a card because you ran out of\nvalid cards to destroy under your super hero. ({i+1}/6)"
 					result = effects.choose_one_of(instruction_text,p,p.hand.contents,ai_hint.WORST)

@@ -527,6 +527,12 @@ class player(drawable):
 			else:
 				on_top.set_gone()
 
+			on_top = self.get_drawable(pile,"under")
+			if len(player.under_superhero.contents) > 0:
+				on_top.draw_squished(player.under_superhero.contents,x+player.persona.texture.width*0.25*SCREEN_SCALE,self.maxy+60,150,True,0.2)
+			else:
+				on_top.set_gone()
+
 		discard = self.get_drawable(pile,"discard")
 		if len(player.discard.contents) > 0:
 			x = buffx+CARD_SCALE*BASE_TEXTURE.width/2

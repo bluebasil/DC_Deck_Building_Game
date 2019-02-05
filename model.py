@@ -17,6 +17,10 @@ from constants import cardtype
 from constants import owners
 from constants import ai_hint
 
+#Custom exception for ending the game early
+class MainDeckEmpty(Exception):
+    pass
+
 """
 A pile refers to any collection of cards in the game.
 For instance, all of the stacks (Villain, Kick, Weakness)
@@ -62,6 +66,8 @@ class pile:
 	def draw(self):
 		if len(self.contents) > 0:
 			return self.contents.pop()
+		elif self.name == "Main Deck":
+			raise MainDeckEmpty
 		else:
 			return None
 
@@ -140,16 +146,19 @@ class playing(pile):
 		#Most will go in the players discard pile, but if a card has been played
 		#from somewherew else, they should go there
 		#Note: This may not be an exsaustive list!!
+
+		#discard_a_card now handles discarding cards that do not belong to you
 		while self.size() > 0:
-			c = self.contents.pop()
-			if c.owner_type == owners.PLAYER:
-				c.owner.discard.add(c)
-			elif c.owner_type == owners.MAINDECK:
-				globe.boss.main_deck.add(c)
-			elif c.owner_type == owners.LINEUP:
-				globe.boss.lineup.add(c)
-			elif c.owner_type == owners.VILLAINDECK:
-				globe.boss.supervillain_stack.add(c)
+			self.owner.discard_a_card(self.contents[0],valid_tigger = False)
+			#c = self.contents.pop()
+			#if c.owner_type == owners.PLAYER:
+			#	c.owner.discard.add(c)
+			#elif c.owner_type == owners.MAINDECK:
+			#	globe.boss.main_deck.add(c)
+			#elif c.owner_type == owners.LINEUP:
+			#	globe.boss.lineup.add(c)
+			#elif c.owner_type == owners.VILLAINDECK:
+			#	globe.boss.supervillain_stack.add(c)
 
 	#Just overwrites the parent add function
 	#Depreciated
@@ -328,12 +337,15 @@ class player:
 
 		#Most things are reset in end_turn
 		#Since cards can be discarded between turns, this has to be reset again
-		discarded_this_turn = []
+		self.discarded_this_turn = []
+		self.already_drawn = False
 
 		#sets up the turn
-		self.persona.ready()
+		#crossover 2's 'Promise to a friend' + 'roy harper' require
+		#ongoing to begin before personas.  If something else 
+		#requires the opposite, this will have to be re-worked
 		self.ongoing.begin_turn()
-		self.already_drawn = False
+		self.persona.ready()
 
 		#Asks the controler to as the player or AI whats next
 		self.controler.turn()
@@ -352,10 +364,10 @@ class player:
 				#This will break things, but is so rare it shouldn't happen really?
 				#This will need to be protected for in the future!!
 				print("ERR: No more cards in deck",flush = True)
-				return None
-			drawn_card = self.deck.draw()
-			all_drawn.append(drawn_card)
-			self.hand.add(drawn_card)
+			else:
+				drawn_card = self.deck.draw()
+				all_drawn.append(drawn_card)
+				self.hand.add(drawn_card)
 		
 		for t in self.triggers.copy():
 			t("draw",[num,from_card,all_drawn],self)
@@ -413,12 +425,29 @@ class player:
 
 	#Formally discards the given card
 	#Triggers anything that needs to know that a card has been discarded
-	def discard_a_card(self,card):
-		self.persona.discard_power()
-		for t in self.triggers:
-			t("discard",[card],self)
-		self.discard.add(card.pop_self())
-		self.discarded_this_turn.append(card)
+	def discard_a_card(self,card,valid_tigger = True):
+		card.pop_self()
+		if valid_tigger:
+			self.persona.discard_power()
+			for t in self.triggers:
+				t("discard",[card],self)
+			self.discarded_this_turn.append(card)
+
+		#Put cards back into their respective locations
+		#Most will go in the players discard pile, but if a card has been played
+		#from somewherew else, they should go there
+		#Note: This may not be an exsaustive list!!
+		if card.owner_type == owners.PLAYER:
+			card.owner.discard.add(card)
+		elif card.owner_type == owners.MAINDECK:
+			globe.boss.main_deck.add(card)
+		elif card.owner_type == owners.LINEUP:
+			globe.boss.lineup.add(card)
+		elif card.owner_type == owners.VILLAINDECK:
+			globe.boss.supervillain_stack.add(card)
+
+		#self.discard.add(card.pop_self())
+		#self.discarded_this_turn.append(card)
 
 	#Call this if a card has been passed, to triggerharly quins ability
 	#I would like to create a 'move' method on a card that automatically calls this is a card changes owners
@@ -724,68 +753,71 @@ class model:
 		#sets up personas in-game
 		#with certain views, this should be set beforhand
 		self.choose_personas()
-		#The game ends when the supervaillin stack is empty
-		while self.supervillain_stack.get_count() > 0:
-			#Tracks the number of turns
-			self.turn_number += 1
-			if self.notify != None:
-				self.notify()
 
-			if globe.DEBUG:
-				print(f"{self.players[self.whose_turn].persona.name}'s' turn")
+		#We are going to keep track of which end condition has been met
+		#'regular' refers to beating all of the SV's
+		end_reason = "regular"
+		try:
+			#The game ends when the supervaillin stack is empty
+			while self.supervillain_stack.get_count() > 0:
+				#Tracks the number of turns
+				self.turn_number += 1
+				if self.notify != None:
+					self.notify()
 
-			current_turn = self.players[self.whose_turn]
+				if globe.DEBUG:
+					print(f"{self.players[self.whose_turn].persona.name}'s' turn")
 
-			#Sets up SV's Stack ongoing
-			if len(self.supervillain_stack.contents) > 0 \
-					and self.supervillain_stack.current_sv.has_stack_ongoing:
-				self.supervillain_stack.current_sv.stack_ongoing(current_turn)
+				current_turn = self.players[self.whose_turn]
 
-			#run the players turn
-			current_turn.turn()
+				#Sets up SV's Stack ongoing
+				if len(self.supervillain_stack.contents) > 0 \
+						and self.supervillain_stack.current_sv.has_stack_ongoing:
+					self.supervillain_stack.current_sv.stack_ongoing(current_turn)
 
-			save_whose_turn = self.whose_turn
-			if self.dupe_checker.check():
-				return
-			#It's between turns for the SV attack
-			self.whose_turn = -1
+				#run the players turn
+				current_turn.turn()
 
-			#Ends the players turn.  I dont rememebr why this is done seperatly
-			current_turn.end_turn()
-
-			#refills the line-up
-			#if the main deck runs out, the game is also over
-			#unfortunatly if the main decks runs out because of a card (like pandoras box)
-			#The game dosnt end until the end of their turn, when it tried to refil, which is not acurat
-			for i in range(max(5 - self.lineup.size(),0)):
-				card_to_add = self.main_deck.draw()
-				#The main deck is empty
-				if card_to_add == None:
-					print("MAIN DECK RAN OUT!")
-					output_persona_stats(self.players,"main_deck")
+				save_whose_turn = self.whose_turn
+				if self.dupe_checker.check():
 					return
-				else:
-					card_to_add.set_owner(owners.LINEUP)
-				self.lineup.add(card_to_add)
+				#It's between turns for the SV attack
+				self.whose_turn = -1
 
-			#If there is a new superviallin on top of it's stack, then First Apearance!
-			if self.supervillain_stack.get_count() > 0 \
-					and self.supervillain_stack.current_sv != self.supervillain_stack.contents[-1]:
-				self.supervillain_stack.current_sv = self.supervillain_stack.contents[-1]
-				#first apearance attack
-				self.supervillain_stack.current_sv.first_apearance()
-				
-			#sets who is going to play next
-			self.whose_turn = save_whose_turn + 1
-			if self.whose_turn >= len(self.players):
-				self.whose_turn = 0
+				#Ends the players turn.  I dont rememebr why this is done seperatly
+				current_turn.end_turn()
+
+				#refills the line-up
+				#if the main deck runs out, the game is also over
+				#unfortunatly if the main decks runs out because of a card (like pandoras box)
+				#The game dosnt end until the end of their turn, when it tried to refil, which is not acurat
+				for i in range(max(5 - self.lineup.size(),0)):
+					card_to_add = self.main_deck.draw()
+					card_to_add.set_owner(owners.LINEUP)
+					self.lineup.add(card_to_add)
+
+				#If there is a new superviallin on top of it's stack, then First Apearance!
+				if self.supervillain_stack.get_count() > 0 \
+						and self.supervillain_stack.current_sv != self.supervillain_stack.contents[-1]:
+					self.supervillain_stack.current_sv = self.supervillain_stack.contents[-1]
+					#first apearance attack
+					self.supervillain_stack.current_sv.first_apearance()
+					
+				#sets who is going to play next
+				self.whose_turn = save_whose_turn + 1
+				if self.whose_turn >= len(self.players):
+					self.whose_turn = 0
+		#If the main deck has ran out, the game is over, with an alternative end condition
+		except MainDeckEmpty:
+			print("Main Deck Ran Out!",flush = True)
+			end_reason = "main_deck"
 
 		#the game has ended, calculate vp (things may have changed since they last 
 		#calulated their vp at the end of their turn)
 		for p in self.players:
 			self.player_score.append(p.calculate_vp())
 
-		output_persona_stats(self.players,"regular")
+		output_persona_stats(self.players,end_reason)
 
 
 

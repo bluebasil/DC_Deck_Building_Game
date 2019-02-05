@@ -29,7 +29,7 @@ class alan_scott(persona_frame.persona):
 					already_played = True
 			if not already_played:
 				top_card = player.reveal_card(public = True)
-				if top_card.cost == 0:
+				if top_card != None and top_card.cost == 0:
 					player.draw_card()
 		return 0
 
@@ -130,7 +130,7 @@ class jay_garrick(persona_frame.persona):
 	def draw_power(self):
 		if self.active:
 			revealed = self.player.reveal_card(public = True)
-			if effects.ok_or_no(f"Would you like to discard the {revealed.name}?",self.player,revealed,ai_hint.IFBAD):
+			if revealed != None and effects.ok_or_no(f"Would you like to discard the {revealed.name}?",self.player,revealed,ai_hint.IFBAD):
 				self.player.discard_a_card(revealed)
 		return
 
@@ -156,8 +156,10 @@ class mister_terricic(persona_frame.persona):
 
 					assemble = []
 					for i in range(3):
-						assemble.append(player.reveal_card(public = False))
-						player.deck.contents.pop()
+						to_add = player.reveal_card(public = False)
+						if to_add != None:
+							assemble.append(to_add)
+							player.deck.contents.pop()
 
 					equipment_assemble = []
 					for c in assemble:
