@@ -90,13 +90,13 @@ class card:
 
 	def destroy(self,player_responsible):
 		stop = trigger.all(trigger.DESTROY,[self],player_responsible,first_result = True)
-		if stop != None:
+		if stop == None:
 			self.frozen = []
 			self.pop_self()
 			#if player_responsible != None:
 			player_responsible.persona.destory_power()
 			self.set_owner(owners.DESTROYED)
-			globe.boss.destroyed_stack.add(self)
+			globe.boss.destroyed_stack.contents.append(self)
 
 
 	def pop_self(self):

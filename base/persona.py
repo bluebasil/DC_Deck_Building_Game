@@ -3,6 +3,7 @@ import effects
 from constants import ai_hint
 import globe
 from frames import persona_frame
+from constants import trigger
 
 def get_personas():
 	#return [auquaman(),batman(),the_flash()]
@@ -20,8 +21,8 @@ class auquaman(persona_frame.persona):
 				and globe.boss.whose_turn == self.player.pid \
 				and data[0] == False \
 				and data[1].cost <= 5 \
-				and effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?",player,card,ai_hint.ALWAYS):
-			player.deck.contents.add(data[1])
+				and effects.ok_or_no(f"Would you like to put {data[1].name} on top of your deck?",player,data[1],ai_hint.ALWAYS):
+			player.deck.contents.append(data[1])
 			return True
 
 	def ready(self):

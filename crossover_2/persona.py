@@ -6,6 +6,7 @@ from frames import persona_frame
 from frames import actions
 import random
 from constants import owners
+from constants import trigger
 
 def get_personas():
 	return [felicity_smoak(),john_diggle(),oliver_queen(),roy_harper(),sara_lance()]
@@ -193,10 +194,10 @@ class sara_lance(persona_frame.persona):
 	def trigger(self,ttype,data,player,immediate):
 		if immediate \
 				and ttype == trigger.GAIN_CARD \
-				and card.owner_type == owners.LINEUP \
-				and card.ctype_eq(cardtype.VILLAIN) \
+				and data[1].owner_type == owners.LINEUP \
+				and data[1].ctype_eq(cardtype.VILLAIN) \
 				and data[0] == False \
-				and effects.ok_or_no(f"Would you like to put {card.name} under your Super Hero?",player,card,ai_hint.ALWAYS):
+				and effects.ok_or_no(f"Would you like to put {data[1].name} under your Super Hero?",player,data[1],ai_hint.ALWAYS):
 			player.under_superhero.contents.append(data[1])
 			return True
 

@@ -318,7 +318,7 @@ class player:
 		self.discard.contents = deck_builder.debug_discard(self)
 
 		#Draw the first hand
-		self.draw_card(num=5,from_card = False)
+		self.draw_card(num=5,from_card = False,should_trigger = False)
 
 	#asks the controler directly which persona 
 	def choose_persona(self,persona_list):
@@ -354,7 +354,7 @@ class player:
 
 	#Draws 'num' cards.  Returns the last card that was drawn
 	#the returned card is from legacy
-	def draw_card(self,num = 1,from_card = True):
+	def draw_card(self,num = 1,from_card = True,should_trigger = True):
 		#print("PLAYER HAS BEEN TOLD TO DRAW",self.persona.name,flush = True)
 		all_drawn = []
 		
@@ -370,8 +370,8 @@ class player:
 				drawn_card = self.deck.draw()
 				all_drawn.append(drawn_card)
 				self.hand.add(drawn_card)
-		
-		trigger.all(trigger.DRAW,[num,from_card,all_drawn],self)
+		if should_trigger:
+			trigger.all(trigger.DRAW,[num,from_card,all_drawn],self)
 
 		#Used for cards that say "The first time a card tells you to draw on each of your turns..."
 		self.drawn_card = True
@@ -407,7 +407,7 @@ class player:
 	#Depreciated
 	def play(self, cardnum):
 		self.played.play(self.hand.contents.pop(cardnum))
-		self.clear_queue()
+		globe.boss.clear_queue()
 
 	#Playes the given card IF IT IS IN YOUR HAND
 	#If the card is being played from somewhere else play_and_return or
@@ -416,7 +416,7 @@ class player:
 		if card in self.hand.contents:
 			self.hand.contents.remove(card)
 			self.played.play(card)
-			self.clear_queue()
+			globe.boss.clear_queue()
 
 	#pops the given card, and then returns it to the top of the given pile
 	#Alot of cards call this and then may manually move the card if it has to not be on top
@@ -460,7 +460,7 @@ class player:
 	def click_action(self,action):
 		if action in self.special_options:
 			action.click_action(self)
-			self.clear_queue()
+			globe.boss.clear_queue()
 
 #The following buy or gain functions return False is they are unsucsesfull, and True if the card is gained
 
@@ -475,7 +475,7 @@ class player:
 				print(f" {globe.boss.supervillain_stack.contents[-1].name} bought")
 			#This is the only time that SV's can be 'defeated', and therefore defeat=True
 			if self.gain(globe.boss.supervillain_stack.contents[-1],bought = True,defeat = True):
-				self.clear_queue()
+				globe.boss.clear_queue()
 				return True
 		return False
 
@@ -484,7 +484,7 @@ class player:
 			if globe.DEBUG:
 				print(f"kick bought")
 			if self.gain(globe.boss.kick_stack.contents[-1],bought = True):
-				self.clear_queue()
+				globe.boss.clear_queue()
 				return True
 		return False
 
@@ -504,7 +504,7 @@ class player:
 				print(f"{card.name} bought")
 			#self.played.power -= card.cost
 			if self.gain(globe.boss.lineup.contents[cardnum],bought = True):
-				self.clear_queue()
+				globe.boss.clear_queue()
 				return True
 			#return True
 		return False
@@ -515,7 +515,7 @@ class player:
 			if globe.DEBUG:
 				print(f"{card.name} bought")
 			if self.gain(card,bought = True):
-				self.clear_queue()
+				globe.boss.clear_queue()
 				return True
 		return False
 
@@ -543,6 +543,7 @@ class player:
 		card.pop_self()
 		self.gained_this_turn.append(card)
 
+		card.set_owner(player=self)
 		#I can replace redirecting with triggers.  
 		#Right now I will have both features untill I patch the other sets
 		redirected = False
@@ -551,7 +552,7 @@ class player:
 			redirected = True
 		#Redirects the card if nessesary
 		#I would like to change the redirect functionallity to be more plyable
-		if len(self.gain_redirect) > 0:
+		"""if len(self.gain_redirect) > 0:
 
 			for re in self.gain_redirect.copy():
 				#A redirect returns a tuple or tripplet, the first item being a 
@@ -566,9 +567,9 @@ class player:
 						redirect_responce[1].contents.insert(0,card)
 					else:
 						redirect_responce[1].add(card)
-					redirected = True
+					redirected = True"""
 
-		card.set_owner(player=self)
+		
 		#If the card has not been redirected, gained cards go in the playes discard
 		if not redirected:
 			self.discard.add(card)
@@ -595,7 +596,7 @@ class player:
 	#add cards to the next hand
 	def end_turn(self):
 		trigger.all(trigger.END_TURN,[],self)
-		self.clear_queue()
+		globe.boss.clear_queue()
 		self.triggers = []
 		self.gain_redirect = []
 		self.discount_on_sv = 0
@@ -613,7 +614,7 @@ class player:
 		#must be after persona.reset for abilities like wonder woman
 		self.gained_this_turn = []
 		self.discarded_this_turn = []
-		self.draw_card(num=5, from_card = False)
+		self.draw_card(num=5, from_card = False,should_trigger = False)
 
 		#Updates the players score at the end of each of their turns
 		self.calculate_vp()
@@ -688,7 +689,7 @@ class model:
 		self.destroyed_stack = pile("Destroyed")
 		self.persona_list = deck_builder.get_personas()
 
-		trigger_queue = []
+		self.trigger_queue = []
 
 		#starts the line-up
 		for c in range(5):
@@ -703,7 +704,7 @@ class model:
 		#If they should not output to the terminal, set this to True
 		#False is usefull for debugging
 		#If a graphic display is used, this wont affect anything that the user sees
-		invisible = True
+		invisible = False
 		pid = 0
 
 		#player initialization
@@ -722,16 +723,16 @@ class model:
 		#controler can be used for testing, which is nice)
 
 		new_player = player(pid,None)
-		new_controler = controlers.cpu(new_player,invisible)
+		new_controler = controlers.human_view(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 		pid += 1
 
-		new_player = player(pid,None)
-		new_controler = controlers.cpu(new_player,invisible)
-		new_player.controler = new_controler
-		self.players.append(new_player)
-		pid += 1
+		#new_player = player(pid,None)
+		#new_controler = controlers.cpu(new_player,invisible)
+		#new_player.controler = new_controler
+		#self.players.append(new_player)
+		#pid += 1
 
 		new_player = player(pid,None)
 		new_controler = controlers.cpu(new_player,invisible)
@@ -838,8 +839,8 @@ class model:
 		self.notify = func
 
 	def clear_queue(self):
-		while len(trigger_queue) > 0:
-			trigger_queue.pop(0).run()
+		while len(self.trigger_queue) > 0:
+			self.trigger_queue.pop(0).run()
 
 
 #just forwards with function

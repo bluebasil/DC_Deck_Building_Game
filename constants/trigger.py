@@ -41,17 +41,20 @@ def check_triggers(trigger_id,data,player,pay_forward = False,first_result = Fal
 	#I could do some sort of sorting triggers by priority
 	#Right now it will be sorted by order played, which is probably best
 	for t in player.triggers.copy():
-		result = t(trigger_id,data,player)
+		result = t(trigger_id,data,player,immediate)
 		if result != None:
 			if pay_forward:
 				data[0] = result
 			if first_result:
+				print("frist result with resutls",result,results,flush = True)
 				return result
 			else:
 				results.append(result)
 	if first_result:
+		print("frist result without resutls",results,flush = True)
 		return None
 	else:
+		print("regular",results,flush = True)
 		return results
 
 
@@ -73,6 +76,6 @@ class delayed_trigger:
 
 
 def all(trigger_id,data,player,pay_forward = False,first_result = False):
-	result = check_triggers(self.trigger_id,self.data,self.player,self.pay_forward,self.first_result,immediate = True)
+	result = check_triggers(trigger_id,data,player,pay_forward,first_result,immediate = True)
 	globe.boss.trigger_queue.append(delayed_trigger(trigger_id,data,player,pay_forward,first_result))
 	return result

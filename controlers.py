@@ -642,7 +642,7 @@ class human(controler):
 
 class cpu(controler):
 	#sleep length between actions
-	slti = 0
+	slti = 0.5
 	invisible = False
 
 	def __init__(self,player,invisible = False):

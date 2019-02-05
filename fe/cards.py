@@ -8,6 +8,7 @@ import random
 import arcade
 from frames import actions
 from frames import card_frame
+from constants import trigger
 
 #Done
 class amanda_waller(card_frame.card):

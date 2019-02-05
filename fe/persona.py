@@ -5,6 +5,7 @@ import globe
 from frames import persona_frame
 from frames import actions
 from constants import owners
+from constants import trigger
 
 
 
@@ -116,7 +117,7 @@ class black_manta(persona_frame.persona):
 				and ttype == trigger.GAIN_CARD \
 				and card.owner_type == owners.LINEUP \
 				and data[0] == False \
-				and effects.ok_or_no(f"Would you like to put {card.name} on the bottom of your deck?",player,card,ai_hint.ALWAYS):
+				and effects.ok_or_no(f"Would you like to put {data[1].name} on the bottom of your deck?",player,data[1],ai_hint.ALWAYS):
 			player.deck.contents.insert(0,data[1])
 			return True
 

@@ -169,16 +169,17 @@ class huntress(card_frame.card):
 	text = "+2 Power\nYou may destroy a card in your hand or discaed\npile for each Villain you buy or gain this turn."
 	image = "crossover_2/images/cards/Huntress 5.jpg"
 
-	def trigger(self,ttype,data,player):
-		if ttype == trigger.GAIN_CARD:
-			if data[1].ctype_eq(cardtype.VILLAIN):
-				assemble = []
-				assemble.extend(player.discard.contents)
-				assemble.extend(player.hand.contents)
-				if len(assemble) > 0:
-					result = effects.may_choose_one_of("You may destory a card in your hand or disscard pile.",player,assemble,ai_hint.IFBAD)
-					if result != None:
-						result.destroy(player)
+	def trigger(self,ttype,data,player,immediate):
+		if not immediate \
+				and ttype == trigger.GAIN_CARD \
+				and data[1].ctype_eq(cardtype.VILLAIN):
+			assemble = []
+			assemble.extend(player.discard.contents)
+			assemble.extend(player.hand.contents)
+			if len(assemble) > 0:
+				result = effects.may_choose_one_of("You may destory a card in your hand or disscard pile.",player,assemble,ai_hint.IFBAD)
+				if result != None:
+					result.destroy(player)
 
 
 	def play_action(self,player):
@@ -292,8 +293,9 @@ class promise_to_a_friend(card_frame.card):
 	ongoing = True
 
 	#Returning ture stops the destory
-	def trigger(self,ttype,data,player):
-		if ttype == trigger.DESTROY \
+	def trigger(self,ttype,data,player,immediate):
+		if immediate \
+				and ttype == trigger.DESTROY \
 				and globe.boss.whose_turn == player.pid:
 			return True
 	
@@ -502,8 +504,9 @@ class deadshot(card_frame.card):
 	attack_text = "First Appearance - Attack: Each player reveals the top card\nof the main deck and puts it under his Super Hero. If it's not a\nHero, discard a random card."
 	image = "crossover_2/images/cards/Deadshot 10.jpg"
 
-	def trigger(self,ttype,data,player):
-		if ttype == trigger.ATTACKING:
+	def trigger(self,ttype,data,player,immediate):
+		if immediate \
+				and ttype == trigger.ATTACKING:
 			player.triggers.remove(self.trigger)
 			return effects.attack(data[0],data[1],by_player = player,avoid_twise = True)
 
@@ -546,8 +549,9 @@ class edward_fyers(card_frame.card):
 	#Returning ture stops the destory
 	#data[1] is from_card
 	#data[2] are the cards drawn
-	def trigger(self,ttype,data,player):
-		if ttype == trigger.DRAW \
+	def trigger(self,ttype,data,player,immediate):
+		if not immediate\
+				and ttype == trigger.DRAW \
 				and globe.boss.whose_turn == player.pid \
 				and data[1]:
 			player.triggers.remove(self.trigger)

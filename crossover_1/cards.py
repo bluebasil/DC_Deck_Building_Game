@@ -194,8 +194,9 @@ class per_degaton(card_frame.card):
 	text = "+2 Power\nDiscard any number of cards from your hand.\n+1 Power for each card you discard or have\ndiscarded this turn."
 	image = "crossover_1/images/cards/Per Degaton 5.jpg"
 
-	def trigger(self,ttype,data,player):
-		if ttype == trigger.DISCARD:
+	def trigger(self,ttype,data,player,immediate):
+		if not immediate \
+				and ttype == trigger.DISCARD:
 			player.played.plus_power(1)
 	
 	def play_action(self,player):
@@ -485,7 +486,9 @@ class icicle(card_frame.card):
 	attack_text = "First Appearance - Attack: Each player gains a Weakness\nfor each Hero in the Line-up."
 	image = "crossover_1/images/cards/Icicle 10.jpg"
 
-	def trigger(self,ttype,data,player):
+	#Should not matter if it's immedaite or not
+	#preferably i dont run this twise
+	def trigger(self,ttype,data,player,immediate):
 		if ttype == trigger.END_TURN:
 			player.persona.active = True
 

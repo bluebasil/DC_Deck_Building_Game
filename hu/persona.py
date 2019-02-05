@@ -4,7 +4,7 @@ from constants import ai_hint
 import globe
 from frames import persona_frame
 from frames import actions
-
+from constants import trigger
 
 
 def get_personas():

@@ -8,6 +8,7 @@ import random
 import arcade
 from frames import actions
 from frames import card_frame
+from constants import trigger
 
 
 
@@ -30,7 +31,7 @@ class aquamans_trident(card_frame.card):
 		if immediate \
 				and ttype == trigger.GAIN_CARD \
 				and data[0] == False \
-				and effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?",player,card,ai_hint.ALWAYS):
+				and effects.ok_or_no(f"Would you like to put {data[1].name} on top of your deck?",player,data[1],ai_hint.ALWAYS):
 			player.deck.contents.append(data[1])
 			player.triggers.remove(self.trigger)
 			return True
@@ -269,7 +270,7 @@ class the_dark_knight(card_frame.card):
 		if not immediate \
 				and ttype == trigger.GAIN_CARD \
 				and data[0] == False \
-				and effects.ok_or_no(f"Would you like to put {card.name} into your hand?",player,card,ai_hint.ALWAYS):
+				and effects.ok_or_no(f"Would you like to put {data[1].name} into your hand?",player,data[1],ai_hint.ALWAYS):
 			player.hand.contents.append(data[1])
 			player.triggers.remove(self.trigger)
 			return True
@@ -787,7 +788,7 @@ class solomon_grundy(card_frame.card):
 				and ttype == trigger.GAIN_CARD \
 				and card == self \
 				and data[0] == False \
-				and effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?",player,card,ai_hint.ALWAYS):
+				and effects.ok_or_no(f"Would you like to put {data[1].name} on top of your deck?",player,data[1],ai_hint.ALWAYS):
 			player.deck.contents.append(data[1])
 			player.triggers.remove(self.trigger)
 			return True
