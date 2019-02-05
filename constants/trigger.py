@@ -1,3 +1,4 @@
+import globe
 #in model
 DRAW = 0
 	#data[0] is the number of cards attempted to draw
@@ -35,7 +36,7 @@ def trigger(self,ttype,data,player):
 
 #If pay_forward = True, then data[0] is set to the result of previous valid triggers
 #This is especially usefull if a card can only be redirected once, for instance
-def all(trigger_id,data,player,pay_forward = False,first_result = False):
+def check_triggers(trigger_id,data,player,pay_forward = False,first_result = False,immediate = False):
 	results = []
 	#I could do some sort of sorting triggers by priority
 	#Right now it will be sorted by order played, which is probably best
@@ -52,3 +53,26 @@ def all(trigger_id,data,player,pay_forward = False,first_result = False):
 		return None
 	else:
 		return results
+
+
+class delayed_trigger:
+	trigger_id = -1
+	data = []
+	player = None
+	pay_forward = False
+	first_result = False
+	def __init__(self,trigger_id,data,player,pay_forward = False,first_result = False):
+		self.trigger_id = trigger_id
+		self.data = data
+		self.player = player
+		self.pay_forward = pay_forward
+		self.first_result = first_result
+	def run(self):
+		return check_triggers(self.trigger_id,self.data,self.player,self.pay_forward,self.first_result,immediate = False)
+
+
+
+def all(trigger_id,data,player,pay_forward = False,first_result = False):
+	result = check_triggers(self.trigger_id,self.data,self.player,self.pay_forward,self.first_result,immediate = True)
+	globe.boss.trigger_queue.append(delayed_trigger(trigger_id,data,player,pay_forward,first_result))
+	return result

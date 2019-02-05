@@ -26,7 +26,7 @@ class persona:
 
 	def ready(self):
 		return
-
+#All of these should be added to the queue
 	def gain_power(self,card):
 		return
 
@@ -48,6 +48,15 @@ class persona:
 	def failed_to_avoid_power(self):
 		return
 
+	def avoided_attack(self,defending):
+		return
+#up till here
+
+	#def trigger(self,trigger_id,data,player,pay_forward = False,first_result = False,immediate = False):
+
+
+
+
 	def reset(self):
 		return
 
@@ -57,8 +66,7 @@ class persona:
 	def ai_is_now_a_good_time(self):
 		return False
 
-	def avoided_attack(self,defending):
-		return
+	
 
 
 #For "has all players superhero/supervillain ext"

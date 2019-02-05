@@ -12,6 +12,7 @@ import effects
 import deck_builder
 import globe
 import error_checker
+import queue
 
 from constants import cardtype
 from constants import owners
@@ -406,6 +407,7 @@ class player:
 	#Depreciated
 	def play(self, cardnum):
 		self.played.play(self.hand.contents.pop(cardnum))
+		self.clear_queue()
 
 	#Playes the given card IF IT IS IN YOUR HAND
 	#If the card is being played from somewhere else play_and_return or
@@ -414,7 +416,7 @@ class player:
 		if card in self.hand.contents:
 			self.hand.contents.remove(card)
 			self.played.play(card)
-
+			self.clear_queue()
 
 	#pops the given card, and then returns it to the top of the given pile
 	#Alot of cards call this and then may manually move the card if it has to not be on top
@@ -454,6 +456,12 @@ class player:
 		self.persona.card_pass_power()
 		trigger.all(trigger.PASS,[card],self)
 
+
+	def click_action(self,action):
+		if action in self.special_options:
+			action.click_action(self)
+			self.clear_queue()
+
 #The following buy or gain functions return False is they are unsucsesfull, and True if the card is gained
 
 	#Tries to buy the SV
@@ -466,14 +474,18 @@ class player:
 			if globe.DEBUG:
 				print(f" {globe.boss.supervillain_stack.contents[-1].name} bought")
 			#This is the only time that SV's can be 'defeated', and therefore defeat=True
-			return self.gain(globe.boss.supervillain_stack.contents[-1],bought = True,defeat = True)
+			if self.gain(globe.boss.supervillain_stack.contents[-1],bought = True,defeat = True):
+				self.clear_queue()
+				return True
 		return False
 
 	def buy_kick(self):
 		if globe.boss.kick_stack.size() > 0 and self.played.power >= globe.boss.kick_stack.contents[-1].cost:
 			if globe.DEBUG:
 				print(f"kick bought")
-			return self.gain(globe.boss.kick_stack.contents[-1],bought = True)
+			if self.gain(globe.boss.kick_stack.contents[-1],bought = True):
+				self.clear_queue()
+				return True
 		return False
 
 	def gain_a_weakness(self):
@@ -491,7 +503,9 @@ class player:
 			if globe.DEBUG:
 				print(f"{card.name} bought")
 			#self.played.power -= card.cost
-			return self.gain(globe.boss.lineup.contents[cardnum],bought = True)
+			if self.gain(globe.boss.lineup.contents[cardnum],bought = True):
+				self.clear_queue()
+				return True
 			#return True
 		return False
 
@@ -500,7 +514,9 @@ class player:
 		if self.played.power >= card.cost and len(card.frozen) == 0:
 			if globe.DEBUG:
 				print(f"{card.name} bought")
-			return self.gain(card,bought = True)
+			if self.gain(card,bought = True):
+				self.clear_queue()
+				return True
 		return False
 
 	#cards that are bought are also gained
@@ -579,6 +595,7 @@ class player:
 	#add cards to the next hand
 	def end_turn(self):
 		trigger.all(trigger.END_TURN,[],self)
+		self.clear_queue()
 		self.triggers = []
 		self.gain_redirect = []
 		self.discount_on_sv = 0
@@ -649,6 +666,8 @@ class model:
 	turn_number = 0
 	#For error checking/debugging
 	dupe_checker = None
+	#Triggered affects will not run right away
+	trigger_queue = None
 
 	#initialize Game
 	def __init__(self,number_of_players=2):
@@ -668,6 +687,8 @@ class model:
 		self.lineup = pile("Linup")
 		self.destroyed_stack = pile("Destroyed")
 		self.persona_list = deck_builder.get_personas()
+
+		trigger_queue = []
 
 		#starts the line-up
 		for c in range(5):
@@ -813,10 +834,12 @@ class model:
 
 		output_persona_stats(self.players,end_reason)
 
-
-
 	def register(self,func):
 		self.notify = func
+
+	def clear_queue(self):
+		while len(trigger_queue) > 0:
+			trigger_queue.pop(0).run()
 
 
 #just forwards with function
