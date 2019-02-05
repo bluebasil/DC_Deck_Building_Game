@@ -20,11 +20,20 @@ class aquamans_trident(card_frame.card):
 	text = "+2 Power\nYou may put any one card you buy or gain this turn on top of your deck."
 	image = "base/images/cards/Aquamans_Trident.jpeg"
 
-	def trident_redirect(self,player,card):
-		if effects.ok_or_no(f"Would you like to put {card.name} into your hand?",player,card,ai_hint.ALWAYS):
-			player.gain_redirect.remove(self.trident_redirect)
-			return (True,player.hand)
-		return (False,None)
+	#def trident_redirect(self,player,card):
+	#	if effects.ok_or_no(f"Would you like to put {card.name} into your hand?",player,card,ai_hint.ALWAYS):
+	#		player.gain_redirect.remove(self.trident_redirect)
+	#		return (True,player.hand)
+	#	return (False,None)
+
+	def trigger(self,ttype,data,player,immediate):
+		if immediate \
+				and ttype == trigger.GAIN_CARD \
+				and data[0] == False \
+				and effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?",player,card,ai_hint.ALWAYS):
+			player.deck.contents.append(data[1])
+			player.triggers.remove(self.trigger)
+			return True
 	
 	def play_action(self,player):
 		used = False
@@ -34,7 +43,8 @@ class aquamans_trident(card_frame.card):
 				player.hand.add(c.pop_self())
 				used = True
 		if not used:
-			player.gain_redirect.append(self.trident_redirect)
+			#player.gain_redirect.append(self.trident_redirect)
+			player.triggers.append(self.trigger)
 		#player.gain_redirect.append(player.deck)
 		return 2
 
@@ -249,11 +259,20 @@ class the_dark_knight(card_frame.card):
 	catwoman_played = False
 	image = "base/images/cards/Dark_Knight.jpeg"
 
-	def the_dark_knight_redirect(self,player,card):
-		if effects.ok_or_no(f"Would you like to put {card.name} into your hand?",player,card,ai_hint.ALWAYS):
-			player.gain_redirect.remove(self.the_dark_knight_redirect)
-			return (True,player.hand)
-		return (False,None)
+	#def the_dark_knight_redirect(self,player,card):
+	#	if effects.ok_or_no(f"Would you like to put {card.name} into your hand?",player,card,ai_hint.ALWAYS):
+	#		player.gain_redirect.remove(self.the_dark_knight_redirect)
+	#		return (True,player.hand)
+	#	return (False,None)
+
+	def trigger(self,ttype,data,player,immediate):
+		if not immediate \
+				and ttype == trigger.GAIN_CARD \
+				and data[0] == False \
+				and effects.ok_or_no(f"Would you like to put {card.name} into your hand?",player,card,ai_hint.ALWAYS):
+			player.hand.contents.append(data[1])
+			player.triggers.remove(self.trigger)
+			return True
 
 	def the_dark_knight_mod(self,card,player):
 		if card.name == "Catwoman" and not self.catwoman_played:
@@ -266,7 +285,8 @@ class the_dark_knight(card_frame.card):
 					player.hand.add(c.pop_self())
 					used = True
 			if not used:
-				player.gain_redirect.append(self.the_dark_knight_redirect)
+				#player.gain_redirect.append(self.the_dark_knight_redirect)
+				player.triggers.append(self.trigger)
 		return 0
 
 	
@@ -295,7 +315,8 @@ class the_dark_knight(card_frame.card):
 				player.hand.add(c.pop_self())
 				used = True
 		if self.catwoman_played and not used:
-			player.gain_redirect.append(self.the_dark_knight_redirect)
+			#player.gain_redirect.append(self.the_dark_knight_redirect)
+			player.triggers.append(self.trigger)
 		if not self.catwoman_played:
 			#set up later play
 			player.played.card_mods.append(self.the_dark_knight_mod)
@@ -759,15 +780,26 @@ class solomon_grundy(card_frame.card):
 	image = "base/images/cards/Solomon_Grundy.jpeg"
 	
 	def play_action(self,player):
-		return 3
+		return 
 
-	def solomon_grundy_redirect(self,player,card):
-		if card.name == "Solomon Grundy" and effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?-",player,card,ai_hint.ALWAYS):
-			return (True,player.deck)
-		return (False,None)
+	def trigger(self,ttype,data,player,immediate):
+		if immediate \
+				and ttype == trigger.GAIN_CARD \
+				and card == self \
+				and data[0] == False \
+				and effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?",player,card,ai_hint.ALWAYS):
+			player.deck.contents.append(data[1])
+			player.triggers.remove(self.trigger)
+			return True
+
+	#def solomon_grundy_redirect(self,player,card):
+	#	if card.name == "Solomon Grundy" and effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?-",player,card,ai_hint.ALWAYS):
+	#		return (True,player.deck)
+	#	return (False,None)
 
 	def buy_action(self,player,bought,defeat):
-		player.gain_redirect.append(self.solomon_grundy_redirect)
+		#player.gain_redirect.append(self.solomon_grundy_redirect)
+		player.triggers.append(self.trigger)
 		#Assume that card can be bought
 		return True
 

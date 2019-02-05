@@ -182,13 +182,23 @@ class sara_lance(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def sara_lance_redirect(self,player,card):
-		if globe.boss.whose_turn == self.player.pid \
+	#def sara_lance_redirect(self,player,card):
+	#	if globe.boss.whose_turn == self.player.pid \
+	#			and card.owner_type == owners.LINEUP \
+	#			and card.ctype_eq(cardtype.VILLAIN) \
+	#			and effects.ok_or_no(f"Would you like to put {card.name} under your Super Hero?",player,card,ai_hint.ALWAYS):
+	#		return [True,player.under_superhero]
+	#	return (False,None)
+
+	def trigger(self,ttype,data,player,immediate):
+		if immediate \
+				and ttype == trigger.GAIN_CARD \
 				and card.owner_type == owners.LINEUP \
 				and card.ctype_eq(cardtype.VILLAIN) \
+				and data[0] == False \
 				and effects.ok_or_no(f"Would you like to put {card.name} under your Super Hero?",player,card,ai_hint.ALWAYS):
-			return [True,player.under_superhero]
-		return (False,None)
+			player.under_superhero.contents.append(data[1])
+			return True
 
 	def special_action_click(self,player):
 		assemble = []
@@ -210,7 +220,7 @@ class sara_lance(persona_frame.persona):
 			self.action = actions.special_action("Sara Lance",self.special_action_click)
 			self.player.played.special_options.append(self.action)
 			self.player.gain_redirect.append(self.sara_lance_redirect)
-
+			self.player.triggers.append(self.trigger)
 
 	def ai_is_now_a_good_time(self):
 		if self.action in self.player.played.special_options:

@@ -14,14 +14,19 @@ class auquaman(persona_frame.persona):
 	text = "You may put any cards with cost 5 or less you buy or gain during your turn on top of your deck."
 	image = "base/images/personas/Aquaman MC.jpg"
 
-	def aquaman_redirect(self,player,card):
-		if globe.boss.whose_turn == self.player.pid and card.cost <= 5 and effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?",player,card,ai_hint.ALWAYS):
-			return (True,player.deck)
-		return (False,None)
+	def trigger(self,ttype,data,player,immediate):
+		if immediate \
+				and ttype == trigger.GAIN_CARD \
+				and globe.boss.whose_turn == self.player.pid \
+				and data[0] == False \
+				and data[1].cost <= 5 \
+				and effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?",player,card,ai_hint.ALWAYS):
+			player.deck.contents.add(data[1])
+			return True
 
 	def ready(self):
 		if self.active:
-			self.player.gain_redirect.append(self.aquaman_redirect)
+			self.player.triggers.append(self.trigger)
 
 class batman(persona_frame.persona):
 	name = "Batman"

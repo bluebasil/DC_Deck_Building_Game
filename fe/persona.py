@@ -106,14 +106,24 @@ class black_manta(persona_frame.persona):
 	text = "You may put any cards you buy or gain from the lineup on the bottom of your deck."
 	image = "fe/images/personas/Black Manta MC.jpg"
 
-	def black_manta_redirect(self,player,card):
-		if globe.boss.whose_turn == self.player.pid and card.owner_type == owners.LINEUP and effects.ok_or_no(f"Would you like to put {card.name} on the bottom of your deck?",player,card,ai_hint.ALWAYS):
-			return [True,player.deck,"bottom"]
-		return (False,None)
+	#def black_manta_redirect(self,player,card):
+	#	if globe.boss.whose_turn == self.player.pid and card.owner_type == owners.LINEUP and effects.ok_or_no(f"Would you like to put {card.name} on the bottom of your deck?",player,card,ai_hint.ALWAYS):
+	#		return [True,player.deck,"bottom"]
+	#	return (False,None)
+
+	def trigger(self,ttype,data,player,immediate):
+		if immediate \
+				and ttype == trigger.GAIN_CARD \
+				and card.owner_type == owners.LINEUP \
+				and data[0] == False \
+				and effects.ok_or_no(f"Would you like to put {card.name} on the bottom of your deck?",player,card,ai_hint.ALWAYS):
+			player.deck.contents.insert(0,data[1])
+			return True
 
 	def ready(self):
 		if self.active:
-			self.player.gain_redirect.append(self.black_manta_redirect)
+			self.player.triggers.append(self.trigger)
+			#self.player.gain_redirect.append(self.black_manta_redirect)
 
 class deathstroke(persona_frame.persona):
 	name = "Deathstroke"
