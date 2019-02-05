@@ -178,7 +178,6 @@ class sinestro(persona_frame.persona):
 		return 0
 
 	def mod(self,card,player):
-		print("ATTACK RESET",flush = True)
 		self.same_attack = False
 		return 0
 

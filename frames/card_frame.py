@@ -88,12 +88,16 @@ class card:
 		return
 
 	def destroy(self,player_responsible):
-		self.frozen = []
-		self.pop_self()
-		#if player_responsible != None:
-		player_responsible.persona.destory_power()
-		self.set_owner(owners.DESTROYED)
-		globe.boss.destroyed_stack.add(self)
+		stop = False
+		for t in player_responsible.triggers:
+			stop = t("destroy",[self],player_responsible) or stop
+		if not stop:
+			self.frozen = []
+			self.pop_self()
+			#if player_responsible != None:
+			player_responsible.persona.destory_power()
+			self.set_owner(owners.DESTROYED)
+			globe.boss.destroyed_stack.add(self)
 
 
 	def pop_self(self):

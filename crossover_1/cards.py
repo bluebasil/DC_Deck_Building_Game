@@ -127,7 +127,7 @@ class monument_point(card_frame.card):
 	ongoing = True
 
 	def mod(self,card,player):
-		print("MONUMENT POINT TRIGGERED",self.owner.persona.name,player.persona.name,flush = True)
+		#print("MONUMENT POINT TRIGGERED",self.owner.persona.name,player.persona.name,flush = True)
 		if card.name == "Punch" and self.mod in player.played.card_mods:
 			player.played.card_mods.remove(self.mod)
 			player.draw_card()
@@ -296,7 +296,8 @@ class the_hourglass(card_frame.card):
 				or self.card_choosen.find_self()[0] == self.played_by.discard):
 			self.played_by.hand.contents.append(self.card_choosen.pop_self())
 		else:
-			print("The Hourglass could not be found.",flush = True)
+			if globe.DEBUG:
+				print("The Hourglass could not be found.",flush = True)
 		self.card_choosen = None
 		self.played_by = None
 
@@ -454,11 +455,12 @@ class gog(card_frame.card):
 		highest_cost = -1
 		for p in globe.boss.players:
 			if effects.attack(p,self):
-				card_to_discard = random.choice(p.hand.contents)
-				discarded[p] = card_to_discard
-				p.discard_a_card(card_to_discard)
-				if card_to_discard.cost > highest_cost:
-					highest_cost += 1
+				if len(p.hand.contents) > 0:
+					card_to_discard = random.choice(p.hand.contents)
+					discarded[p] = card_to_discard
+					p.discard_a_card(card_to_discard)
+					if card_to_discard.cost > highest_cost:
+						highest_cost += 1
 
 		for p in discarded:
 			if discarded[p].cost == highest_cost:

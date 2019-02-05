@@ -679,7 +679,7 @@ class man_bat(card_frame.card):
 
 
 	def defend(self,defender = None,attacker = None):
-		print(self.owner,defender,attacker,"THOSE ARE THE PPL")
+		#print(self.owner,defender,attacker,"THOSE ARE THE PPL")
 		self.owner.discard_a_card(self)
 		if attacker != None and attacker.vp > 0:
 			self.owner.vp += 1
@@ -1345,7 +1345,7 @@ class aquaman(card_frame.card):
 		#Initialize it to something other than None
 		result = False
 		while result != None and number_put < 3:
-			print("Loop1",flush = True)
+			#print("Loop1",flush = True)
 			if len(player.discard.contents) > 0:
 				instruction_text = f"You may put a card from your discard pile on top of your deck.\nIf you choose not to put any, +3 Power. ({number_put+1}/3)"
 				result = effects.may_choose_one_of(instruction_text,player,player.discard.contents,ai_hint.IFGOOD)
@@ -1401,7 +1401,7 @@ class batman(card_frame.card):
 		#Initialize it to something other than None
 		result = False
 		while result != None and number_put < 3:
-			print("Loop2",flush = True)
+			#print("Loop2",flush = True)
 			if len(assemble) > 0:
 				instruction_text = f"You may up to three Equipment of cost 6 or less from the destroyed pile. If you choose to play none, +3 Power ({number_put+1}/3)"
 				result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.IFGOOD)
@@ -1473,7 +1473,8 @@ class constantine(card_frame.card):
 			try:
 				vp_to_gain = int(vp_to_gain)
 			except:
-				print(f"Error converting {vp_to_gain} to an int, defaulting to 3.")
+				if globe.DEBUG:
+					print(f"Error converting {vp_to_gain} to an int, defaulting to 3.")
 				vp_to_gain = 3
 		else:
 			vp_to_gain = result.vp
@@ -1574,11 +1575,11 @@ class green_arrow(card_frame.card):
 						assemble.append(c)
 				discarded = 0
 				while len(assemble) > 0 and discarded < 2:
-					print("Loop3",flush = True)
+					#print("Loop3",flush = True)
 					p.discard_a_card(assemble.pop())
 					discarded += 1
 				while discarded < 2:
-					print("Loop4",flush = True)
+					#print("Loop4",flush = True)
 					p.gain_a_weakness()
 					discarded += 1
 		return
@@ -1605,7 +1606,7 @@ class green_lantern(card_frame.card):
 		#Initialize it to something other than None
 		result = False
 		while result != None and number_put < 3:
-			print("Loop5",flush = True)
+			#print("Loop5",flush = True)
 			if len(assemble) > 0:
 				instruction_text = f"You may up play to three Heros of cost 6 or less from the destroyed pile. If you choose to play none, +3 Power ({number_put+1}/3)"
 				result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.IFGOOD)
@@ -1755,7 +1756,7 @@ class superman(card_frame.card):
 		result = True
 		num_played = 0
 		while result != None and num_played < 3:
-			print("Loop6",flush = True)
+			#print("Loop6",flush = True)
 			instruction_text = f"You may play a Super Power from the destroyed pile,\nand then put on the bottom of the main deck. ({num_played+1}/3)"
 			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			if result != None:
@@ -1855,7 +1856,7 @@ class wonder_woman(card_frame.card):
 		result = True
 		num_played = 0
 		while result != None and num_played < 3:
-			print("Loop0",flush = True)
+			#print("Loop0",flush = True)
 			instruction_text = f"You may play a Villain from the destroyed pile,\nand then put on the bottom of the main deck. ({num_played+1}/3)"
 			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			if result != None:

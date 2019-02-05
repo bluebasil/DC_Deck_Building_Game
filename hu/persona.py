@@ -42,7 +42,7 @@ class batgirl(persona_frame.persona):
 			if c.cost > 0:
 				total_left += 1
 		if total_left/(len(self.player.deck.contents)+1) > 0.5:
-			if self.special_action in self.player.played.special_options:
+			if self.action in self.player.played.special_options:
 				return self.special_action_click(self.player)
 			#return self.any_time()
 		return False
@@ -93,7 +93,7 @@ class booster_gold(persona_frame.persona):
 		if self.active:
 			self.player.played.card_mods.append(self.mod)
 
-	def avoided_attack(self):
+	def avoided_attack(self,defending):
 		self.player.draw_card(from_card = False)
 		return
 
@@ -162,7 +162,7 @@ class red_tornado(persona_frame.persona):
 	def ai_overvalue(self,card):
 		card_types = self.get_typecount()
 		all_relevant = sum(list(card_types.values()))
-		print("MAKE SURE NONE OF THESE ARE 0",card.ctype,all_relevant,flush=True)
+		#print("MAKE SURE NONE OF THESE ARE 0",card.ctype,all_relevant,flush=True)
 		if card.ctype in card_types:
 			return 0.25/(card_types[card.ctype]/all_relevant) - 1
 		return 0

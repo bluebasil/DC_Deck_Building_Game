@@ -18,6 +18,7 @@ def ensure_int(i):
 	else:
 		return True
 
+#depreciated
 def attack_all(card):
 	total_hit = 0
 	for p in globe.boss.players:
@@ -26,7 +27,16 @@ def attack_all(card):
 	return total_hit
 
 #Returns true if hit by attack
-def attack(player,card,by_player = None):
+def attack(player,card,by_player = None,avoid_twise = False):
+	if by_player != None:
+		for t in by_player.triggers.copy():
+			result = t("attacking",[player,card],by_player):
+			#The attacking trigger will return true or false, but nested
+			#So that it can be distinquished from other triggers
+			#I should probbaly set up a uniform trigger responce
+			if result != False:
+				return result[0]
+
 	assemble = []
 	for c in player.hand.contents:
 		if c.defence:
@@ -44,9 +54,16 @@ def attack(player,card,by_player = None):
 				print("Err: invalid number")
 				return attack(player,card,by_player)
 			else:
+				#Attack avoided
 				assemble[result[1]].defend(attacker = by_player, defender = player)
-				player.persona.avoided_attack()
-				return False
+				#avoid twise, like in crossover 2's deadshot
+				if avoid_twise:
+					return attack(player,card,by_player,avoid_twise = False)
+				else:
+					#If you avoid the attack but not twise when nessesary (crossover 2's deadshot)
+					#do you get to trigger your avoided attack abilities?
+					player.persona.avoided_attack(result[1])
+					return False
 		elif result[0] == option.NO:
 			if by_player != None:
 				by_player.persona.failed_to_avoid_power()

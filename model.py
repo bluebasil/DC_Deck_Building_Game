@@ -265,6 +265,8 @@ class player:
 	#Stores how much cheeper the SV should be.
 	discount_on_sv = 0
 	#So  far i have no method of settign how much cheeper other cards should be
+	already_drawn = False
+
 
 	#For cards to use on generic rare things
 	#like if they have to detect discarding cards and such
@@ -331,6 +333,7 @@ class player:
 		#sets up the turn
 		self.persona.ready()
 		self.ongoing.begin_turn()
+		self.already_drawn = False
 
 		#Asks the controler to as the player or AI whats next
 		self.controler.turn()
@@ -354,10 +357,13 @@ class player:
 			all_drawn.append(drawn_card)
 			self.hand.add(drawn_card)
 		
-		for t in self.triggers:
+		for t in self.triggers.copy():
 			t("draw",[num,from_card,all_drawn],self)
+
+		#Used for cards that say "The first time a card tells you to draw on each of your turns..."
+		self.drawn_card = True
 		
-		return drawn_card
+		return all_drawn
 
 	#returns the top card of the deck
 	#if public = True, runs the reveal effect
@@ -493,6 +499,13 @@ class player:
 
 		card.pop_self()
 		self.gained_this_turn.append(card)
+
+		#I can replace redirecting with triggers.  
+		#Right now I will have both features untill I patch the other sets
+		redirected = False
+		for t in self.triggers:
+			#the gain trigger should return true if the card has already been redirected!
+			redirected = t("gain",[card,bought,defeat,redirected],self) or redirected
 
 		#Redirects the card if nessesary
 		#I would like to change the redirect functionallity to be more plyable

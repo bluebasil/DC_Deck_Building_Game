@@ -10,6 +10,10 @@ class dupe_checker:
 	keep_checking = True
 	displayed = False
 	def __init__(self):
+		self.all_cards = []
+		self.all_piles = []
+		self.keep_checking = True
+		self.displayed = False
 		self.all_piles.append(globe.boss.main_deck)
 		#print("Main deck",self.all_piles[-1],flush = True)
 		self.all_piles.append(globe.boss.lineup)

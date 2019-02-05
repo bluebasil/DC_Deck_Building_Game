@@ -1,6 +1,8 @@
 import random
 #from base import persona as base_personas
 from base import deck as base_deck
+
+from hu import persona as hu_personas
 #from hu import persona as hu_personas
 #from fe import persona as fe_personas
 from fe import deck as fe_deck
@@ -11,10 +13,13 @@ from crossover_1 import deck as c1_deck
 from crossover_1 import cards as custom
 from frames import card_frame
 import arcade
+import globe
 
 
 decks = [base_deck.this_set,fe_deck.this_set,c1_deck.this_set]
 choosen_sets = []
+#Specifies wether small set personas muct be picked when playing with small sets
+any_pick = True
 
 
 def choose_sets():
@@ -43,13 +48,18 @@ def get_personas():
 	small_sets = []
 	large_sets = []
 	for d in choosen_sets:
-		print(f"Loading {d.name}'s personas...",flush = True)
+		if globe.DEBUG:
+			print(f"Loading {d.name}'s personas...",flush = True)
 		if d.large_set:
 			large_sets.extend(d.load_personas())
 		else:
 			small_sets.extend(d.load_personas())
-	if len(small_sets) > 0:
-		return small_sets
+	if not any_pick:
+		if len(small_sets) > 0:
+			return small_sets
+	else:
+		large_sets.extend(small_sets)
+		large_sets.extend(hu_personas.get_personas())
 	return large_sets
 
 def get_starting_deck(player):
@@ -92,7 +102,8 @@ def initialize_supervillains():
 	small_sets = []
 	large_sets = []
 	for d in choosen_sets:
-		print(f"Loading {d.name}'s SV's...",flush = True)
+		if globe.DEBUG:
+			print(f"Loading {d.name}'s SV's...",flush = True)
 		if d.large_set:
 			large_sets.append(d.load_supervilains())
 		else:
@@ -129,7 +140,8 @@ def initialize_deck():
 	#large_sets = []
 	assemble = []
 	for d in choosen_sets:
-		print(f"Loading {d.name}'s deck...",flush = True)
+		if globe.DEBUG:
+			print(f"Loading {d.name}'s deck...",flush = True)
 		if d.large_set:
 			assemble.extend(d.load_deck())
 		else:
@@ -142,7 +154,6 @@ def initialize_deck():
 	elif len(small_sets_cards) > 0:
 		bottom_split = assemble[:int(len(assemble)/2)]
 		top_split = assemble[int(len(assemble)/2):]
-		print("DID I DO THAT SPLIT RIGHT?",len(assemble),len(top_split) + len(bottom_split))
 		top_split.extend(small_sets_cards)
 		random.shuffle(top_split)
 		assemble = bottom_split

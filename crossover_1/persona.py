@@ -87,7 +87,8 @@ class doctor_fate(persona_frame.persona):
 					c.df_power = True
 					card.df_power = True
 					player.played.plus_power(1)
-					print(f"Doctor Fate got power because of a {card.name} and {c.name}")
+					if globe.DEBUG:
+						print(f"Doctor Fate got power because of a {card.name} and {c.name}")
 				#draw portion
 				if c.df_draw == False and card.df_draw == False:
 					#find third match
@@ -97,7 +98,8 @@ class doctor_fate(persona_frame.persona):
 							c.df_draw = True
 							c2.df_draw = True
 							player.draw_card()
-							print(f"Doctor Fate Drew because of a {card.name}, {c.name}, and {c2.name}")
+							if globe.DEBUG:
+								print(f"Doctor Fate Drew because of a {card.name}, {c.name}, and {c2.name}")
 
 		return 0
 
@@ -249,7 +251,7 @@ class stargirl(persona_frame.persona):
 		if self.active:
 			self.player.played.card_mods.append(self.mod)
 
-	def avoided_attack(self):
+	def avoided_attack(self,defending):
 		self.player.draw_card(from_card = False)
 		result = effects.choose_one_of("Discard a card",self.player,self.player.hand.contents,ai_hint.WORST)
 		self.player.discard_a_card(result)

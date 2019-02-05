@@ -226,8 +226,10 @@ class clayface(card_frame.card):
 		instruction_text = "Choose a card that you have already played to play again"
 		assemble = []
 		#Should i be able to play cards in toher people hands on on their decks, or in the destroyed pile, or in my dack...
+		#Cannot play the last card played...because whatever card that was caused clayface to play in the first place
+		#creates an infinite loop (firestor/clayface example)
 		for c in player.played.contents:
-			if c.name != "Clayface":
+			if c.name != "Clayface" and c != player.played.played_this_turn[-1]:
 				assemble.append(c)
 		if len(assemble) > 0:
 			choosen = effects.choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
@@ -274,7 +276,7 @@ class the_dark_knight(card_frame.card):
 		for c in globe.boss.lineup.contents:
 			if c.ctype_eq(cardtype.EQUIPMENT):
 				assemble.append(c)
-		print(len(assemble)," was ASSEMBELED",flush=True)
+		#print(len(assemble)," was ASSEMBELED",flush=True)
 		for c in assemble:
 			player.gain(c)
 
@@ -1144,9 +1146,9 @@ class ras_al_ghul(card_frame.card):
 		return 3
 
 	def end_of_turn(self):
-		print(self.name, "END OF TURN FROM RAS",flush = True)
-		self.pop_self()
-		self.owner.deck.contents.insert(0,self)
+		if self.owner != None:
+			self.pop_self()
+			self.owner.deck.contents.insert(0,self)
 		return
 
 #test fa
@@ -1431,7 +1433,7 @@ class the_joker(card_frame.card):
 		cards_to_shuffle = []
 		participating_players = []
 		for p in globe.boss.players:
-			print(p.persona.name,flush=True)
+			#print(p.persona.name,flush=True)
 			if effects.attack(p,self):
 				if p.hand.size() > 0:
 					card_to_give = effects.choose_one_of(instruction_text,p,p.hand.contents,hint = ai_hint.WORST)
@@ -1439,7 +1441,6 @@ class the_joker(card_frame.card):
 					participating_players.append(p)
 		if len(cards_to_shuffle) > 0:
 			for i,p in enumerate(participating_players):
-				print("DJDJDJ",i-1,len(cards_to_shuffle),flush=True)
 				card_recived = cards_to_shuffle[i-1]
 				p.discard_a_card(card_recived)
 				card_recived.set_owner(p)

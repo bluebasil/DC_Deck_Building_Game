@@ -57,7 +57,7 @@ class persona:
 	def ai_is_now_a_good_time(self):
 		return False
 
-	def avoided_attack(self):
+	def avoided_attack(self,defending):
 		return
 
 
