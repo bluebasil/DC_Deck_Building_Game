@@ -16,15 +16,15 @@ def initialize_supervillains():
 	assemble.append(cards.solomon_grundy())
 	return assemble
 
-deck = {cards.citizen_steel: 3, \
-		cards.dr_mid_nite: 2, \
-		cards.girl_power: 3, \
-		cards.liberty_belle: 3, \
+deck = {cards.citizen_steel: 1, \
+		cards.dr_mid_nite: 1, \
+		cards.girl_power: 1, \
+		cards.liberty_belle: 1, \
 		cards.monument_point: 1, \
 		cards.mystic_bolts: 1, \
-		cards.per_degaton: 3, \
-		cards.t_spheres: 3, \
-		cards.the_hourglass: 3, \
+		cards.per_degaton: 1, \
+		cards.t_spheres: 1, \
+		cards.the_hourglass: 1, \
 		}
 
 def initialize_deck():

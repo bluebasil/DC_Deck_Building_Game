@@ -846,5 +846,3 @@ class cpu_greedy(cpu):
 			self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)",quick = False)
 
 		return
-
-

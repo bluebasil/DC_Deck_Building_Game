@@ -605,38 +605,57 @@ class malcolm_merlyn(card_frame.card):
 	cost = 12
 	ctype = cardtype.VILLAIN
 	owner_type = owners.VILLAINDECK
-	text = "+3Power. Defense: You may reveal this card from your hand to avoid an Attack."
+	text = "+3 Power. Defense: You may reveal this card from your hand to avoid an Attack."
 	attack_text = "First Appearance - Attack: Each player reveals the top card\nof the main deck and puts it under his Super Hero. If it's not a\nHero, discard a random card."
 	image = "crossover_2/images/cards/Malcom Merlyn 12.jpg"
+	defence = True
 
 	def play_action(self,player):
-		instruction_text = "Choose a player to gain a card from under their Super Hero"
-		result = effects.choose_a_player(instruction_text,player,includes_self = True,hint = ai_hint.RANDOM)
-		if len(result.under_superhero.contents) > 0:
-			instruction_text = f"Gain a card from under {result.persona.name}'s Super Hero"
-			result = effects.choose_one_of(instruction_text,player,result.under_superhero.contents,ai_hint.BEST)
-			player.gain(result)
-			result.pop_self()
-			player.hand.contents.append(result)
+		player.plus_power(3)
 		return 0
+
+	def defend(self,attacker = None,defender = None):
+		effects.reveal(f"{self.owner.persona.name} defended with this card.",self.owner,[self])
+		return
 
 	def first_apearance(self):
 		for p in globe.boss.players:
 			if effects.attack(p,self):
-				highest_costs = []
-				cost = -1
-				for c in p.hand.contents:
-					if c.cost > cost:
-						cost = c.cost
-						highest_costs = [c]
-					elif c.cost == cost:
-						highest_costs.append(c)
-				#Hand is not empty
-				if len(highest_costs) > 1:
-					instruction_text = "Choose a highest cost to put under your Super Hero."
-					result = effects.choose_one_of(instruction_text,p,highest_costs,ai_hint.WORST)
-					result.pop_self()
-					p.under_superhero.contents.append(result)
+				top_card = globe.boss.main_deck.draw()
+				effects.reveal(f"This will be under {p.persona.name}'s Super Hero.",p,[top_card])
+				top_card.set_owner(p)
+				p.under_superhero.contents.append(top_card)
+				if not top_card.ctype_eq(cardtype.EQUIPMENT):
+					p.gain_a_weakness()
 		return
 
+class slade_wilson(card_frame.card):
+	name = "Slade Wilson"
+	vp = 7
+	cost = 15
+	ctype = cardtype.VILLAIN
+	owner_type = owners.VILLAINDECK
+	text = ""
+	attack_text = "First Appearance - Attack: This Attack cannot be\navoided. Each player destroys six cards with different\ncard types under his Super Hero. For each card type you\nfail to destroy this way, discard a card."
+	image = "crossover_2/images/cards/Slade Wilson 15.jpg"
 
+	def first_apearance(self):
+		for p in globe.boss.players:
+			#Do i still want to trigger the attack function that may trigger other things?
+			#if effects.attack(p,self):
+			destroyed_types = set()
+			for i in range(6):
+				assemble = []
+				for c in p.under_superhero.contents:
+					#If there are overlaps, this card cant be included
+					if len(destroyed_types.intersection(set(c.get_ctype()))) == 0:
+						assemble.append(c)
+				if len(assemble) > 0:
+					instruction_text = f"Destroy six cards with different\ncard types under your Super Hero. ({i+1}/6)"
+					result = effects.choose_one_of(instruction_text,p,assemble,ai_hint.WORST)
+					result.destory()
+				elif len(p.hand.contents) > 0:
+					instruction_text = f"Discard a card because you ran out of\nvalid cards to destroy under your super hero. ({i+1}/6)"
+					result = effects.choose_one_of(instruction_text,p,p.hand.contents,ai_hint.WORST)
+					p.discard_a_card(result)
+		return
