@@ -67,7 +67,10 @@ def attack(player,card,by_player = None,avoid_twise = False):
 					return False
 		elif result[0] == option.NO:
 			if by_player != None:
-				by_player.persona.failed_to_avoid_power()
+				result = trigger.all(trigger.FAILED_TO_AVOID,[player,card],by_player,first_result = True)
+
+				#by_player.persona.failed_to_avoid_power()
+
 			return True
 		else:
 			print("Err: responce")

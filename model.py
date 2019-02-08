@@ -207,6 +207,12 @@ class playing(pile):
 
 		#Finally adds the total power from this card to the total power
 		self.power += modifier
+
+		#new trigger functionality, eventually to replace mods
+		#self.play(card)
+		if not ongoing:
+			trigger.all(trigger.PLAY,[card],self.owner)
+
 		
 
 	def parallax_double(self):
@@ -358,8 +364,10 @@ class player:
 		#print("PLAYER HAS BEEN TOLD TO DRAW",self.persona.name,flush = True)
 		all_drawn = []
 		
-		if from_card:
-			self.persona.draw_power()
+		#if from_card:
+		#	self.persona.draw_power()
+		if should_trigger:
+			trigger.all(trigger.DRAW,[num,from_card,all_drawn],self)
 		for i in range(num):
 			#Check that there is a card to draw
 			if not self.manage_reveal():
@@ -370,8 +378,7 @@ class player:
 				drawn_card = self.deck.draw()
 				all_drawn.append(drawn_card)
 				self.hand.add(drawn_card)
-		if should_trigger:
-			trigger.all(trigger.DRAW,[num,from_card,all_drawn],self)
+		
 
 		#Used for cards that say "The first time a card tells you to draw on each of your turns..."
 		self.drawn_card = True
@@ -407,6 +414,7 @@ class player:
 	#Depreciated
 	def play(self, cardnum):
 		self.played.play(self.hand.contents.pop(cardnum))
+		print("clear-play",flush = True)
 		globe.boss.clear_queue()
 
 	#Playes the given card IF IT IS IN YOUR HAND
@@ -416,6 +424,7 @@ class player:
 		if card in self.hand.contents:
 			self.hand.contents.remove(card)
 			self.played.play(card)
+			print("clear-play_c",flush = True)
 			globe.boss.clear_queue()
 
 	#pops the given card, and then returns it to the top of the given pile
@@ -458,8 +467,9 @@ class player:
 
 
 	def click_action(self,action):
-		if action in self.special_options:
+		if action in self.played.special_options:
 			action.click_action(self)
+			print("clear-click",flush = True)
 			globe.boss.clear_queue()
 
 #The following buy or gain functions return False is they are unsucsesfull, and True if the card is gained
@@ -475,6 +485,7 @@ class player:
 				print(f" {globe.boss.supervillain_stack.contents[-1].name} bought")
 			#This is the only time that SV's can be 'defeated', and therefore defeat=True
 			if self.gain(globe.boss.supervillain_stack.contents[-1],bought = True,defeat = True):
+				print("clear-SV",flush = True)
 				globe.boss.clear_queue()
 				return True
 		return False
@@ -484,6 +495,7 @@ class player:
 			if globe.DEBUG:
 				print(f"kick bought")
 			if self.gain(globe.boss.kick_stack.contents[-1],bought = True):
+				print("clear-kick",flush = True)
 				globe.boss.clear_queue()
 				return True
 		return False
@@ -504,6 +516,7 @@ class player:
 				print(f"{card.name} bought")
 			#self.played.power -= card.cost
 			if self.gain(globe.boss.lineup.contents[cardnum],bought = True):
+				print("clear-buy",flush = True)
 				globe.boss.clear_queue()
 				return True
 			#return True
@@ -515,6 +528,7 @@ class player:
 			if globe.DEBUG:
 				print(f"{card.name} bought")
 			if self.gain(card,bought = True):
+				print("clear-buy_c",flush = True)
 				globe.boss.clear_queue()
 				return True
 		return False
@@ -530,9 +544,11 @@ class player:
 			if len(card.frozen) != 0:
 				return False
 
-			#Trying to buy card.  Card may resist, if not, it may do other effects
-			if not card.buy_action(self,bought,defeat):
-				return False
+		#Trying to buy card.  Card may resist, if not, it may do other effects
+		if not card.buy_action(self,bought,defeat):
+			return False
+
+		if bought:
 			# All checks passed, paying
 			if defeat:
 				#avoids negative
@@ -596,6 +612,7 @@ class player:
 	#add cards to the next hand
 	def end_turn(self):
 		trigger.all(trigger.END_TURN,[],self)
+		print("clear-end",flush = True)
 		globe.boss.clear_queue()
 		self.triggers = []
 		self.gain_redirect = []

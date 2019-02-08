@@ -27,11 +27,17 @@ class aquamans_trident(card_frame.card):
 	#		return (True,player.hand)
 	#	return (False,None)
 
-	def trigger(self,ttype,data,player,immediate):
-		if immediate \
-				and ttype == trigger.GAIN_CARD \
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(immediate,\
+						trigger.GAIN_CARD, \
+						self.trigger, \
+						player,ttype) \
 				and data[0] == False \
 				and effects.ok_or_no(f"Would you like to put {data[1].name} on top of your deck?",player,data[1],ai_hint.ALWAYS):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			player.deck.contents.append(data[1])
 			player.triggers.remove(self.trigger)
 			return True
@@ -257,74 +263,70 @@ class the_dark_knight(card_frame.card):
 	cost = 5
 	ctype = cardtype.HERO
 	text = "+2 Power.  Gain all Equipment in the Line-Up.  Then, if you play or have gained Catwoman this turn, you may put a card you bought or gained this turn into your hand."
-	catwoman_played = False
 	image = "base/images/cards/Dark_Knight.jpeg"
 
-	#def the_dark_knight_redirect(self,player,card):
-	#	if effects.ok_or_no(f"Would you like to put {card.name} into your hand?",player,card,ai_hint.ALWAYS):
-	#		player.gain_redirect.remove(self.the_dark_knight_redirect)
-	#		return (True,player.hand)
-	#	return (False,None)
-
-	def trigger(self,ttype,data,player,immediate):
-		if not immediate \
-				and ttype == trigger.GAIN_CARD \
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test - DK",self.name,flush=True)
+		if trigger.test(immediate,\
+						trigger.GAIN_CARD, \
+						self.trigger, \
+						player,ttype) \
 				and data[0] == False \
 				and effects.ok_or_no(f"Would you like to put {data[1].name} into your hand?",player,data[1],ai_hint.ALWAYS):
+			if globe.DEBUG:
+				print("active - DK",self.name,flush=True)
 			player.hand.contents.append(data[1])
 			player.triggers.remove(self.trigger)
 			return True
 
-	def the_dark_knight_mod(self,card,player):
-		if card.name == "Catwoman" and not self.catwoman_played:
-			self.catwoman_played = True
-			#should be able to remove 'catwoman_played'
-			player.played.card_mods.remove(self.the_dark_knight_mod)
-			used = False
-			for c in player.gained_this_turn:
-				if not used and c in player.discard.contents and effects.ok_or_no(f"Would you like to put {c.name} into your hand?-",player,c,ai_hint.ALWAYS):
-					player.hand.add(c.pop_self())
-					used = True
-			if not used:
-				#player.gain_redirect.append(self.the_dark_knight_redirect)
-				player.triggers.append(self.trigger)
-		return 0
+	def catwoman_catchup(self):
+		assemble = []
+		for c in player.gained_this_turn:
+			if c in player.discard.contents:
+				assemble.append(c)
+		if len(assemble) > 0:
+			result = effects.may_choose_one_of("Would you like to put a card you gined this turn, into your hand?",player,assemble,ai_hint.BEST)
+			if result != None:
+				player.hand.add(result.pop_self())
+				return True
+		return False
 
-	
+	def triggerCW(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test - CW",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.triggerCW, \
+						player,ttype) \
+				and data[0].name == "Catwoman":
+			if globe.DEBUG:
+				print("active - CW",self.name,flush=True)
+			player.triggers.remove(self.trigger_cat_woman)
+			if not catwoman_catchup():
+				player.triggers.append(self.trigger)
 	
 	def play_action(self,player):
 		assemble = []
 		for c in globe.boss.lineup.contents:
 			if c.ctype_eq(cardtype.EQUIPMENT):
 				assemble.append(c)
-		#print(len(assemble)," was ASSEMBELED",flush=True)
 		for c in assemble:
 			player.gain(c)
 
-		can_use = False
-		used = False
-		for c in player.played.contents:
+		catwoman_triggered = False
+		for c in player.played.played_this_turn:
 			if c.name == "Catwoman":
-				self.catwoman_played = True
+				catwoman_triggered = True
 		for c in player.gained_this_turn:
 			if c.name == "Catwoman":
-				self.catwoman_played = True
+				catwoman_triggered = True
 
-		#"and c in player.discard.contents" added to avoid the clayface/darkknight/catwoman infinite loop
-		for c in player.gained_this_turn:
-			if self.catwoman_played and not used and c in player.discard.contents and effects.ok_or_no(f"Would you like to put {c.name} into your hand?.",player,c,ai_hint.ALWAYS):
-				player.hand.add(c.pop_self())
-				used = True
-		if self.catwoman_played and not used:
-			#player.gain_redirect.append(self.the_dark_knight_redirect)
+		if catwoman_triggered and not catwoman_catchup():
 			player.triggers.append(self.trigger)
-		if not self.catwoman_played:
-			#set up later play
-			player.played.card_mods.append(self.the_dark_knight_mod)
+		elif not catwoman_triggered:
+			player.triggers.append(self.triggerCW)
 		return 2
-
-	def end_of_turn(self):
-		self.catwoman_played = False
 
 #Done
 class doomsday(card_frame.card):
@@ -716,7 +718,6 @@ class the_riddler(card_frame.card):
 	def special_action_click(self,player):
 		if globe.boss.main_deck.size() > 0 and player.played.power >= 3:
 			player.played.power -= 3
-
 			player.gain(globe.boss.main_deck.contents[-1])
 
 	def play_action(self,player):
@@ -781,14 +782,21 @@ class solomon_grundy(card_frame.card):
 	image = "base/images/cards/Solomon_Grundy.jpeg"
 	
 	def play_action(self,player):
-		return 
+		player.played.plus_power(3)
+		return 0
 
-	def trigger(self,ttype,data,player,immediate):
-		if immediate \
-				and ttype == trigger.GAIN_CARD \
-				and card == self \
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(immediate,\
+						trigger.GAIN_CARD, \
+						self.trigger, \
+						player,ttype) \
+				and data[1] == self \
 				and data[0] == False \
 				and effects.ok_or_no(f"Would you like to put {data[1].name} on top of your deck?",player,data[1],ai_hint.ALWAYS):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			player.deck.contents.append(data[1])
 			player.triggers.remove(self.trigger)
 			return True
@@ -954,7 +962,7 @@ class utility_belt(card_frame.card):
 	name = "utility_belt"
 	vp = '*'
 	cost = 5
-	ctype = cardtype.HERO
+	ctype = cardtype.EQUIPMENT
 	text = "+2 Power\nAt the end of the game, if you have four or more other Equipment in your deck, this card is worth 5 VPs."
 	image = "base/images/cards/Utility_Belt.jpeg"
 	
@@ -1024,16 +1032,31 @@ class arkham_asylum(card_frame.card):
 	image = "base/images/cards/Arkham_Asylum.jpeg"
 	ongoing = True
 
-	def arkham_mod(self,card,player):
-		if card.ctype_eq(cardtype.VILLAIN) and self.arkham_mod in player.played.card_mods:
-			player.played.card_mods.remove(self.arkham_mod)
+	#def arkham_mod(self,card,player):
+	#	if card.ctype_eq(cardtype.VILLAIN) and self.arkham_mod in player.played.card_mods:
+	#		player.played.card_mods.remove(self.arkham_mod)
+	#		player.draw_card()
+	#	return 0
+
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].ctype_eq(cardtype.VILLAIN):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			player.draw_card()
-		return 0
+			player.triggers.remove(self.trigger)
+			return True
 	
 	
 	def play_action(self,player):
 		if self in player.ongoing.contents:
-			player.played.card_mods.append(self.arkham_mod)
+			#player.played.card_mods.append(self.arkham_mod)
+			player.triggers.append(self.trigger)
 		else:
 			player.ongoing.add(self.pop_self())
 
@@ -1042,7 +1065,8 @@ class arkham_asylum(card_frame.card):
 				if c.ctype_eq(cardtype.VILLAIN):
 					already_played = True
 			if not already_played:
-				player.played.card_mods.append(self.arkham_mod)
+				#player.played.card_mods.append(self.arkham_mod)
+				player.triggers.append(self.trigger)
 		return 0
 
 class the_batcave(card_frame.card):
@@ -1054,16 +1078,24 @@ class the_batcave(card_frame.card):
 	image = "base/images/cards/The_Batcave.jpeg"
 	ongoing = True
 
-	def batcave_mod(self,card,player):
-		if card.ctype_eq(cardtype.EQUIPMENT) and self.batcave_mod in player.played.card_mods:
-			player.played.card_mods.remove(self.batcave_mod)
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].ctype_eq(cardtype.EQUIPMENT):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			player.draw_card()
-		return 0
+			player.triggers.remove(self.trigger)
+			return True
 
-	
+
 	def play_action(self,player):
 		if self in player.ongoing.contents:
-			player.played.card_mods.append(self.batcave_mod)
+			player.triggers.append(self.trigger)
 		else:
 			player.ongoing.add(self.pop_self())
 
@@ -1072,7 +1104,7 @@ class the_batcave(card_frame.card):
 				if c.ctype_eq(cardtype.EQUIPMENT):
 					already_played = True
 			if not already_played:
-				player.played.card_mods.append(self.batcave_mod)
+				player.triggers.append(self.trigger)
 		return 0
 
 class fortress_of_solitude(card_frame.card):
@@ -1080,20 +1112,28 @@ class fortress_of_solitude(card_frame.card):
 	vp = 1
 	cost = 5
 	ctype = cardtype.LOCATION
-	text = "Ongoing: When you play your first Super Poweron each of your turns, draw a card."
+	text = "Ongoing: When you play your first Super Power on each of your turns, draw a card."
 	image = "base/images/cards/Fortress_of_Solitude.jpeg"
 	ongoing = True
 
-	def solitude_mod(self,card,player):
-		if card.ctype_eq(cardtype.SUPERPOWER) and self.solitude_mod in player.played.card_mods:
-			player.played.card_mods.remove(self.solitude_mod)
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].ctype_eq(cardtype.SUPERPOWER):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			player.draw_card()
-		return 0
+			player.triggers.remove(self.trigger)
+			return True
 	
 	
 	def play_action(self,player):
 		if self in player.ongoing.contents:
-			player.played.card_mods.append(self.solitude_mod)
+			player.triggers.append(self.trigger)
 		else:
 			player.ongoing.add(self.pop_self())
 
@@ -1102,7 +1142,7 @@ class fortress_of_solitude(card_frame.card):
 				if c.ctype_eq(cardtype.SUPERPOWER):
 					already_played = True
 			if not already_played:
-				player.played.card_mods.append(self.solitude_mod)
+				player.triggers.append(self.trigger)
 		return 0
 
 class titans_tower(card_frame.card):
@@ -1114,16 +1154,24 @@ class titans_tower(card_frame.card):
 	image = "base/images/cards/Titans_Tower.jpeg"
 	ongoing = True
 
-	def titan_mod(self,card,player):
-		if card.cost == 2 or card.cost == 3 and self.titan_mod in player.played.card_mods:
-			player.played.card_mods.remove(self.titan_mod)
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and (data[0].cost == 2 or data[0].cost == 3):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			player.draw_card()
-		return 0
+			player.triggers.remove(self.trigger)
+			return True
 
 	
 	def play_action(self,player):
 		if self in player.ongoing.contents:
-			player.played.card_mods.append(self.titan_mod)
+			player.triggers.append(self.trigger)
 		else:
 			player.ongoing.add(self.pop_self())
 
@@ -1132,7 +1180,7 @@ class titans_tower(card_frame.card):
 				if c.cost == 2 or c.cost == 3:
 					already_played = True
 			if not already_played:
-				player.played.card_mods.append(self.titan_mod)
+				player.triggers.append(self.trigger)
 		return 0
 
 class the_watchtower(card_frame.card):
@@ -1144,16 +1192,24 @@ class the_watchtower(card_frame.card):
 	image = "base/images/cards/The_Watchtower.jpeg"
 	ongoing = True
 
-	def watchtower_mod(self,card,player):
-		if card.ctype_eq(cardtype.HERO) and self.watchtower_mod in player.played.card_mods:
-			player.played.card_mods.remove(self.watchtower_mod)
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].ctype_eq(cardtype.HERO):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			player.draw_card()
-		return 0
+			player.triggers.remove(self.trigger)
+			return True
 	
 	
 	def play_action(self,player):
 		if self in player.ongoing.contents:
-			player.played.card_mods.append(self.watchtower_mod)
+			player.triggers.append(self.trigger)
 		else:
 			player.ongoing.add(self.pop_self())
 
@@ -1163,7 +1219,7 @@ class the_watchtower(card_frame.card):
 					already_played = True
 			if not already_played:
 				#if player == self.owner:
-				player.played.card_mods.append(self.watchtower_mod)
+				player.triggers.append(self.trigger)
 		return 0
 
 

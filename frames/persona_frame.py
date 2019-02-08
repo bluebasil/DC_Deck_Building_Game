@@ -24,8 +24,7 @@ class persona:
 	def ai_overvalue(self,card):
 		return 0
 
-	def ready(self):
-		return
+	
 #All of these should be added to the queue
 	def gain_power(self,card):
 		return
@@ -54,9 +53,14 @@ class persona:
 
 	#def trigger(self,trigger_id,data,player,pay_forward = False,first_result = False,immediate = False):
 
+	#Happenss at the end of the turn.
+	#Used to set up abilities for the turn
+	def ready(self):
+		return
 
-
-
+	#Happens at the end of the turn
+	#Used to clean up anything needed
+	#Also used to set up abilites that should be active during other players turns
 	def reset(self):
 		return
 
@@ -96,8 +100,6 @@ class dispatch(persona):
 		for p in self.persona_list:
 			p.player = p.old_player
 			p.reset()
-
-
 
 	def gain_power(self,card):
 		for p in self.persona_list:

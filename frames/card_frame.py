@@ -72,7 +72,6 @@ class card:
 		#Assume that card can be bought
 		return True
 
-
 	#defence = True must be set or this will not be an option
 	#pop_self will come in handy
 	def defend(self,attacker = None,defender = None):
