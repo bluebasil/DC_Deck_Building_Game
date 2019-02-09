@@ -21,12 +21,6 @@ class aquamans_trident(card_frame.card):
 	text = "+2 Power\nYou may put any one card you buy or gain this turn on top of your deck."
 	image = "base/images/cards/Aquamans_Trident.jpeg"
 
-	#def trident_redirect(self,player,card):
-	#	if effects.ok_or_no(f"Would you like to put {card.name} into your hand?",player,card,ai_hint.ALWAYS):
-	#		player.gain_redirect.remove(self.trident_redirect)
-	#		return (True,player.hand)
-	#	return (False,None)
-
 	def trigger(self,ttype,data,player,active,immediate):
 		if globe.DEBUG:
 			print("test",self.name,flush=True)
@@ -43,6 +37,7 @@ class aquamans_trident(card_frame.card):
 			return True
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		used = False
 		for c in player.gained_this_turn:
 			if not used and c in player.discard.contents and effects.ok_or_no(f"Would you like to put {c.name} into your hand?-",player,c,ai_hint.ALWAYS):
@@ -53,7 +48,7 @@ class aquamans_trident(card_frame.card):
 			#player.gain_redirect.append(self.trident_redirect)
 			player.triggers.append(self.trigger)
 		#player.gain_redirect.append(player.deck)
-		return 2
+		return 0
 
 #Done
 class bane(card_frame.card):
@@ -67,8 +62,9 @@ class bane(card_frame.card):
 	image = "base/images/cards/Bane_4.jpeg"
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		self.attack_action(player)
-		return 2
+		return 0
 
 	def attack_action(self,by_player):
 		for p in globe.boss.players:
@@ -93,9 +89,9 @@ class the_batmobile(card_frame.card):
 		if len(player.played.played_this_turn) == 1:
 			player.discard_hand()
 			player.draw_card(5)
-			return 0
 		else:
-			return 1
+			player.played.plus_power(1)
+		return 0
 
 #done
 class the_bat_signal(card_frame.card):
@@ -116,7 +112,8 @@ class the_bat_signal(card_frame.card):
 			choosen = effects.choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			#if choosen != None
 			player.hand.add(choosen.pop_self())
-		return 1
+		player.played.plus_power(1)
+		return 0
 
 #TODO: test vp
 class bizarro(card_frame.card):
@@ -128,7 +125,8 @@ class bizarro(card_frame.card):
 	image = "base/images/cards/Bizarro_7.jpeg"
 	
 	def play_action(self,player):
-		return 3
+		player.played.plus_power(3)
+		return 0
 
 	def calculate_vp(self,all_cards):
 		count = 0
@@ -148,7 +146,8 @@ class blue_beetle(card_frame.card):
 	image = "base/images/cards/Blue_Beetle.jpeg"
 	
 	def play_action(self,player):
-		return 3
+		player.played.plus_power(3)
+		return 0
 
 	def defend(self,attacker = None,defender = None):
 		return
@@ -164,7 +163,8 @@ class bulletproof(card_frame.card):
 	image = "base/images/cards/Bulletproof.jpeg"
 	
 	def play_action(self,player):
-		return 2
+		player.played.plus_power(2)
+		return 0
 
 	def defend(self,attacker = None,defender = None):
 		self.owner.discard_a_card(self)
@@ -190,7 +190,8 @@ class the_cape_and_cowl(card_frame.card):
 	image = "base/images/cards/The_Cape_and_Cowl.jpeg"
 	
 	def play_action(self,player):
-		return 2
+		player.played.plus_power(2)
+		return 0
 
 	def defend(self,attacker = None,defender = None):
 		self.owner.discard_a_card(self)
@@ -207,7 +208,8 @@ class catwoman(card_frame.card):
 	image = "base/images/cards/Catwoman_2.jpeg"
 	
 	def play_action(self,player):
-		return 2
+		player.played.plus_power(2)
+		return 0
 
 #Done
 class cheetah(card_frame.card):
@@ -837,7 +839,7 @@ class starro(card_frame.card):
 					if not card_to_discard.ctype_eq(cardtype.LOCATION):
 						result = effects.ok_or_no(f"Would you like to play a {card_to_discard.name}?",by_player,card_to_discard,ai_hint.ALWAYS)
 						if result:
-							by_player.play_and_return(card_to_discard.pop_self(),p.discard)
+							by_player.played.play(card_to_discard.pop_self())
 		return
 
 #test vp
@@ -850,6 +852,7 @@ class suicide_squad(card_frame.card):
 	image = "base/images/cards/Suicide_Squad.jpeg"
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		count = 0
 		for c in player.played.contents:
 			if c.name == "Suicide Squad":
@@ -859,7 +862,7 @@ class suicide_squad(card_frame.card):
 			for p in globe.boss.players:
 				if p != player:
 					p.discard_hand()
-		return 2
+		return 0
 		# Suidide ability needed
 
 	def calculate_vp(self,all_cards):
@@ -898,7 +901,8 @@ class super_strength(card_frame.card):
 	image = "base/images/cards/Super_Strength.jpeg"
 	
 	def play_action(self,player):
-		return 5
+		player.played.plus_power(5)
+		return 0
 
 #done
 class super_girl(card_frame.card):
@@ -929,8 +933,10 @@ class swamp_thing(card_frame.card):
 	def play_action(self,player):
 		for c in player.ongoing.contents:
 			if c.ctype_eq(cardtype.LOCATION):
-				return 5
-		return 2
+				player.played.plus_power(5)
+				return 0
+		player.played.plus_power(2)
+		return 0
 
 #Test
 class two_face(card_frame.card):
@@ -942,6 +948,7 @@ class two_face(card_frame.card):
 	image = "base/images/cards/Two_Face.jpeg"
 	
 	def play_action(self,player):
+		player.played.plus_power(1)
 		choose_even = effects.choose_even_or_odd("Choose even or odd, then reveal the top card of your deck.  If its cost matches your choice, draw it.  If not, discard it.",player)
 		
 		on_top = player.reveal_card()
@@ -955,7 +962,7 @@ class two_face(card_frame.card):
 			else:
 				player.discard_a_card(on_top)
 
-		return 1
+		return 0
 
 #TODO: need testing calculating vp
 class utility_belt(card_frame.card):
@@ -967,7 +974,8 @@ class utility_belt(card_frame.card):
 	image = "base/images/cards/Utility_Belt.jpeg"
 	
 	def play_action(self,player):
-		return 2
+		player.played.plus_power(2)
+		return 0
 
 	def calculate_vp(self,all_cards):
 		count = 0
@@ -1015,12 +1023,13 @@ class zatanna_zatara(card_frame.card):
 	image = "base/images/cards/Zatanna_Zatara.jpeg"
 	
 	def play_action(self,player):
+		player.played.plus_power(1)
 		instruction_text = "You may choose a card from your dicard pile to go on the bottom of your deck('no' or 'ok 0')"
 		for i in range(2):
 			result = effects.may_choose_one_of(instruction_text,player,player.discard.contents,hint = ai_hint.BEST)
 			if result != None:
 				player.deck.contents.insert(0,result.pop_self())
-		return 1
+		return 0
 
 #Locations
 class arkham_asylum(card_frame.card):
@@ -1235,7 +1244,8 @@ class ras_al_ghul(card_frame.card):
 	image = "base/images/cards/Ras Al Ghul 8.jpg"
 	
 	def play_action(self,player):
-		return 3
+		player.played.plus_power(3)
+		return 0
 
 	def end_of_turn(self):
 		if self.owner != None:
@@ -1255,6 +1265,7 @@ class the_anti_monitor(card_frame.card):
 	image = "base/images/cards/The Anti-Monitor.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		instruction_text = "Choose any number of cards in the lineup to destroy"
 		choosen = effects.choose_however_many(instruction_text,player,globe.boss.lineup.contents,ai_hint.IFBAD)
 		if choosen != None:
@@ -1264,7 +1275,7 @@ class the_anti_monitor(card_frame.card):
 				card_to_add = globe.boss.main_deck.draw()
 				if card_to_add != None:
 					globe.boss.lineup.add(card_to_add)
-		return 2
+		return 0
 
 	def first_apearance(self):
 		instruction_text = "Choose a card with cost 1 or greater to add to the lineup"
@@ -1293,6 +1304,7 @@ class atrocitus(card_frame.card):
 	image = "base/images/cards/Atrocitus 10.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		card_to_destroy = True
 		for i in range(2):
 			#This way we only ask the seccond time if the first was ok
@@ -1301,7 +1313,7 @@ class atrocitus(card_frame.card):
 				card_to_destroy = effects.may_choose_one_of(instruction_text,player,player.discard.contents,ai_hint.IFBAD)
 				if card_to_destroy != None:
 					card_to_destroy.destroy(player)
-		return 2
+		return 0
 
 	def first_apearance(self):
 		for p in globe.boss.players:
@@ -1330,8 +1342,9 @@ class black_manta(card_frame.card):
 	image = "base/images/cards/Black Manta 8.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(3)
 		player.draw_card()
-		return 3
+		return 0
 
 	def first_apearance(self):
 		for p in globe.boss.players:
@@ -1402,7 +1415,8 @@ class captain_cold(card_frame.card):
 			if p != player:
 				if p.discard.get_count(cardtype.HERO) > 0:
 					power += 1
-		return power
+		player.played.plus_power(power)
+		return 0
 
 	def first_apearance(self):
 		for p in globe.boss.players:
@@ -1438,8 +1452,10 @@ class darkseid(card_frame.card):
 			if card2 != None:
 				card1.destroy(player)
 				card2.destroy(player)
-				return 5
-		return 3
+				player.played.plus_power(5)
+				return 0
+		player.played.plus_power(3)
+		return 0
 
 	def first_apearance(self):
 		for p in globe.boss.players:
@@ -1480,7 +1496,8 @@ class deathstroke(card_frame.card):
 				choosen.set_owner(player)
 				player.discard_a_card(choosen)
 				return 0
-		return 3
+		player.played.plus_power(3)
+		return 0
 			
 
 	def first_apearance(self):
@@ -1519,7 +1536,8 @@ class the_joker(card_frame.card):
 					player.draw_card()
 				else:
 					p.discard_a_card(choosen)
-		return 2
+		player.played.plus_power(2)
+		return 0
 
 	def first_apearance(self):
 		instruction_text = "Choose a card to go into the discard pile of the player on your left"
@@ -1601,7 +1619,8 @@ class sinestro(card_frame.card):
 		effects.reveal("This was on top of the main deck",player,[globe.boss.main_deck.contents[-1]])
 		if len(globe.boss.main_deck.contents) > 0 and globe.boss.main_deck.contents[-1].ctype_eq(cardtype.HERO):
 			globe.boss.main_deck.contents[-1].destroy(player)
-			return 3
+			player.played.plus_power(3)
+			return 0
 		else:
 			new_card = globe.boss.main_deck.contents.pop()
 			#ownership change

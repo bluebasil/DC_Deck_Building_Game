@@ -75,7 +75,12 @@ def check_triggers(trigger_id,data,player,active,pay_forward = False,first_resul
 		#print("regular",results,flush = True)
 		return results
 
-
+#saves the state of the trigger until later
+#unfortunatly, a better way would be to ask each card if they are triggered immediatly
+#and then later execute what they do if they are triggered
+#An easy way with the current functionality would be to have 2 tests
+#in the trigger, one for immediate (whihc makes a local self.triggered = True)
+#at which point the seddon non-immediate test is used
 class delayed_trigger:
 	trigger_id = -1
 	data = []

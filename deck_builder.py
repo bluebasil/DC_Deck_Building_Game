@@ -72,7 +72,7 @@ def get_starting_deck(player):
 
 	random.shuffle(assemble)
 
-	assemble.append(custom.shazam(player))
+	#assemble.append(custom.shazam(player))
 	
 	#assemble.append(custom.citizen_steel(player))
 	#assemble.append(custom.liberty_belle(player))
@@ -169,9 +169,9 @@ def initialize_deck():
 		assemble = bottom_split
 		assemble.extend(top_split)
 
-	assemble.append(custom.happy_harbor())
-	for i in range(6):
-		assemble.append(custom.transmutation())
+	#assemble.append(custom.happy_harbor())
+	#for i in range(6):
+	#	assemble.append(custom.transmutation())
 	return assemble
 	
 
