@@ -282,7 +282,7 @@ class the_dark_knight(card_frame.card):
 			player.triggers.remove(self.trigger)
 			return True
 
-	def catwoman_catchup(self):
+	def catwoman_catchup(self,player):
 		assemble = []
 		for c in player.gained_this_turn:
 			if c in player.discard.contents:
@@ -304,8 +304,8 @@ class the_dark_knight(card_frame.card):
 				and data[0].name == "Catwoman":
 			if globe.DEBUG:
 				print("active - CW",self.name,flush=True)
-			player.triggers.remove(self.trigger_cat_woman)
-			if not catwoman_catchup():
+			player.triggers.remove(self.triggerCW)
+			if not self.catwoman_catchup(player):
 				player.triggers.append(self.trigger)
 	
 	def play_action(self,player):
@@ -324,7 +324,7 @@ class the_dark_knight(card_frame.card):
 			if c.name == "Catwoman":
 				catwoman_triggered = True
 
-		if catwoman_triggered and not catwoman_catchup():
+		if catwoman_triggered and not self.catwoman_catchup(player):
 			player.triggers.append(self.trigger)
 		elif not catwoman_triggered:
 			player.triggers.append(self.triggerCW)

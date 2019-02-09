@@ -57,20 +57,26 @@ class black_canary(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.ctype_eq(cardtype.VILLAIN):
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active) \
+				and data[0].ctype_eq(cardtype.VILLAIN):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			already_played = False
 			for c in self.player.played.played_this_turn:
-				if card != c and card.name == c.name:
+				if data[0] != c and data[0].name == c.name:
 					already_played = True
 			if not already_played:
-				return 1
-		return 0
+				player.played.plus_power(1)
 
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.trigger)
 
 
 class booster_gold(persona_frame.persona):
@@ -83,19 +89,35 @@ class booster_gold(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.defence:
-			return 1
-		return 0
+	def triggerDE(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.triggerDE, \
+						player,ttype,active) \
+				and data[0].defence:
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.played.plus_power(1)
+
+	def triggerAA(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.AVOIDED_ATTACK, \
+						self.triggerAA, \
+						player,ttype,active):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.draw_card(from_card = False)
 
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.triggerAA)
 
-	def avoided_attack(self,defending):
-		self.player.draw_card(from_card = False)
-		return
+	def reset(self):
+		self.player.triggers.append(self.triggerDE)
 
 class hawkman(persona_frame.persona):
 	name = "Hawkman"
@@ -107,15 +129,20 @@ class hawkman(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.ctype_eq(cardtype.HERO):
-			return 1
-		return 0
-
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active) \
+				and data[0].ctype_eq(cardtype.HERO):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.played.plus_power(1)
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.trigger)
 
 class nightwing(persona_frame.persona):
 	name = "Nightwing"
@@ -127,22 +154,28 @@ class nightwing(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.ctype_eq(cardtype.EQUIPMENT):
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active) \
+				and data[0].ctype_eq(cardtype.EQUIPMENT):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			number_played = 0
 			for c in self.player.played.played_this_turn:
 				if c.ctype_eq(cardtype.EQUIPMENT):
 					number_played += 1
 			if number_played == 1:
-				return 1
+				player.played.plus_power(1)
 			elif number_played == 2:
-				self.player.draw_card(from_card = False)
-		return 0
-
-
+				player.draw_card(from_card = False)
+				player.triggers.remove(self.trigger)
+			
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.trigger)
 
 
 
@@ -223,7 +256,7 @@ class shazam(persona_frame.persona):
 			self.action = actions.special_action("Shazam",self.special_action_click)
 			self.player.played.special_options.append(self.action)
 
-	#IDK
+	#IDK, never?
 	def ai_is_now_a_good_time(self):
 
 		return False

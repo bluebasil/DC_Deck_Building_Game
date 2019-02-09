@@ -63,10 +63,13 @@ def attack(player,card,by_player = None,avoid_twise = False):
 				else:
 					#If you avoid the attack but not twise when nessesary (crossover 2's deadshot)
 					#do you get to trigger your avoided attack abilities?
-					player.persona.avoided_attack(assemble[result[1]])
+					#player.persona.avoided_attack(assemble[result[1]])
+					#sent to the defending player
+					trigger.all(trigger.AVOIDED_ATTACK,[by_player,card,assemble[result[1]]],player,first_result = True)
 					return False
 		elif result[0] == option.NO:
 			if by_player != None:
+				#Sent to the attacking player
 				result = trigger.all(trigger.FAILED_TO_AVOID,[player,card],by_player,first_result = True)
 
 				#by_player.persona.failed_to_avoid_power()

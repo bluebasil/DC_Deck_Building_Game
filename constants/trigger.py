@@ -21,19 +21,24 @@ GAIN_VP = 4
 	#data[0] is the amount of vp gained
 END_TURN = 5
 	#data is an empty list
-PLAY = 8
+PLAY = 6
 	#data[0] is the card played
 	#If there is ever a need for ongoing triggers, that could be added
+
 #in card frame
-DESTROY = 6
+DESTROY = 7
 #in effects
-ATTACKING = 7
+ATTACKING = 8
 	#first_result = True
 	#This is where prioratization would be usefull, if the attack is 
 	#canceled or chanegd, that should happen before anything else
 	#data[0] is the player that is being attacked
 	#data[1] is the attacking card
-FAILED_TO_AVOID = 9
+AVOIDED_ATTACK = 9
+	#data[0] the attacking player
+	#data[1] the attacking card
+	#data[2] defending card
+FAILED_TO_AVOID = 10
 	#data[0] is the player that is being attacked
 	#data[1] is the attacking card
 
@@ -114,7 +119,6 @@ def test(immediate,trigger_on,trigger_function,player,ttype,active = True):
 			and ttype == trigger_on \
 			and trigger_function in player.triggers \
 			and active:
-		print("PASS",flush = True)
 		return True
 	else:
 		return False

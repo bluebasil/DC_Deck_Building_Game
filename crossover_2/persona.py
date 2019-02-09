@@ -22,9 +22,14 @@ class felicity_smoak(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def hero_mod(self,card,player):
-		if card.ctype_eq(cardtype.HERO):
-			#This card is 1
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active) \
+				and data[0].ctype_eq(cardtype.HERO):
 			hero_count = 0
 			for c in self.player.played.played_this_turn:
 				if c.ctype_eq(cardtype.HERO):
@@ -42,14 +47,9 @@ class felicity_smoak(persona_frame.persona):
 				elif len(player.under_superhero.contents) > 0:
 					instruction_text = "You may put a card from under your superhero into your hand."
 					result = effects.may_choose_one_of(instruction_text,player,player.under_superhero.contents,ai_hint.BEST)
-				return 0
-		return 0
-
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.hero_mod)
-
+		self.player.triggers.append(self.trigger)
 
 
 class john_diggle(persona_frame.persona):
@@ -78,18 +78,31 @@ class john_diggle(persona_frame.persona):
 				return True
 		return False
 
-	def avoided_attack(self,defending):
-		instruction_text = f"Would you like to that {defending.name} on top of your deck?"
-		if effects.ok_or_no(instruction_text,self.player,defending,ai_hint.ALWAYS):
-			if defending.owner == self.player:
-				defending.pop_self()
-				self.player.under_superhero.contents.append(defending)
-		return
+	#I don't know if this should be immediate or not, but 
+	#To avoid complications, i'll make it immediate
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(immediate,\
+						trigger.AVOIDED_ATTACK, \
+						self.trigger, \
+						player,ttype,active):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			instruction_text = f"Would you like to that {data[2].name} on top of your deck?"
+			if effects.ok_or_no(instruction_text,player,data[2],ai_hint.ALWAYS) \
+					and data[2].owner == player:
+				data[2].pop_self()
+				player.under_superhero.contents.append(data[2])
+
 
 	def ready(self):
 		if self.active:
 			self.action = actions.special_action("John Diggle",self.special_action_click)
 			self.player.played.special_options.append(self.action)
+	
+	def reset(self):
+		self.player.triggers.append(self.trigger)
 
 	#If there is more than a 50% chance of getting a card that does anything,
 	def ai_is_now_a_good_time(self):
@@ -183,21 +196,19 @@ class sara_lance(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	#def sara_lance_redirect(self,player,card):
-	#	if globe.boss.whose_turn == self.player.pid \
-	#			and card.owner_type == owners.LINEUP \
-	#			and card.ctype_eq(cardtype.VILLAIN) \
-	#			and effects.ok_or_no(f"Would you like to put {card.name} under your Super Hero?",player,card,ai_hint.ALWAYS):
-	#		return [True,player.under_superhero]
-	#	return (False,None)
-
-	def trigger(self,ttype,data,player,immediate):
-		if immediate \
-				and ttype == trigger.GAIN_CARD \
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(immediate,\
+						trigger.GAIN_CARD, \
+						self.trigger, \
+						player,ttype,active) \
 				and data[1].owner_type == owners.LINEUP \
 				and data[1].ctype_eq(cardtype.VILLAIN) \
 				and data[0] == False \
 				and effects.ok_or_no(f"Would you like to put {data[1].name} under your Super Hero?",player,data[1],ai_hint.ALWAYS):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			player.under_superhero.contents.append(data[1])
 			return True
 
@@ -217,11 +228,11 @@ class sara_lance(persona_frame.persona):
 		return False
 
 	def ready(self):
+		self.player.triggers.append(self.trigger)
 		if self.active:
 			self.action = actions.special_action("Sara Lance",self.special_action_click)
 			self.player.played.special_options.append(self.action)
-			self.player.gain_redirect.append(self.sara_lance_redirect)
-			self.player.triggers.append(self.trigger)
+		
 
 	def ai_is_now_a_good_time(self):
 		if self.action in self.player.played.special_options:

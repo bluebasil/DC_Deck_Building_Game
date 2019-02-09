@@ -23,6 +23,9 @@ from constants import trigger
 class MainDeckEmpty(Exception):
     pass
 
+class DupeFailure(Exception):
+    pass
+
 """
 A pile refers to any collection of cards in the game.
 For instance, all of the stacks (Villain, Kick, Weakness)
@@ -174,7 +177,6 @@ class playing(pile):
 	#Ongoing cards are not played with ongoing = True.
 	#Ongoing is only true when the ongoing pile calls this
 	def play(self,card,ongoing = False):
-		print("PALY WHY",flush = True)
 		if globe.DEBUG:
 			if card.owner != self.owner:
 				if card.owner_type == owners.PLAYER:
@@ -361,7 +363,8 @@ class player:
 			if not self.manage_reveal():
 				#This will break things, but is so rare it shouldn't happen really?
 				#This will need to be protected for in the future!!
-				print("ERR: No more cards in deck",flush = True)
+				#print("ERR: No more cards in deck",flush = True)
+				pass
 			else:
 				drawn_card = self.deck.draw()
 				all_drawn.append(drawn_card)
@@ -401,8 +404,9 @@ class player:
 
 	#Depreciated
 	def play(self, cardnum):
+		if globe.DEBUG:
+			print("play-START",flush = True)
 		self.played.play(self.hand.contents.pop(cardnum))
-		print("clear-play",flush = True)
 		globe.boss.clear_queue()
 
 	#Playes the given card IF IT IS IN YOUR HAND
@@ -410,21 +414,24 @@ class player:
 	#playing.play directly should be used
 	def play_c(self, card):
 		if card in self.hand.contents:
+			if globe.DEBUG:
+				print("play_c-START",flush = True)
 			self.hand.contents.remove(card)
 			self.played.play(card)
-			print("clear-play_c",flush = True)
 			globe.boss.clear_queue()
 
 	#Given card must be already poped
 	#Plays it, and retusn it to the indicated pile
 	def play_and_return(self, card, pile):
-		print("PLAY AND RETURN CALLED",flush = True)
+		save_owner_type = card.owner_type
+		save_owner = card.owner
 		self.played.play(card)
-		print('POPING NOW',card.find_self(),len(pile.contents))
 		card.pop_self()
-		print('POPed',len(pile.contents))
+		#gets put back at the location specified, no matetr what
+		#even if it was destroyed
+		card.owner_type = save_owner_type
+		card.owner = save_owner
 		pile.contents.append(card)
-		print('ADDED',len(pile.contents))
 
 	#Formally discards the given card
 	#Triggers anything that needs to know that a card has been discarded
@@ -462,8 +469,9 @@ class player:
 
 	def click_action(self,action):
 		if action in self.played.special_options:
+			if globe.DEBUG:
+				print("click-START",flush = True)
 			action.click_action(self)
-			print("clear-click",flush = True)
 			globe.boss.clear_queue()
 
 #The following buy or gain functions return False is they are unsucsesfull, and True if the card is gained
@@ -477,9 +485,9 @@ class player:
 				and self.played.power >= globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv:
 			if globe.DEBUG:
 				print(f" {globe.boss.supervillain_stack.contents[-1].name} bought")
+				print("buy_sv-START",flush = True)
 			#This is the only time that SV's can be 'defeated', and therefore defeat=True
 			if self.gain(globe.boss.supervillain_stack.contents[-1],bought = True,defeat = True):
-				print("clear-SV",flush = True)
 				globe.boss.clear_queue()
 				return True
 		return False
@@ -488,8 +496,8 @@ class player:
 		if globe.boss.kick_stack.size() > 0 and self.played.power >= globe.boss.kick_stack.contents[-1].cost:
 			if globe.DEBUG:
 				print(f"kick bought")
+				print("buy_kick-START",flush = True)
 			if self.gain(globe.boss.kick_stack.contents[-1],bought = True):
-				print("clear-kick",flush = True)
 				globe.boss.clear_queue()
 				return True
 		return False
@@ -508,9 +516,9 @@ class player:
 			#card.bought = True
 			if globe.DEBUG:
 				print(f"{card.name} bought")
+				print("buy-START",flush = True)
 			#self.played.power -= card.cost
 			if self.gain(globe.boss.lineup.contents[cardnum],bought = True):
-				print("clear-buy",flush = True)
 				globe.boss.clear_queue()
 				return True
 			#return True
@@ -521,8 +529,8 @@ class player:
 		if self.played.power >= card.cost and len(card.frozen) == 0:
 			if globe.DEBUG:
 				print(f"{card.name} bought")
+				print("buy_c-START",flush = True)
 			if self.gain(card,bought = True):
-				print("clear-buy_c",flush = True)
 				globe.boss.clear_queue()
 				return True
 		return False
@@ -589,8 +597,9 @@ class player:
 	#but after self.discard_hand and played.turn_end so that Wonder Woman can properly 
 	#add cards to the next hand
 	def end_turn(self):
+		if globe.DEBUG:
+			print("end-START",flush = True)
 		trigger.all(trigger.END_TURN,[],self)
-		print("clear-end",flush = True)
 		globe.boss.clear_queue()
 		self.triggers = []
 		self.gain_redirect = []
@@ -600,6 +609,7 @@ class player:
 		self.discard_hand()
 		#used so that cards can choose how many cards to draw next turn or add a card to the enxt hand
 		#must be before played.turn_end and after self.discard_hand
+		#This should follow the trigger model, but unfortunatly i am removing triggers before here
 		for c in self.played.played_this_turn:
 			c.next_turn()
 		#empties cards in play_and returns them to their pile.
@@ -718,16 +728,16 @@ class model:
 		#controler can be used for testing, which is nice)
 
 		new_player = player(pid,None)
-		new_controler = controlers.human_view(new_player,invisible)
+		new_controler = controlers.cpu(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 		pid += 1
 
-		#new_player = player(pid,None)
-		#new_controler = controlers.cpu(new_player,invisible)
-		#new_player.controler = new_controler
-		#self.players.append(new_player)
-		#pid += 1
+		new_player = player(pid,None)
+		new_controler = controlers.cpu(new_player,invisible)
+		new_player.controler = new_controler
+		self.players.append(new_player)
+		pid += 1
 
 		new_player = player(pid,None)
 		new_controler = controlers.cpu(new_player,invisible)
@@ -768,6 +778,7 @@ class model:
 		#We are going to keep track of which end condition has been met
 		#'regular' refers to beating all of the SV's
 		end_reason = "regular"
+		check_result = None
 		try:
 			#The game ends when the supervaillin stack is empty
 			while self.supervillain_stack.get_count() > 0:
@@ -790,8 +801,9 @@ class model:
 				current_turn.turn()
 
 				save_whose_turn = self.whose_turn
-				if self.dupe_checker.check():
-					return
+				check_result = self.dupe_checker.check()
+				if check_result[0]:
+					raise DupeFailure({"msg":check_result[1]})
 				#It's between turns for the SV attack
 				self.whose_turn = -1
 
@@ -822,6 +834,12 @@ class model:
 		except MainDeckEmpty:
 			print("Main Deck Ran Out!",flush = True)
 			end_reason = "main_deck"
+		except DupeFailure as e:
+			print("Duplicate or unmatched found",flush = True)
+			details = e.args[0]
+			print(details["msg"],flush = True)
+			output_persona_stats(self.players,"crash",details["msg"])
+			return
 
 		#the game has ended, calculate vp (things may have changed since they last 
 		#calulated their vp at the end of their turn)
@@ -834,8 +852,12 @@ class model:
 		self.notify = func
 
 	def clear_queue(self):
+		if globe.DEBUG:
+			print("start clear",flush = True)
 		while len(self.trigger_queue) > 0:
 			self.trigger_queue.pop(0).run()
+		if globe.DEBUG:
+			print("end clear",flush = True)
 
 
 #just forwards with function

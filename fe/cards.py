@@ -147,7 +147,11 @@ class cold_gun(card_frame.card):
 	ctype = cardtype.EQUIPMENT
 	text = "+1 Power\nYou may put a Frozen token on a card in the Line-up.\nIf you do, remove it at the start of your next turn."
 	image = "fe/images/cards/Cold Gun 2.jpg"
+	play_time = []
 	
+	#I could use triggers and buy actions to remove the global
+	#frozen attributes
+	#But i have not done that yet, and graphicly there are advantages this way
 	def play_action(self,player):
 		player.played.plus_power(1)
 		instruction_text = "You may put a Frozen token on a card in the Line-up"

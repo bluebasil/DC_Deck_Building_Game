@@ -20,7 +20,7 @@ import globe
 decks = [base_deck.this_set,fe_deck.this_set,c1_deck.this_set,c2_deck.this_set]
 choosen_sets = []
 #Specifies wether small set personas muct be picked when playing with small sets
-any_pick = False
+any_pick = True
 
 
 def choose_sets():
@@ -74,8 +74,8 @@ def get_starting_deck(player):
 
 	#assemble.append(custom.shazam(player))
 	
-	#assemble.append(custom.citizen_steel(player))
-	#assemble.append(custom.liberty_belle(player))
+	#assemble.append(custom.catwoman(player))
+	assemble.append(custom.firestorm_matrix(player))
 
 	return assemble
 
