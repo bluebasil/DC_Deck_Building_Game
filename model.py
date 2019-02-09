@@ -65,6 +65,14 @@ class pile:
 		else:
 			return False
 
+	def reveal(self):
+		if len(self.contents) > 0:
+			return self.contents[-1]
+		elif self.name == "Main Deck":
+			raise MainDeckEmpty
+		else:
+			return None
+
 	def draw(self):
 		if len(self.contents) > 0:
 			return self.contents.pop()
@@ -162,15 +170,11 @@ class playing(pile):
 			#elif c.owner_type == owners.VILLAINDECK:
 			#	globe.boss.supervillain_stack.add(c)
 
-	#Just overwrites the parent add function
-	#Depreciated
-	def add(self,card):
-		self.play(card)
-
 	#To play a card, run this
 	#Ongoing cards are not played with ongoing = True.
 	#Ongoing is only true when the ongoing pile calls this
 	def play(self,card,ongoing = False):
+		print("PALY WHY",flush = True)
 		if globe.DEBUG:
 			if card.owner != self.owner:
 				if card.owner_type == owners.PLAYER:
@@ -187,30 +191,14 @@ class playing(pile):
 			#For statistics, but has not been fully implimented
 			card.times_played += 1
 			self.contents.append(card)
+			
+		#runs the cards code
+		card.play_action(self.owner)
+		#the card is not officially played until its code is done,
+		#it gets added to 'played this turn' afterwards
 
-		#This will track how much a single card affects the power
-		#Note: I hope to remove the need for each c ard to return the power they add
-		#Should should add power with the 'plus_power' function instead from now on
-		modifier = 0
-
-		#ongoing cards are not considered to be played this turn
 		if not ongoing:
 			self.played_this_turn.append(card)
-
-		#Must loop on a copy so that the mods can delete themselves while being run
-		for mod in self.card_mods.copy():
-			modifier += mod(card,self.owner)
-
-		#Paralax double on cards being played after paralax
-		for i in range(self.double_modifier):
-			modifier *= 2
-
-		#Finally adds the total power from this card to the total power
-		self.power += modifier
-
-		#new trigger functionality, eventually to replace mods
-		#self.play(card)
-		if not ongoing:
 			trigger.all(trigger.PLAY,[card],self.owner)
 
 		
@@ -427,12 +415,16 @@ class player:
 			print("clear-play_c",flush = True)
 			globe.boss.clear_queue()
 
-	#pops the given card, and then returns it to the top of the given pile
-	#Alot of cards call this and then may manually move the card if it has to not be on top
+	#Given card must be already poped
+	#Plays it, and retusn it to the indicated pile
 	def play_and_return(self, card, pile):
+		print("PLAY AND RETURN CALLED",flush = True)
 		self.played.play(card)
+		print('POPING NOW',card.find_self(),len(pile.contents))
 		card.pop_self()
-		pile.add(card)
+		print('POPed',len(pile.contents))
+		pile.contents.append(card)
+		print('ADDED',len(pile.contents))
 
 	#Formally discards the given card
 	#Triggers anything that needs to know that a card has been discarded
@@ -453,6 +445,8 @@ class player:
 			globe.boss.main_deck.add(card)
 		elif card.owner_type == owners.LINEUP:
 			globe.boss.lineup.add(card)
+		elif card.owner_type == owners.DESTROYED:
+			globe.boss.destroyed_stack.add(card)
 		elif card.owner_type == owners.VILLAINDECK:
 			globe.boss.supervillain_stack.add(card)
 
@@ -559,32 +553,16 @@ class player:
 		card.pop_self()
 		self.gained_this_turn.append(card)
 
-		card.set_owner(player=self)
+		
 		#I can replace redirecting with triggers.  
 		#Right now I will have both features untill I patch the other sets
 		redirected = False
 		results = trigger.all(trigger.GAIN_CARD,[redirected,card,bought,defeat],self,pay_forward = True)
+		#Ownser should be set after gain trigger, so that it can be determined where it came from
+		card.set_owner(player=self)
+
 		if True in results:
 			redirected = True
-		#Redirects the card if nessesary
-		#I would like to change the redirect functionallity to be more plyable
-		"""if len(self.gain_redirect) > 0:
-
-			for re in self.gain_redirect.copy():
-				#A redirect returns a tuple or tripplet, the first item being a 
-				#boolean representing if the card is to be redirected
-				#The seccond item is the location to be redirected
-				#if a third itme exists, its the index in the final desdinaton
-				#That the card should be put at
-				redirect_responce = re(self,card)
-				#The card can only be redirected once
-				if not redirected and redirect_responce[0]:
-					if len(redirect_responce) == 3:
-						redirect_responce[1].contents.insert(0,card)
-					else:
-						redirect_responce[1].add(card)
-					redirected = True"""
-
 		
 		#If the card has not been redirected, gained cards go in the playes discard
 		if not redirected:

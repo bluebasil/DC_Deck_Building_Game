@@ -11,7 +11,7 @@ from fe import deck as fe_deck
 from crossover_1 import deck as c1_deck
 from crossover_2 import deck as c2_deck
 #from crossover_1 import cards as custom
-from base import cards as custom
+from fe import cards as custom
 from frames import card_frame
 import arcade
 import globe
@@ -72,8 +72,8 @@ def get_starting_deck(player):
 
 	random.shuffle(assemble)
 
-	assemble.append(custom.the_riddler(player))
-	#assemble.append(custom.utility_belt(player))
+	assemble.append(custom.shazam(player))
+	
 	#assemble.append(custom.citizen_steel(player))
 	#assemble.append(custom.liberty_belle(player))
 
@@ -157,8 +157,8 @@ def initialize_deck():
 		else:
 			small_sets_cards.extend(d.load_deck())
 	#All large sets should be shuffled (although there may be none)
-	#random.shuffle(assemble)
-	#random.shuffle(small_sets_cards)
+	random.shuffle(assemble)
+	random.shuffle(small_sets_cards)
 	if len(assemble) == 0:
 		return small_sets_cards
 	elif len(small_sets_cards) > 0:
@@ -168,6 +168,10 @@ def initialize_deck():
 		random.shuffle(top_split)
 		assemble = bottom_split
 		assemble.extend(top_split)
+
+	assemble.append(custom.happy_harbor())
+	for i in range(6):
+		assemble.append(custom.transmutation())
 	return assemble
 	
 

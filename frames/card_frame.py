@@ -159,7 +159,8 @@ class punch(card):
 	image = "base/images/cards/Punch.jpg"
 	
 	def play_action(self,player):
-		return 1
+		player.played.plus_power(1)
+		return 0
 
 class kick(card):
 	name = "Kick"
@@ -171,4 +172,5 @@ class kick(card):
 	image = "base/images/cards/Kick.jpeg"
 	
 	def play_action(self,player):
-		return 2
+		player.played.plus_power(2)
+		return 0
