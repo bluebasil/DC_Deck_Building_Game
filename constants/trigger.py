@@ -30,6 +30,10 @@ PRICE = 11
 	#data[1] card
 #in card frame
 DESTROY = 7
+	#data[0] is the destroyed card
+ROTATE = 12
+	#data[0] is the rotated card
+	#data[1] is a boolean of wether it was just rotated upright
 #in effects
 ATTACKING = 8
 	#first_result = True
@@ -39,6 +43,10 @@ ATTACKING = 8
 	#data[1] is the attacking card
 AVOIDED_ATTACK = 9
 	#data[0] the attacking player
+	#data[1] the attacking card
+	#data[2] defending card
+MY_AVOIDED_ATTACK = 13
+	#data[0] the defending player
 	#data[1] the attacking card
 	#data[2] defending card
 FAILED_TO_AVOID = 10

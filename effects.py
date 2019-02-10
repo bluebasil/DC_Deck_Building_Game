@@ -66,6 +66,8 @@ def attack(player,card,by_player = None,avoid_twise = False):
 					#player.persona.avoided_attack(assemble[result[1]])
 					#sent to the defending player
 					trigger.all(trigger.AVOIDED_ATTACK,[by_player,card,assemble[result[1]]],player,first_result = True)
+					#sent to attacking player
+					trigger.all(trigger.MY_AVOIDED_ATTACK,[player,card,assemble[result[1]]],by_player,first_result = True)
 					return False
 		elif result[0] == option.NO:
 			if by_player != None:

@@ -442,6 +442,8 @@ class player:
 			trigger.all(trigger.DISCARD,[card],self)
 			self.discarded_this_turn.append(card)
 
+		card.rotation = 0
+
 		#Put cards back into their respective locations
 		#Most will go in the players discard pile, but if a card has been played
 		#from somewherew else, they should go there

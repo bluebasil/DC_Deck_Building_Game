@@ -91,6 +91,7 @@ class card:
 	def destroy(self,player_responsible):
 		stop = trigger.all(trigger.DESTROY,[self],player_responsible,first_result = True)
 		if stop == None:
+			self.rotation = 0
 			self.frozen = []
 			self.pop_self()
 			#if player_responsible != None:
@@ -98,7 +99,7 @@ class card:
 			self.set_owner(owners.DESTROYED)
 			globe.boss.destroyed_stack.contents.append(self)
 
-	def rotate(self,counter_clockwise = False,player_responsible = None):
+	def rotate(self,player_responsible = None,counter_clockwise = False):
 		if player_responsible == None:
 			player_responsible = self.owner
 		upright = False
