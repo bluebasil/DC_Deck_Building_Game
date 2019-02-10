@@ -11,7 +11,7 @@ from fe import deck as fe_deck
 from crossover_1 import deck as c1_deck
 from crossover_2 import deck as c2_deck
 #from crossover_1 import cards as custom
-from fe import cards as custom
+from base import cards as custom
 from frames import card_frame
 import arcade
 import globe
@@ -20,7 +20,7 @@ import globe
 decks = [base_deck.this_set,fe_deck.this_set,c1_deck.this_set,c2_deck.this_set]
 choosen_sets = []
 #Specifies wether small set personas muct be picked when playing with small sets
-any_pick = True
+any_pick = False
 
 
 def choose_sets():
@@ -75,7 +75,10 @@ def get_starting_deck(player):
 	#assemble.append(custom.shazam(player))
 	
 	#assemble.append(custom.catwoman(player))
-	assemble.append(custom.firestorm_matrix(player))
+	assemble.append(custom.green_arrows_bow(player))
+	assemble.append(custom.green_arrows_bow(player))
+	assemble.append(custom.green_arrows_bow(player))
+	assemble.append(custom.green_arrows_bow(player))
 
 	return assemble
 

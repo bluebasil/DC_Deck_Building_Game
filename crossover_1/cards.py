@@ -21,6 +21,19 @@ class citizen_steel(card_frame.card):
 	ctype = cardtype.HERO
 	text = "Draw a card.\nSuper-Villains cost you 1 less to defeat this turn\nfor each Punch you play or have played this turn."
 	image = "crossover_1/images/cards/Citizen Steel 5.jpg"
+	total_discount = 0
+
+	def triggerSV(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(immediate,\
+						trigger.PRICE, \
+						self.triggerSV, \
+						player,ttype) \
+				and data[1].owner_type == owners.VILLAINDECK:
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			return data[0] - self.total_discount
 
 	def trigger(self,ttype,data,player,active,immediate):
 		if globe.DEBUG:
@@ -30,7 +43,7 @@ class citizen_steel(card_frame.card):
 						self.trigger, \
 						player,ttype) \
 				and data[0].name == "Punch":
-			player.discount_on_sv += 1
+			self.total_discount += 1
 	
 	
 	def play_action(self,player):
@@ -39,8 +52,9 @@ class citizen_steel(card_frame.card):
 		for c in player.played.played_this_turn:
 			if c.name == "Punch":
 				count += 1
-		player.discount_on_sv += count
+		self.total_discount = count
 		player.triggers.append(self.trigger)
+		player.triggers.append(self.triggerSV)
 		return 0
 
 

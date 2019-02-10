@@ -98,7 +98,9 @@ class card:
 			self.set_owner(owners.DESTROYED)
 			globe.boss.destroyed_stack.contents.append(self)
 
-	def rotate(self,counter_clockwise = False,player_responsible = self.owner):
+	def rotate(self,counter_clockwise = False,player_responsible = None):
+		if player_responsible == None:
+			player_responsible = self.owner
 		upright = False
 		if not counter_clockwise:
 			self.rotation += 90

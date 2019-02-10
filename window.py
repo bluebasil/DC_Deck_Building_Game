@@ -765,7 +765,7 @@ class card(drawable):
 		#print(card.name)
 		width = BASE_TEXTURE.width*CARD_SCALE*scale
 		height = BASE_TEXTURE.height*CARD_SCALE*scale
-		arcade.draw_texture_rectangle(x, y, width, height, card.texture, 0)
+		arcade.draw_texture_rectangle(x, y, width, height, card.texture, card.rotation)
 
 		self.set_juristiction(x-width/2,y-height/2,x+width/2,y+height/2)
 		#print(self.name,self.jminx,self.jminy,self.jmaxx,self.jmaxy,self)

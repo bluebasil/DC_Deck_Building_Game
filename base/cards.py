@@ -309,6 +309,7 @@ class the_dark_knight(card_frame.card):
 				player.triggers.append(self.trigger)
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		assemble = []
 		for c in globe.boss.lineup.contents:
 			if c.ctype_eq(cardtype.EQUIPMENT):
@@ -328,7 +329,7 @@ class the_dark_knight(card_frame.card):
 			player.triggers.append(self.trigger)
 		elif not catwoman_triggered:
 			player.triggers.append(self.triggerCW)
-		return 2
+		return 0
 
 #Done
 class doomsday(card_frame.card):
@@ -340,7 +341,8 @@ class doomsday(card_frame.card):
 	image = "base/images/cards/Doomsday.jpeg"
 	
 	def play_action(self,player):
-		return 4
+		player.played.plus_power(4)
+		return 0
 
 #Done
 class the_emerald_knight(card_frame.card):
@@ -393,7 +395,8 @@ class gorilla_grodd(card_frame.card):
 	image = "base/images/cards/Gorilla_Grodd.jpeg"
 	
 	def play_action(self,player):
-		return 3
+		player.played.plus_power(3)
+		return 0
 
 #TODO: need testing calculating vp
 class green_arrow(card_frame.card):
@@ -405,6 +408,7 @@ class green_arrow(card_frame.card):
 	image = "base/images/cards/Green_Arrow.jpeg"
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		return 2
 
 	def calculate_vp(self,all_cards):
@@ -425,10 +429,23 @@ class green_arrows_bow(card_frame.card):
 	ctype = cardtype.EQUIPMENT
 	text = "+2 Power.  Super-Villains cost you 2 less to defeat this turn."
 	image = "base/images/cards/Green_Arrows_Bow.jpeg"
+
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(immediate,\
+						trigger.PRICE, \
+						self.trigger, \
+						player,ttype) \
+				and data[1].owner_type == owners.VILLAINDECK:
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			return data[0] - 2
 	
 	def play_action(self,player):
-		player.discount_on_sv += 2
-		return 2
+		player.played.plus_power(2)
+		player.triggers.append(self.trigger)
+		return 0
 
 #Done
 class harley_quinn(card_frame.card):
@@ -442,8 +459,9 @@ class harley_quinn(card_frame.card):
 	image = "base/images/cards/Harley_Quinn_2.jpeg"
 	
 	def play_action(self,player):
+		player.played.plus_power(1)
 		self.attack_action(player)
-		return 1
+		return 0
 
 	def attack_action(self,by_player):
 		for p in globe.boss.players:
@@ -466,6 +484,7 @@ class heat_vision(card_frame.card):
 	image = "base/images/cards/Heat_Vision.jpeg"
 	
 	def play_action(self,player):
+		player.played.plus_power(3)
 		#effects.may_destroy_card_in_hand_or_discard(player)
 		collection = player.hand.contents.copy()
 		collection.extend(player.discard.contents)
@@ -474,7 +493,7 @@ class heat_vision(card_frame.card):
 		if card_to_destroy != None:
 			card_to_destroy.destroy(player)
 
-		return 3
+		return 0
 
 #Done
 class high_tech_hero(card_frame.card):
@@ -488,9 +507,10 @@ class high_tech_hero(card_frame.card):
 	def play_action(self,player):
 		if player.played.get_count(cardtype.SUPERPOWER) > 0 \
 				or player.played.get_count(cardtype.EQUIPMENT) > 0:
-			return 3
+			player.played.plus_power(3)
 		else:
-			return 1
+			player.played.plus_power(1)
+		return 0
 
 #Done
 class jonn_jonzz(card_frame.card):
@@ -538,10 +558,11 @@ class king_of_atlantis(card_frame.card):
 		card_to_destroy = effects.may_choose_one_of(instruction_text,player,player.discard.contents,ai_hint.IFBAD)
 
 		if card_to_destroy == None:
-			return 1
+			player.played.plus_power(1)
 		else:
 			card_to_destroy.destroy(player)
-			return 3
+			player.played.plus_power(3)
+		return 0
 
 #Done
 class lasso_of_truth(card_frame.card):
@@ -554,7 +575,8 @@ class lasso_of_truth(card_frame.card):
 	image = "base/images/cards/Lasso_of_Truth.jpeg"
 	
 	def play_action(self,player):
-		return 1
+		player.played.plus_power(1)
+		return 0
 
 	def defend(self,attacker = None,defender = None):
 		self.owner.discard_a_card(self)
@@ -571,6 +593,7 @@ class lobo(card_frame.card):
 	image = "base/images/cards/Lobo.jpeg"
 	
 	def play_action(self,player):
+		player.played.plus_power(3)
 		collection = player.hand.contents.copy()
 		collection.extend(player.discard.contents)
 		instruction_text = f"You may destroy a card in your hand or discard pile (1/2)"
@@ -583,7 +606,7 @@ class lobo(card_frame.card):
 			card_to_destroy = effects.may_choose_one_of(instruction_text,player,collection,ai_hint.IFBAD)
 			if card_to_destroy != None:
 				card_to_destroy.destroy(player)
-		return 3
+		return 0
 
 #Done
 class the_man_of_steel(card_frame.card):
@@ -595,13 +618,14 @@ class the_man_of_steel(card_frame.card):
 	image = "base/images/cards/Man_of_Steel.jpeg"
 	
 	def play_action(self,player):
+		player.played.plus_power(3)
 		assemble = []
 		for c in player.discard.contents:
 			if c.ctype_eq(cardtype.SUPERPOWER):
 				assemble.append(c)
 		for c in assemble:
 			player.hand.add(c.pop_self())
-		return 3
+		return 0
 
 #Done
 class mera(card_frame.card):
@@ -614,8 +638,10 @@ class mera(card_frame.card):
 	
 	def play_action(self,player):
 		if player.discard.size() == 0:
-			return 4
-		return 2
+			player.played.plus_power(4)
+		else:
+			player.played.plus_power(2)
+		return 0
 
 #Done
 class nth_metal(card_frame.card):
@@ -661,8 +687,9 @@ class poison_ivy(card_frame.card):
 	image = "base/images/cards/Poison_Ivy_3.jpeg"
 	
 	def play_action(self,player):
+		player.played.plus_power(1)
 		self.attack_action(player)
-		return 1
+		return 0
 
 	def attack_action(self,by_player):
 		for p in globe.boss.players:
@@ -687,8 +714,10 @@ class power_ring(card_frame.card):
 	def play_action(self,player):
 		top_card = player.reveal_card()
 		if top_card != None and top_card.cost >= 1:
-			return 3
-		return 2
+			player.played.plus_power(3)
+		else:
+			player.played.plus_power(1)
+		return 0
 
 #Done
 class princess_diana_of_themyscira(card_frame.card):
@@ -726,9 +755,9 @@ class the_riddler(card_frame.card):
 		#player.played_riddler = True
 		if effects.ok_or_no(f"Would you like to use the riddler ability?",player,self,ai_hint.NEVER):
 			player.played.special_options.append(actions.special_action("Riddle",self.special_action_click))
-			return 0
 		else:
-			return 1
+			player.played.plus_power(1)
+		return 0
 
 
 
@@ -742,6 +771,7 @@ class robin(card_frame.card):
 	image = "base/images/cards/Robin_3.jpeg"
 	
 	def play_action(self,player):
+		player.played.plus_power(1)
 		instruction_text = "Choose an Equipment from you discard pile to put into your hand"
 		assemble = []
 		for c in player.discard.contents:
@@ -751,7 +781,7 @@ class robin(card_frame.card):
 			choosen = effects.choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			#if choosen != None
 			player.hand.add(choosen.pop_self())
-		return 1
+		return 0
 
 #Attack
 class scarecrow(card_frame.card):
@@ -765,8 +795,9 @@ class scarecrow(card_frame.card):
 	image = "base/images/cards/Scarecrow_5.jpeg"
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		self.attack_action(player)
-		return 2
+		return 0
 
 	def attack_action(self,by_player):
 		for p in globe.boss.players:

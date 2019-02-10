@@ -474,6 +474,14 @@ class player:
 			action.click_action(self)
 			globe.boss.clear_queue()
 
+	def get_cost(self,card):
+		results = trigger.all(trigger.PRICE,[card.cost,card],self,pay_forward = True,immediate = True)
+		#since pay forward is on, the cost will already be calculatec
+		predicted_cost = card.cost
+		if len(results) > 0:
+			predicted_cost = results[-1]
+		return predicted_cost
+
 #The following buy or gain functions return False is they are unsucsesfull, and True if the card is gained
 
 	#Tries to buy the SV
@@ -481,25 +489,35 @@ class player:
 		#print("Trying to buy sv",globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv,flush = True)
 		#Is the top SV visible, or is it flipped over.
 		#Do we have enough power (minus discount) to buy the sv
-		if globe.boss.supervillain_stack.current_sv == globe.boss.supervillain_stack.contents[-1] \
-				and self.played.power >= globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv:
-			if globe.DEBUG:
-				print(f" {globe.boss.supervillain_stack.contents[-1].name} bought")
-				print("buy_sv-START",flush = True)
-			#This is the only time that SV's can be 'defeated', and therefore defeat=True
-			if self.gain(globe.boss.supervillain_stack.contents[-1],bought = True,defeat = True):
-				globe.boss.clear_queue()
-				return True
+		if globe.boss.supervillain_stack.current_sv == globe.boss.supervillain_stack.contents[-1]:
+			card = globe.boss.supervillain_stack.contents[-1]
+
+			predicted_cost = self.get_cost(card)
+
+			#remember to take discount_on_sv out once trigger.PRICE has been fully implimented
+			if self.played.power >= predicted_cost - self.discount_on_sv:
+				if globe.DEBUG:
+					print(f" {card.name} bought")
+					print("buy_sv-START",flush = True)
+				#This is the only time that SV's can be 'defeated', and therefore defeat=True
+				if self.gain(card,price = predicted_cost - self.discount_on_sv,defeat = True):
+					globe.boss.clear_queue()
+					return True
 		return False
 
 	def buy_kick(self):
-		if globe.boss.kick_stack.size() > 0 and self.played.power >= globe.boss.kick_stack.contents[-1].cost:
-			if globe.DEBUG:
-				print(f"kick bought")
-				print("buy_kick-START",flush = True)
-			if self.gain(globe.boss.kick_stack.contents[-1],bought = True):
-				globe.boss.clear_queue()
-				return True
+		if globe.boss.kick_stack.size() > 0:
+			card = globe.boss.kick_stack.contents[-1]
+
+			predicted_cost = self.get_cost(card)
+
+			if self.played.power >= predicted_cost:
+				if globe.DEBUG:
+					print(f"kick bought")
+					print("buy_kick-START",flush = True)
+				if self.gain(card,price = predicted_cost):
+					globe.boss.clear_queue()
+					return True
 		return False
 
 	def gain_a_weakness(self):
@@ -511,14 +529,16 @@ class player:
 	def buy(self,cardnum):
 		if cardnum < 0 or cardnum >= len(globe.boss.lineup.contents):
 			return False
-		card = globe.boss.lineup.contents[cardnum]
-		if self.played.power >= card.cost:
+		
+		predicted_cost = self.get_cost(card)
+
+		if self.played.power >= predicted_cost:
 			#card.bought = True
 			if globe.DEBUG:
 				print(f"{card.name} bought")
 				print("buy-START",flush = True)
 			#self.played.power -= card.cost
-			if self.gain(globe.boss.lineup.contents[cardnum],bought = True):
+			if self.gain(globe.boss.lineup.contents[cardnum],price = predicted_cost):
 				globe.boss.clear_queue()
 				return True
 			#return True
@@ -526,11 +546,13 @@ class player:
 
 	#No discounds have been applied, that may need to be added in the future
 	def buy_c(self,card):
-		if self.played.power >= card.cost and len(card.frozen) == 0:
+		predicted_cost = self.get_cost(card)
+
+		if self.played.power >= predicted_cost and len(card.frozen) == 0:
 			if globe.DEBUG:
 				print(f"{card.name} bought")
 				print("buy_c-START",flush = True)
-			if self.gain(card,bought = True):
+			if self.gain(card,price = predicted_cost):
 				globe.boss.clear_queue()
 				return True
 		return False
@@ -538,10 +560,12 @@ class player:
 	#cards that are bought are also gained
 	#This can return False if the card does not want to be gained (like if it enforces
 	#certain criteria that have not been met)
-	def gain(self, card,bought = False,defeat = False):
 
+	def gain(self, card,price = None,defeat = False):
+		bought = False
 		#Trying to buy card. Have not payed yet, but funds have been secured
-		if bought:
+		if price != None:
+			bought = True
 			#card is frozen, cannot buy
 			if len(card.frozen) != 0:
 				return False
@@ -550,13 +574,10 @@ class player:
 		if not card.buy_action(self,bought,defeat):
 			return False
 
-		if bought:
+		if price != None:
 			# All checks passed, paying
-			if defeat:
-				#avoids negative
-				self.played.power -= max(card.cost - self.discount_on_sv,0)
-			else:
-				self.played.power -= card.cost
+			#avoids negative
+			self.played.power -= max(price,0)
 
 		card.pop_self()
 		self.gained_this_turn.append(card)
@@ -599,7 +620,7 @@ class player:
 	def end_turn(self):
 		if globe.DEBUG:
 			print("end-START",flush = True)
-		trigger.all(trigger.END_TURN,[],self)
+		trigger.all(trigger.END_TURN,[],self,immediate = True)
 		globe.boss.clear_queue()
 		self.triggers = []
 		self.gain_redirect = []
@@ -728,7 +749,7 @@ class model:
 		#controler can be used for testing, which is nice)
 
 		new_player = player(pid,None)
-		new_controler = controlers.cpu(new_player,invisible)
+		new_controler = controlers.human_view(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 		pid += 1

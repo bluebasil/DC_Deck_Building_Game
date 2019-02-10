@@ -1210,9 +1210,21 @@ class word_of_power(card_frame.card):
 	ctype = cardtype.SUPERPOWER
 	text = "When you destroy this card in any zone, you\npay 4 less to defeat Super Heros this turn."
 	image = "fe/images/cards/Word of Power.jpg"
+
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(immediate,\
+						trigger.PRICE, \
+						self.trigger, \
+						player,ttype) \
+				and data[1].owner_type == owners.VILLAINDECK:
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			return data[0] - 4
 	
 	def destroy(self,player_responsible):
-		player_responsible.discount_on_sv += 4
+		player.triggers.append(self.trigger)
 		super().destroy(player_responsible)
 
 

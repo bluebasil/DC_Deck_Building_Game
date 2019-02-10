@@ -11,6 +11,8 @@ class persona:
 	active = True
 	image = "base/images/personas/Aquaman MC.jpg"
 	texture = None
+	#:( so that ui dosnt brake
+	rotation = 0
 
 	def __init__(self,player = None):
 		self.texture = arcade.load_texture(self.image)

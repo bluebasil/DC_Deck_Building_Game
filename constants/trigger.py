@@ -24,7 +24,10 @@ END_TURN = 5
 PLAY = 6
 	#data[0] is the card played
 	#If there is ever a need for ongoing triggers, that could be added
-
+PRICE = 11
+	#pay_forward = True
+	#data[0] cost
+	#data[1] card
 #in card frame
 DESTROY = 7
 #in effects
@@ -105,9 +108,10 @@ class delayed_trigger:
 
 
 
-def all(trigger_id,data,player,pay_forward = False,first_result = False):
+def all(trigger_id,data,player,pay_forward = False,first_result = False,immediate = False):
 	result = check_triggers(trigger_id,data,player,player.persona.active,pay_forward,first_result,immediate = True)
-	globe.boss.trigger_queue.append(delayed_trigger(trigger_id,data,player,pay_forward,first_result))
+	if not immediate:
+		globe.boss.trigger_queue.append(delayed_trigger(trigger_id,data,player,pay_forward,first_result))
 	return result
 
 #These tests are done on every trigger, so I though i could automate them,
