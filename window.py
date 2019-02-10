@@ -389,7 +389,11 @@ class boss(drawable):
 			play.draw(p.played.contents,SCREEN_WIDTH/2,SCREEN_HEIGHT/2,True)
 
 		#Power display
-		arcade.draw_text(f"{globe.boss.players[globe.boss.whose_turn].played.power} Power", SCREEN_WIDTH*0.8,SCREEN_HEIGHT*0.9 , arcade.color.WHITE, 86*SCREEN_SCALE)
+		power_text = f"{globe.boss.players[globe.boss.whose_turn].played.power} Power"
+		if globe.boss.players[globe.boss.whose_turn].discount_on_sv != 0:
+			power_text += f" (+{globe.boss.players[globe.boss.whose_turn].discount_on_sv})"
+
+		arcade.draw_text(power_text, SCREEN_WIDTH*0.8,SCREEN_HEIGHT*0.9 , arcade.color.WHITE, 86*SCREEN_SCALE)
 
 		if globe.boss.whose_turn == 0:
 			for i,special_option in enumerate(globe.boss.players[globe.boss.whose_turn].played.special_options):
@@ -761,7 +765,7 @@ class card(drawable):
 		#print(card.name)
 		width = BASE_TEXTURE.width*CARD_SCALE*scale
 		height = BASE_TEXTURE.height*CARD_SCALE*scale
-		arcade.draw_texture_rectangle(x, y, width, height, card.texture, 0)
+		arcade.draw_texture_rectangle(x, y, width, height, card.texture, card.rotation)
 
 		self.set_juristiction(x-width/2,y-height/2,x+width/2,y+height/2)
 		#print(self.name,self.jminx,self.jminy,self.jmaxx,self.jmaxy,self)

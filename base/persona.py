@@ -3,6 +3,7 @@ import effects
 from constants import ai_hint
 import globe
 from frames import persona_frame
+from constants import trigger
 
 def get_personas():
 	#return [auquaman(),batman(),the_flash()]
@@ -14,14 +15,23 @@ class auquaman(persona_frame.persona):
 	text = "You may put any cards with cost 5 or less you buy or gain during your turn on top of your deck."
 	image = "base/images/personas/Aquaman MC.jpg"
 
-	def aquaman_redirect(self,player,card):
-		if globe.boss.whose_turn == self.player.pid and card.cost <= 5 and effects.ok_or_no(f"Would you like to put {card.name} on top of your deck?",player,card,ai_hint.ALWAYS):
-			return (True,player.deck)
-		return (False,None)
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(immediate,\
+						trigger.GAIN_CARD, \
+						self.trigger, \
+						player,ttype,active) \
+				and data[0] == False \
+				and data[1].cost <= 5 \
+				and effects.ok_or_no(f"Would you like to put {data[1].name} on top of your deck?",player,data[1],ai_hint.ALWAYS):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.deck.contents.append(data[1])
+			return True
 
 	def ready(self):
-		if self.active:
-			self.player.gain_redirect.append(self.aquaman_redirect)
+		self.player.triggers.append(self.trigger)
 
 class batman(persona_frame.persona):
 	name = "Batman"
@@ -33,14 +43,20 @@ class batman(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.ctype_eq(cardtype.EQUIPMENT):
-			return 1
-		return 0
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active) \
+				and data[0].ctype_eq(cardtype.EQUIPMENT):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.played.plus_power(1)
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.trigger)
 
 class cyborg(persona_frame.persona):
 	name = "Cyborg"
@@ -52,50 +68,66 @@ class cyborg(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.ctype_eq(cardtype.SUPERPOWER):
-			already_played = False
-			for c in self.player.played.played_this_turn:
-				if c != card and c.ctype_eq(cardtype.SUPERPOWER):
-					already_played = True
-			if not already_played:
-				return 1
-		elif card.ctype_eq(cardtype.EQUIPMENT):
-			already_played = False
-			for c in self.player.played.played_this_turn:
-				if c != card and c.ctype_eq(cardtype.EQUIPMENT):
-					already_played = True
-			if not already_played:
-				self.player.draw_card(from_card = False)
-		return 0
+	def triggerEQ(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test - EQ",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.triggerEQ, \
+						player,ttype) \
+				and data[0].ctype_eq(cardtype.EQUIPMENT):
+			if globe.DEBUG:
+				print("active - EQ",self.name,flush=True)
+			if active:
+				player.draw_card(from_card = False)
+			player.triggers.remove(self.triggerEQ)
 
+	def triggerSP(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test - SP",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.triggerSP, \
+						player,ttype) \
+				and data[0].ctype_eq(cardtype.SUPERPOWER):
+			if globe.DEBUG:
+				print("active - SP",self.name,flush=True)
+			if active:
+				player.played.plus_power(1)
+			player.triggers.remove(self.triggerSP)
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.triggerSP)
+		self.player.triggers.append(self.triggerEQ)
 
 class the_flash(persona_frame.persona):
 	name = "The Flash"
 	text = "You go first.  The first time a card tells you to draw one or more cards during each of your turns, draw an additional card."
 	image = "base/images/personas/The Flash MC.jpg"
-	accounted_for = False
 
 	def ai_overvalue(self,card):
 		if card.text.lower().count('draw') > 0:
 			return persona_frame.overvalue()
 		return 0
 
-	def draw_power(self):
-		if self.active and not self.accounted_for:
-			self.accounted_for = True
-			self.player.draw_card(from_card = False)
-		return
-
-	def reset(self):
-		self.accounted_for = True
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.DRAW, \
+						self.trigger, \
+						player,ttype) \
+				and data[1] == True:
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			if active:
+				player.draw_card(from_card = False)
+			player.triggers.remove(self.trigger)
 
 	def ready(self):
-		self.accounted_for = False
+		self.player.triggers.append(self.trigger)
+
+
 
 
 class green_lantern(persona_frame.persona):
@@ -104,28 +136,25 @@ class green_lantern(persona_frame.persona):
 	image = "base/images/personas/Green Lantern MC.jpg"
 	#accounted_for = False
 
-	def mod(self,card,player):
-		#if not self.accounted_for:
-		others = []
-		for c in self.player.played.played_this_turn:
-			unique = True
-			if c.cost >= 1:
-				for o in others:
-					if c.name == o.name:
-						unique = False
-				if unique:
-					others.append(c)
-		if len(others) >= 3:
-			#self.accounted_for = True
-			if self.mod in self.player.played.card_mods:
-				self.player.played.card_mods.remove(self.mod)
-			return 3
-		return 0
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			names = set()
+			for c in player.played.played_this_turn:
+				if c.cost >= 1:
+					names.add(c.name)
+			if len(names) >= 3:
+				player.played.plus_power(3)
+				player.triggers.remove(self.trigger)
 
 	def ready(self):
-		if self.active:
-			#self.accounted_for = False
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.trigger)
 
 class hawkman(persona_frame.persona):
 	name = "Hawkman"
@@ -137,15 +166,20 @@ class hawkman(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.ctype_eq(cardtype.HERO):
-			return 1
-		return 0
-
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active) \
+				and data[0].ctype_eq(cardtype.HERO):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.played.plus_power(1)
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.trigger)
 
 class superman(persona_frame.persona):
 	name = "Superman"
@@ -157,20 +191,25 @@ class superman(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.ctype_eq(cardtype.SUPERPOWER):
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active) \
+				and data[0].ctype_eq(cardtype.SUPERPOWER):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			already_played = False
-			for c in self.player.played.played_this_turn:
-				if c != card and card.name == c.name:
+			for c in player.played.played_this_turn:
+				if c != data[0] and data[0].name == c.name:
 					already_played = True
 			if not already_played:
-				return 1
-		return 0
-
+				player.played.plus_power(1)
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.trigger)
 
 class wonder_woman(persona_frame.persona):
 	name = "Wonder Woman"
@@ -199,35 +238,43 @@ class martian_manhunter(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def villain_mod(self,card,player):
-		if card.ctype_eq(cardtype.VILLAIN):
-			#This card is 1
+	def triggerVI(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test - VI",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.triggerVI, \
+						player,ttype,active) \
+				and data[0].ctype_eq(cardtype.VILLAIN):
+			
+			if globe.DEBUG:
+				print("active - VI",self.name,flush=True)
 			villain_count = 0
-			for c in self.player.played.played_this_turn:
+			for c in player.played.played_this_turn:
 				if c.ctype_eq(cardtype.VILLAIN):
 					villain_count += 1
-			if villain_count == 2:
-				if self.villain_mod in self.player.played.card_mods:
-					self.player.played.card_mods.remove(self.villain_mod)
-				return 3
-		return 0
+			if villain_count >= 2:
+				player.played.plus_power(3)
+				player.triggers.remove(self.triggerVI)
 
-
-	def hero_mod(self,card,player):
-		if card.ctype_eq(cardtype.HERO):
-			#This card is 1
-			hero_count = 0
-			for c in self.player.played.played_this_turn:
+	def triggerHE(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test - HE",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.triggerHE, \
+						player,ttype,active) \
+				and data[0].ctype_eq(cardtype.HERO):
+			if globe.DEBUG:
+				print("active - HE",self.name,flush=True)
+			villain_count = 0
+			for c in player.played.played_this_turn:
 				if c.ctype_eq(cardtype.HERO):
-					hero_count += 1
-			if hero_count == 2:
-				if self.hero_mod in self.player.played.card_mods:
-					self.player.played.card_mods.remove(self.hero_mod)
-				return 3
-		return 0
-
+					villain_count += 1
+			if villain_count >= 2:
+				player.played.plus_power(3)
+				player.triggers.remove(self.triggerHE)
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.villain_mod)
-			self.player.played.card_mods.append(self.hero_mod)
+		self.player.triggers.append(self.triggerVI)
+		self.player.triggers.append(self.triggerHE)

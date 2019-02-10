@@ -8,6 +8,7 @@ import random
 import arcade
 from frames import actions
 from frames import card_frame
+from constants import trigger
 
 #Done
 class amanda_waller(card_frame.card):
@@ -25,11 +26,13 @@ class amanda_waller(card_frame.card):
 		instruction_text = "You may destroy a card in your hand or discard pile.\nIf it's a Villain, +Power equal to it's cost.\nIf you choose not to, +2 Power."
 		card_to_destroy = effects.may_choose_one_of(instruction_text,player,collection,ai_hint.IFBAD)
 		if card_to_destroy == None:
-			return 2
+			player.played.plus_power(2)
+			return 0
 		else:
 			card_to_destroy.destroy(player)
 			if card_to_destroy.ctype_eq(cardtype.VILLAIN):
-				return card_to_destroy.cost
+				player.played.plus_power(card_to_destroy.cost)
+				return 0
 		return 0
 
 #Done
@@ -70,9 +73,10 @@ class bizarro_power(card_frame.card):
 	image = "fe/images/cards/Bizarro Power.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(4)
 		player.gain_a_weakness()
 		self.attack_action(player)
-		return 4
+		return 0
 
 	def attack_action(self,by_player):
 		for p in globe.boss.players:
@@ -93,8 +97,9 @@ class broadsword(card_frame.card):
 	image = "fe/images/cards/Broadsword.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		self.attack_action(player)
-		return 2
+		return 0
 
 	def attack_action(self,by_player):
 		#r(instruction_text,player,includes_self = True):
@@ -121,8 +126,9 @@ class catwoman(card_frame.card):
 	image = "fe/images/cards/Catwoman 3 Fe.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(1)
 		self.attack_action(player)
-		return 1
+		return 0
 
 	def attack_action(self,by_player):
 		#r(instruction_text,player,includes_self = True):
@@ -141,13 +147,18 @@ class cold_gun(card_frame.card):
 	ctype = cardtype.EQUIPMENT
 	text = "+1 Power\nYou may put a Frozen token on a card in the Line-up.\nIf you do, remove it at the start of your next turn."
 	image = "fe/images/cards/Cold Gun 2.jpg"
+	play_time = []
 	
+	#I could use triggers and buy actions to remove the global
+	#frozen attributes
+	#But i have not done that yet, and graphicly there are advantages this way
 	def play_action(self,player):
+		player.played.plus_power(1)
 		instruction_text = "You may put a Frozen token on a card in the Line-up"
 		result = effects.may_choose_one_of(instruction_text,player,globe.boss.lineup.contents,ai_hint.RANDOM)
 		if result != None:
 			result.frozen.append(player.pid)
-		return 1
+		return 0
 
 #Done
 class commissioner_gordon(card_frame.card):
@@ -160,7 +171,8 @@ class commissioner_gordon(card_frame.card):
 	image = "fe/images/cards/Commissioner Gordon.jpg"
 	
 	def play_action(self,player):
-		return 1
+		player.played.plus_power(1)
+		return 0
 
 	def defend(self,attacker = None,defender = None):
 		self.owner.discard_a_card(self)
@@ -179,8 +191,9 @@ class constructs_of_fear(card_frame.card):
 	image = "fe/images/cards/Constructs of Fear.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(3)
 		self.attack_action(player)
-		return 3
+		return 0
 
 	def attack_action(self,by_player):
 		for p in globe.boss.players:
@@ -201,7 +214,8 @@ class cosmic_staff(card_frame.card):
 	image = "fe/images/cards/Cosmic Staff.jpg"
 	
 	def play_action(self,player):
-		return 2
+		player.played.plus_power(2)
+		return 0
 
 	def defend(self,attacker = None,defender = None):
 		self.owner.discard_a_card(self)
@@ -294,8 +308,9 @@ class element_woman(card_frame.card):
 	being_played = False
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		self.being_played = True
-		return 2
+		return 0
 
 	def get_ctype(self):
 		if self.owner == None and not self.being_played:
@@ -511,8 +526,10 @@ class giganta(card_frame.card):
 		card_exists = False
 		for c in player.discard.contents:
 			if c.cost <= 3:
-				return 2
-		return 4
+				player.played.plus_power(2)
+				return 0
+		player.played.plus_power(4)
+		return 0
 
 class grid(card_frame.card):
 	name = "Grid"
@@ -523,6 +540,7 @@ class grid(card_frame.card):
 	image = "fe/images/cards/Grid.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(1)
 		assemble = []
 		for c in player.discard.contents:
 			if c.cost <= 5 and (c.ctype_eq(cardtype.VILLAIN) or c.ctype_eq(cardtype.EQUIPMENT)):
@@ -532,7 +550,7 @@ class grid(card_frame.card):
 			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			if result != None:
 				player.deck.contents.append(result.pop_self())
-		return 1
+		return 0
 
 class insanity(card_frame.card):
 	name = "Insanity"
@@ -544,7 +562,7 @@ class insanity(card_frame.card):
 	defence = True
 	
 	def play_action(self,player):
-		if len(player.played.played_this_turn) == 1:
+		if len(player.played.played_this_turn) == 0:
 			cards_to_pass = []
 			instruction_text = "Choose a card to pass to the hand of the player to your left."
 			for p in globe.boss.players:
@@ -589,7 +607,8 @@ class invulnerable(card_frame.card):
 	defence = True
 	
 	def play_action(self,player):
-		return 1
+		player.played.plus_power(1)
+		return 0
 
 	def defend(self,defender = None,attacker = None):
 		assemble = []
@@ -659,7 +678,8 @@ class man_bat_serum(card_frame.card):
 		self.destroy_by = None
 		if player.vp >= 5:
 			self.destroy_by = player
-		return player.vp
+		player.played.plus_power(player.vp)
+		return 0
 
 
 	def end_of_turn(self):
@@ -678,7 +698,8 @@ class man_bat(card_frame.card):
 	defence = True
 	
 	def play_action(self,player):
-		return 2
+		player.played.plus_power(2)
+		return 0
 
 
 	def defend(self,defender = None,attacker = None):
@@ -711,7 +732,8 @@ class owlman(card_frame.card):
 		for c in globe.boss.destroyed_stack.contents:
 			if c.ctype_eq(cardtype.EQUIPMENT):
 				unique_equipment.add(c.name)
-		return len(unique_equipment)
+		player.played.plus_power(len(unique_equipment))
+		return 0
 
 class pandora(card_frame.card):
 	name = "Pandora"
@@ -729,7 +751,8 @@ class pandora(card_frame.card):
 		unique_cost = set()
 		for c in globe.boss.lineup.contents:
 			unique_cost.add(c.cost)
-		return len(unique_cost)
+		player.played.plus_power(len(unique_cost))
+		return 0
 
 class pandoras_box(card_frame.card):
 	name = "Pandora's Box"
@@ -790,7 +813,8 @@ class power_armor(card_frame.card):
 	defence = True
 	
 	def play_action(self,player):
-		return 3
+		player.played.plus_power(3)
+		return 0
 
 
 	def defend(self,defender = None,attacker = None):
@@ -813,8 +837,9 @@ class power_drain(card_frame.card):
 	image = "fe/images/cards/Power Drain.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		self.attack_action(player)
-		return 2
+		return 0
 
 	def attack_action(self,by_player):
 		player = effects.choose_a_player("Choose a foe to attack",by_player,includes_self = False)
@@ -834,7 +859,8 @@ class power_girl(card_frame.card):
 	image = "fe/images/cards/Power Girl.jpg"
 	
 	def play_action(self,player):
-		return 3
+		player.played.plus_power(3)
+		return 0
 
 
 
@@ -860,7 +886,8 @@ class power_ring(card_frame.card):
 		for c in globe.boss.destroyed_stack.contents:
 			if c.ctype_eq(cardtype.HERO):
 				unique_hero.add(c.name)
-		return len(unique_hero)
+		player.played.plus_power(len(unique_hero))
+		return 0
 
 class royal_flush_gang(card_frame.card):
 	name = "Royal Flush Glang"
@@ -903,9 +930,10 @@ class secret_society_communicator(card_frame.card):
 			if result != None:
 				result.destroy(player)
 				if result.ctype_eq(cardtype.HERO):
-					return result.cost
+					player.played.plus_power(result.cost)
 				return 0
-		return 2
+		player.played.plus_power(2)
+		return 0
 
 class sledgehammer(card_frame.card):
 	name = "Sledgehammer"
@@ -942,7 +970,8 @@ class stargirl(card_frame.card):
 	defence = True
 	
 	def play_action(self,player):
-		return 2
+		player.played.plus_power(2)
+		return 0
 
 
 	def defend(self,defender = None,attacker = None):
@@ -1021,9 +1050,10 @@ class super_intellect(card_frame.card):
 			if result != None:
 				result.destroy(player)
 				if result.ctype_eq(cardtype.EQUIPMENT):
-					return result.cost
+					player.played.plus_power(result.cost)
 				return 0
-		return 2
+		player.played.plus_power(2)
+		return 0
 
 
 class superwoman(card_frame.card):
@@ -1048,7 +1078,8 @@ class superwoman(card_frame.card):
 		for c in globe.boss.destroyed_stack.contents:
 			if c.ctype_eq(cardtype.VILLAIN):
 				unique_villain.add(c.name)
-		return len(unique_villain)
+		player.played.plus_power(len(unique_villain))
+		return 0
 
 
 class the_blight(card_frame.card):
@@ -1068,9 +1099,10 @@ class the_blight(card_frame.card):
 			if result != None:
 				result.destroy(player)
 				if result.ctype_eq(cardtype.SUPERPOWER):
-					return result.cost
+					player.played.plus_power(result.cost)
 				return 0
-		return 2
+		player.played.plus_power(2)
+		return 0
 
 
 class transmutation(card_frame.card):
@@ -1108,8 +1140,9 @@ class ultra_strength(card_frame.card):
 	image = "fe/images/cards/Ultra Strength.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(3)
 		player.draw_card(2)
-		return 3
+		return 0
 
 
 class ultraman(card_frame.card):
@@ -1130,7 +1163,8 @@ class ultraman(card_frame.card):
 		for c in globe.boss.destroyed_stack.contents:
 			if c.ctype_eq(cardtype.SUPERPOWER):
 				unique_superpower.add(c.name)
-		return len(unique_superpower)
+		player.played.plus_power(len(unique_superpower))
+		return 0
 
 
 class venom_injector(card_frame.card):
@@ -1156,6 +1190,7 @@ class vibe(card_frame.card):
 	image = "fe/images/cards/Vibe.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(1)
 		assemble = []
 		for c in player.discard.contents:
 			if c.cost <= 5 and (c.ctype_eq(cardtype.HERO) or c.ctype_eq(cardtype.SUPERPOWER)):
@@ -1165,7 +1200,7 @@ class vibe(card_frame.card):
 			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			if result != None:
 				player.deck.contents.append(result.pop_self())
-		return 1
+		return 0
 
 
 class word_of_power(card_frame.card):
@@ -1175,9 +1210,21 @@ class word_of_power(card_frame.card):
 	ctype = cardtype.SUPERPOWER
 	text = "When you destroy this card in any zone, you\npay 4 less to defeat Super Heros this turn."
 	image = "fe/images/cards/Word of Power.jpg"
+
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(immediate,\
+						trigger.PRICE, \
+						self.trigger, \
+						player,ttype) \
+				and data[1].owner_type == owners.VILLAINDECK:
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			return data[0] - 4
 	
 	def destroy(self,player_responsible):
-		player_responsible.discount_on_sv += 4
+		player.triggers.append(self.trigger)
 		super().destroy(player_responsible)
 
 
@@ -1192,17 +1239,24 @@ class belle_reve(card_frame.card):
 	image = "fe/images/cards/Belle Reve.jpg"
 	ongoing = True
 
-	def location_mod(self,card,player):
-		#there is a risk that the card is removed from ongoing from an ealier mod
-		if card.ctype_eq(cardtype.VILLAIN) and self.location_mod in player.played.card_mods:
-			return 1
-		return 0
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].ctype_eq(cardtype.VILLAIN):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.played.plus_power(1)
+
 	
 	
 	def play_action(self,player):
 		if self not in player.ongoing.contents:
 			player.ongoing.add(self.pop_self())
-		player.played.card_mods.append(self.location_mod)
+		player.triggers.append(self.trigger)
 		return 0
 
 class blackgate_prison(card_frame.card):
@@ -1240,17 +1294,24 @@ class central_city(card_frame.card):
 	image = "fe/images/cards/Central City.jpg"
 	ongoing = True
 
-	def location_mod(self,card,player):
-		#there is a risk that the card is removed from ongoing from an ealier mod
-		if self.location_mod in player.played.card_mods and card.ctype_eq(cardtype.SUPERPOWER) and card.name != "Kick":
-			return 1
-		return 0
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].ctype_eq(cardtype.SUPERPOWER) \
+				and data[0].name != "Kick":
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.played.plus_power(1)
 	
 	
 	def play_action(self,player):
 		if self not in player.ongoing.contents:
 			player.ongoing.add(self.pop_self())
-		player.played.card_mods.append(self.location_mod)
+		player.triggers.append(self.trigger)
 		return 0
 
 class earth_3(card_frame.card):
@@ -1288,17 +1349,23 @@ class happy_harbor(card_frame.card):
 	image = "fe/images/cards/Happy Harbor.jpg"
 	ongoing = True
 
-	def location_mod(self,card,player):
-		#there is a risk that the card is removed from ongoing from an ealier mod
-		if self.location_mod in player.played.card_mods and card.ctype_eq(cardtype.HERO):
-			return 1
-		return 0
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].ctype_eq(cardtype.HERO):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.played.plus_power(1)
 	
 	
 	def play_action(self,player):
 		if self not in player.ongoing.contents:
 			player.ongoing.add(self.pop_self())
-		player.played.card_mods.append(self.location_mod)
+		player.triggers.append(self.trigger)
 		return 0
 
 class star_labs(card_frame.card):
@@ -1310,24 +1377,24 @@ class star_labs(card_frame.card):
 	image = "fe/images/cards/Star Labs.jpg"
 	ongoing = True
 
-	def location_mod(self,card,player):
-		#there is a risk that the card is removed from ongoing from an ealier mod
-		if self.location_mod in player.played.card_mods and card.ctype_eq(cardtype.EQUIPMENT):
-			return 1
-		return 0
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].ctype_eq(cardtype.EQUIPMENT):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.played.plus_power(1)
 	
 	
 	def play_action(self,player):
 		if self not in player.ongoing.contents:
 			player.ongoing.add(self.pop_self())
-		player.played.card_mods.append(self.location_mod)
+		player.triggers.append(self.trigger)
 		return 0
-
-
-
-
-
-
 
 
 
@@ -1359,7 +1426,7 @@ class aquaman(card_frame.card):
 			else:
 				result = None
 		if number_put == 0:
-			return 3
+			player.played.plus_power(3)
 		return 0
 
 
@@ -1411,7 +1478,7 @@ class batman(card_frame.card):
 				if result != None:
 					number_put += 1
 					#I should make a better play and return function
-					player.play_and_return(result.pop_self(),player.played)
+					player.played.play(result.pop_self())
 					assemble.remove(result)
 					result.pop_self()
 					result.set_owner(owners.MAINDECK)
@@ -1420,7 +1487,7 @@ class batman(card_frame.card):
 			else:
 				result = None
 		if number_put == 0:
-			return 3
+			player.played.plus_power(3)
 		return 0
 
 
@@ -1513,19 +1580,30 @@ class cyborg(card_frame.card):
 	text = "+2 Power for each Super Power and Equipment you play or have\nplayed this turn."
 	image = "fe/images/cards/Cyborg 10.jpg"
 	attack_text = "First Appearance - Attack:: Each player discards a Super\nPower and an Equipment. If you discard no cards, gain a Weakness."
-	
-	def cyborg_mod(self,card,player):
-		if card.ctype_eq(cardtype.SUPERPOWER) or card.ctype_eq(cardtype.EQUIPMENT):
-			return 2
-		return 0
+
+
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and (data[0].ctype_eq(cardtype.SUPERPOWER) \
+				or data[0].ctype_eq(cardtype.EQUIPMENT)):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.played.plus_power(2)
 
 	def play_action(self,player):
-		player.played.card_mods.append(self.cyborg_mod)
 		so_far_power = 0
 		for c in player.played.played_this_turn:
-			if c.ctype_eq(cardtype.SUPERPOWER) or c.ctype_eq(cardtype.EQUIPMENT):
+			if c.ctype_eq(cardtype.SUPERPOWER) \
+					or c.ctype_eq(cardtype.EQUIPMENT):
 				so_far_power += 2
-		return so_far_power
+		player.played.plus_power(so_far_power)
+		player.triggers.append(self.trigger)
+		return 0
 
 
 	def first_apearance(self):
@@ -1562,18 +1640,24 @@ class green_arrow(card_frame.card):
 	text = "When you play this card, leave it in front of you for the rest of the game.\nOngoing: Punch cards your play have an additional +1 Power."
 	image = "fe/images/cards/Green Arrow 9.jpg"
 	attack_text = "First Appearance - Attack:: Each player discards two Punch\ncards. For each Punch you fail ti discard, gain a Weakness."
-	
-	def green_arrow_mod(self,card,player):
-		#there is a risk that the card is removed from ongoing from an ealier mod
-		if card.name == "Punch" and self.green_arrow_mod in player.played.card_mods:
-			return 1
-		return 0
+
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].name == "Punch":
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.played.plus_power(1)
 	
 	
 	def play_action(self,player):
 		if self not in player.ongoing.contents:
 			player.ongoing.add(self.pop_self())
-		player.played.card_mods.append(self.green_arrow_mod)
+		player.triggers.append(self.trigger)
 		return 0
 
 	def first_apearance(self):
@@ -1601,7 +1685,7 @@ class green_lantern(card_frame.card):
 	cost = 11
 	ctype = cardtype.HERO
 	owner_type = owners.VILLAINDECK
-	text = "You may play up to three Heros with a cost of 6 or less from the\ndestroyed pile, and then put them on the bottom of the main deck.\nIf you choose not to, +3 Power"
+	text = "You may play up to three Heros with a cost of 6 or less\nfrom the destroyed pile,\nand then put them on the bottom of the main deck.\nIf you choose not to, +3 Power"
 	image = "fe/images/cards/Green Lantern.jpg"
 	attack_text = "First Appearance - Attack:: Each player destroys a Hero in his hand or discard pile. If you cannot, gain a Weakness"
 	
@@ -1623,7 +1707,7 @@ class green_lantern(card_frame.card):
 				if result != None:
 					number_put += 1
 					#I should make a better play and return function
-					player.play_and_return(result.pop_self(),player.played)
+					player.played.play(result.pop_self())
 					result.pop_self()
 					result.set_owner(owners.MAINDECK)
 					globe.boss.main_deck.contents.insert(0,result)
@@ -1631,7 +1715,7 @@ class green_lantern(card_frame.card):
 			else:
 				result = None
 		if number_put == 0:
-			return 3
+			player.played.plus_power(3)
 		return 0
 
 
@@ -1664,18 +1748,27 @@ class martian_manhunter(card_frame.card):
 	image = "fe/images/cards/Martian Manhunter 12.jpg"
 	attack_text = "First Appearance - Attack:: Each player discards a\nHero and a Villain. If you discard no cards, gain a Weakness."
 	
-	def cyborg_mod(self,card,player):
-		if card.ctype_eq(cardtype.HERO) or card.ctype_eq(cardtype.VILLAIN):
-			return 2
-		return 0
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and (data[0].ctype_eq(cardtype.HERO) \
+				or data[0].ctype_eq(cardtype.VILLAIN)):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.played.plus_power(2)
 
 	def play_action(self,player):
-		player.played.card_mods.append(self.cyborg_mod)
 		so_far_power = 0
 		for c in player.played.played_this_turn:
 			if c.ctype_eq(cardtype.HERO) or c.ctype_eq(cardtype.VILLAIN):
 				so_far_power += 2
-		return so_far_power
+		player.played.plus_power(so_far_power)
+		player.triggers.append(self.trigger)
+		return 0
 
 
 	def first_apearance(self):
@@ -1688,6 +1781,7 @@ class martian_manhunter(card_frame.card):
 						assemble.append(c)
 				if len(assemble) > 0:
 					result = effects.choose_one_of("Discard a Hero",p,assemble,ai_hint.WORST)
+					p.discard_a_card(result)
 					card_discarded = True
 
 				assemble = []
@@ -1696,6 +1790,7 @@ class martian_manhunter(card_frame.card):
 						assemble.append(c)
 				if len(assemble) > 0:
 					result = effects.choose_one_of("Discard a Villain",p,assemble,ai_hint.WORST)
+					p.discard_a_card(result)
 					card_discarded = True
 
 				if not card_discarded:
@@ -1715,12 +1810,17 @@ class shazam(card_frame.card):
 	
 	def play_action(self,player):
 		assemble = []
+		#Step 1, gain the top 2 cards of the main deck
 		for i in range(2):
-			new_card = globe.boss.main_deck.draw()
+			new_card = globe.boss.main_deck.reveal()
 			if new_card != None:
-				new_card.set_owner(player)
-				player.play_and_return(new_card,player.played)
+				player.gain(new_card)
 				assemble.append(new_card)
+		#Step 2, play them
+		for c in assemble:
+			if c.find_self()[0] == player.discard:
+				player.played.play(c.pop_self())
+		#step 3, destroy one of them
 		if len(assemble) > 0:
 			result = effects.choose_one_of("Destroy one of the cards that you just gained.",player,assemble,ai_hint.WORST)
 			result.destroy(player)
@@ -1771,13 +1871,13 @@ class superman(card_frame.card):
 			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			if result != None:
 				num_played += 1
-				player.play_and_return(result.pop_self(),player.played)
+				player.played.play(result.pop_self())
 				assemble.remove(result)
 				result.set_owner(owners.MAINDECK)
 				result.pop_self()
 				globe.boss.main_deck.contents.insert(0,result)
 		if num_played == 0:
-			return 4
+			player.played.plus_power(4)
 		return 0
 
 
@@ -1815,7 +1915,8 @@ class swamp_thing(card_frame.card):
 			for c in p.ongoing.contents:
 				if c.ctype_eq(cardtype.LOCATION):
 					locations_in_play += 1
-		return locations_in_play*2
+		player.played.plus_power(locations_in_play*2)
+		return 0
 
 
 	def first_apearance(self):
@@ -1871,7 +1972,7 @@ class wonder_woman(card_frame.card):
 			result = effects.may_choose_one_of(instruction_text,player,assemble,ai_hint.BEST)
 			if result != None:
 				num_played += 1
-				player.play_and_return(result.pop_self(),player.played)
+				player.played.play(result.pop_self())
 				assemble.remove(result)
 				result.set_owner(owners.MAINDECK)
 				result.pop_self()

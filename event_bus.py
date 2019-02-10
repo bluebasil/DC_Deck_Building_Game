@@ -55,7 +55,7 @@ class event_bus:
 		
 
 	def clear(self):
-		print("(clearing)",flush = True)
+		#print("(clearing)",flush = True)
 		self.lock.acquire()
 		try:
 			self.on_bus = []

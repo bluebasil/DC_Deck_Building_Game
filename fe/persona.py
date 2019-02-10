@@ -5,6 +5,7 @@ import globe
 from frames import persona_frame
 from frames import actions
 from constants import owners
+from constants import trigger
 
 
 
@@ -25,16 +26,23 @@ class bane(persona_frame.persona):
 		self.player.played.special_options.remove(self.action)
 		return True
 
-	def mod(self,card,player):
-		if len(player.played.played_this_turn) == 1 and card.cost >= 1:
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active) \
+				and player.played.played_this_turn.index(data[0]) == 0 \
+				and data[0].cost >= 1:
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			self.action = actions.special_action("Bane",self.special_action_click)
-			self.player.played.special_options.append(self.action)
-			self.player.played.card_mods.remove(self.mod)
-		return 0
+			player.played.special_options.append(self.action)
+			player.triggers.remove(self.trigger)
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.trigger)
 
 	def ai_is_now_a_good_time(self):
 		return False
@@ -62,6 +70,7 @@ class bizarro(persona_frame.persona):
 		return False
 
 	def ready(self):
+		self.player.triggers.append(self.trigger)
 		if self.active:
 			self.action = actions.special_action("Bizarro",self.special_action_click)
 			self.player.played.special_options.append(self.action)
@@ -70,10 +79,16 @@ class bizarro(persona_frame.persona):
 		if self.action in self.player.played.special_options:
 			return self.special_action_click(self.player)
 
-	def destory_power(self):
-		if self.active:
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.DESTROY, \
+						self.trigger, \
+						player,ttype,active):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			self.player.gain_a_weakness()
-		return
 
 
 class black_adam(persona_frame.persona):
@@ -86,45 +101,67 @@ class black_adam(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.ctype_eq(cardtype.SUPERPOWER): # and len(player.played.played_this_turn) == 0:
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active) \
+				and data[0].ctype_eq(cardtype.SUPERPOWER):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			instruction_text = "Would you like to destory it? If you do, draw a card and gain 1 VP."
-			result = effects.ok_or_no(instruction_text,player,card,ai_hint.IFBAD)
-			if result:
-				card.destroy(player)
+			if effects.ok_or_no(instruction_text,player,data[0],ai_hint.IFBAD):
+				data[0].destroy(player)
 				player.draw_card(from_card = False)
 				player.gain_vp(1)
-			self.player.played.card_mods.remove(self.mod)
-		return 0
+			player.triggers.remove(self.trigger)
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.trigger)
 
 class black_manta(persona_frame.persona):
 	name = "Black Manta"
 	text = "You may put any cards you buy or gain from the lineup on the bottom of your deck."
 	image = "fe/images/personas/Black Manta MC.jpg"
 
-	def black_manta_redirect(self,player,card):
-		if globe.boss.whose_turn == self.player.pid and card.owner_type == owners.LINEUP and effects.ok_or_no(f"Would you like to put {card.name} on the bottom of your deck?",player,card,ai_hint.ALWAYS):
-			return [True,player.deck,"bottom"]
-		return (False,None)
+	def trigger(self,ttype,data,player,active,immediate):
+		if trigger.test(immediate,\
+						trigger.GAIN_CARD, \
+						self.trigger, \
+						player,ttype,active) \
+				and data[1].owner_type == owners.LINEUP \
+				and data[0] == False \
+				and effects.ok_or_no(f"Would you like to put {data[1].name} on the bottom of your deck?",player,data[1],ai_hint.ALWAYS):
+			player.deck.contents.insert(0,data[1])
+			return True
 
 	def ready(self):
-		if self.active:
-			self.player.gain_redirect.append(self.black_manta_redirect)
+		#if self.active:
+		self.player.triggers.append(self.trigger)
+			#self.player.gain_redirect.append(self.black_manta_redirect)
 
 class deathstroke(persona_frame.persona):
 	name = "Deathstroke"
 	text = "+1 Power for each card you destroy during your turn."
 	image = "fe/images/personas/Deathstroke MC.jpg"
 
-
-	def destory_power(self):
-		if self.active and globe.boss.whose_turn == self.player.pid:
+	def trigger(self,ttype,data,player,active,immediate):
+		if trigger.test(not immediate,\
+						trigger.DESTROY, \
+						self.trigger, \
+						player,ttype,active):
 			self.player.played.plus_power(1)
-		return
+			return True
+
+	def ready(self):
+		self.player.triggers.append(self.trigger)
+
+	#def destory_power(self):
+	#	if self.active and globe.boss.whose_turn == self.player.pid:
+	#		self.player.played.plus_power(1)
+	#	return
 
 
 class harley_quinn(persona_frame.persona):
@@ -133,7 +170,7 @@ class harley_quinn(persona_frame.persona):
 	image = "fe/images/personas/Harley Quinn MC.jpg"
 	last_seen_turn = -1
 
-	def discard_power(self):
+	"""def discard_power(self):
 		if self.active and globe.boss.whose_turn != -1 and self.last_seen_turn != globe.boss.whose_turn:
 			self.last_seen_turn = globe.boss.whose_turn
 			self.player.draw_card(from_card = False)
@@ -143,7 +180,27 @@ class harley_quinn(persona_frame.persona):
 		if self.active and globe.boss.whose_turn != -1 and self.last_seen_turn != globe.boss.whose_turn:
 			self.last_seen_turn = globe.boss.whose_turn
 			self.player.draw_card(from_card = False)
-		return
+		return"""
+
+	def trigger(self,ttype,data,player,active,immediate):
+		#Two trigger events can do this
+		#must be during a players turn
+		#Only once per players turn
+		if (trigger.test(not immediate,\
+						trigger.DRAW, \
+						self.trigger, \
+						player,ttype,active) \
+				or trigger.test(not immediate,\
+						trigger.PASS, \
+						self.trigger, \
+						player,ttype,active)) \
+				and globe.boss.whose_turn != -1 \
+				and self.last_seen_turn != globe.boss.whose_turn:
+			self.last_seen_turn = globe.boss.whose_turn
+			self.player.draw_card(from_card = False)
+
+	def reset(self):
+		self.player.triggers.append(self.trigger)
 
 
 class lex_luther(persona_frame.persona):
@@ -177,26 +234,36 @@ class sinestro(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		self.same_attack = False
-		return 0
+	def triggerVP(self,ttype,data,player,active,immediate):
+		if trigger.test(not immediate,\
+						trigger.GAIN_VP, \
+						self.triggerVP, \
+						player,ttype):
+			if active:
+				player.draw_card(from_card = False)
+			player.triggers.remove(self.triggerVP)
 
-	def gain_vp_power(self):
-		if not self.ability_used and self.active and globe.boss.whose_turn == self.player.pid:
-			self.player.draw_card(from_card = False)
-			self.ability_used = True
-		return
+	def triggerReset(self,ttype,data,player,active,immediate):
+		if trigger.test(immediate,\
+						trigger.PLAY, \
+						self.triggerReset, \
+						player,ttype):
+			self.same_attack = False
 
-	def failed_to_avoid_power(self):
-		if self.active and not self.same_attack:
+	#FA = Failed to Avoid
+	def triggerFA(self,ttype,data,player,active,immediate):
+		if trigger.test(not immediate,\
+						trigger.FAILED_TO_AVOID, \
+						self.triggerFA, \
+						player,ttype,active) \
+				and self.same_attack == False:
 			self.player.gain_vp(1)
 			self.same_attack = True
-		return
 
-	def reset(self):
-		self.ability_used = False
-		self.player.played.card_mods.append(self.mod)
-
+	def ready(self):
+		self.player.triggers.append(self.triggerVP)
+		self.player.triggers.append(self.triggerFA)
+		self.player.triggers.append(self.triggerReset)
 
 
 class the_joker(persona_frame.persona):
@@ -230,16 +297,23 @@ class the_joker(persona_frame.persona):
 			return True
 		return False
 
-	def mod(self,card,player):
-		if card.ctype_eq(cardtype.VILLAIN):
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].ctype_eq(cardtype.VILLAIN):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			self.action = actions.special_action("The Joker",self.special_action_click)
-			self.player.played.special_options.append(self.action)
-			self.player.played.card_mods.remove(self.mod)
-		return 0
+			player.played.special_options.append(self.action)
+			player.triggers.remove(self.trigger)
+
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.trigger)
 
 	def ai_is_now_a_good_time(self):
 		if self.action in self.player.played.special_options:

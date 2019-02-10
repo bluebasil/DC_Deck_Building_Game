@@ -82,6 +82,8 @@ def initialize_deck():
 		for i in range(num):
 			assemble.append(card())
 	random.shuffle(assemble)
+	for i in range(6):
+		assemble.append(cards.solomon_grundy())
 	return assemble
 
 

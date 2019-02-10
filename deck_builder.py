@@ -11,6 +11,7 @@ from fe import deck as fe_deck
 from crossover_1 import deck as c1_deck
 from crossover_2 import deck as c2_deck
 #from crossover_1 import cards as custom
+from base import cards as custom
 from frames import card_frame
 import arcade
 import globe
@@ -70,9 +71,14 @@ def get_starting_deck(player):
 		assemble.append(card_frame.punch(player))
 
 	random.shuffle(assemble)
-	#assemble.append(custom.gentleman_ghost(player))
-	#assemble.append(custom.citizen_steel(player))
-	#assemble.append(custom.liberty_belle(player))
+
+	#assemble.append(custom.shazam(player))
+	
+	#assemble.append(custom.catwoman(player))
+	assemble.append(custom.green_arrows_bow(player))
+	assemble.append(custom.green_arrows_bow(player))
+	assemble.append(custom.green_arrows_bow(player))
+	assemble.append(custom.green_arrows_bow(player))
 
 	return assemble
 
@@ -165,6 +171,10 @@ def initialize_deck():
 		random.shuffle(top_split)
 		assemble = bottom_split
 		assemble.extend(top_split)
+
+	#assemble.append(custom.happy_harbor())
+	#for i in range(6):
+	#	assemble.append(custom.transmutation())
 	return assemble
 	
 

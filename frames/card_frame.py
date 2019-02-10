@@ -21,6 +21,7 @@ class card:
 	#List of pid's of who has a frozen token on this card
 	frozen = []
 	has_stack_ongoing = False
+	rotation = 0
 
 
 	#stats
@@ -72,7 +73,6 @@ class card:
 		#Assume that card can be bought
 		return True
 
-
 	#defence = True must be set or this will not be an option
 	#pop_self will come in handy
 	def defend(self,attacker = None,defender = None):
@@ -90,13 +90,27 @@ class card:
 
 	def destroy(self,player_responsible):
 		stop = trigger.all(trigger.DESTROY,[self],player_responsible,first_result = True)
-		if stop != None:
+		if stop == None:
 			self.frozen = []
 			self.pop_self()
 			#if player_responsible != None:
 			player_responsible.persona.destory_power()
 			self.set_owner(owners.DESTROYED)
-			globe.boss.destroyed_stack.add(self)
+			globe.boss.destroyed_stack.contents.append(self)
+
+	def rotate(self,counter_clockwise = False,player_responsible = None):
+		if player_responsible == None:
+			player_responsible = self.owner
+		upright = False
+		if not counter_clockwise:
+			self.rotation += 90
+			if self.rotation == 360:
+				upright = True
+				self.rotation = 0
+		else:
+			#We should be checking to see if this card was rotated before we allow this
+			self.rotation -= 90
+		trigger.all(trigger.ROTATE,[self,upright],player_responsible)
 
 
 	def pop_self(self):
@@ -160,7 +174,8 @@ class punch(card):
 	image = "base/images/cards/Punch.jpg"
 	
 	def play_action(self,player):
-		return 1
+		player.played.plus_power(1)
+		return 0
 
 class kick(card):
 	name = "Kick"
@@ -172,4 +187,5 @@ class kick(card):
 	image = "base/images/cards/Kick.jpeg"
 	
 	def play_action(self,player):
-		return 2
+		player.played.plus_power(2)
+		return 0

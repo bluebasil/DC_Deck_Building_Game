@@ -128,7 +128,8 @@ class human_view(controler):
 					return True
 
 				if type(current.content) == actions.special_action:
-					current.content.click_action(self.player)
+					self.player.click_action(current.content)
+					#.click_action(self.player)
 					globe.bus.clear()
 
 		self.await(process)

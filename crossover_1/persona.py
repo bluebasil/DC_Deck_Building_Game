@@ -4,6 +4,7 @@ from constants import ai_hint
 import globe
 from frames import persona_frame
 from frames import actions
+from constants import trigger
 
 def get_personas():
 	#return [auquaman(),batman(),the_flash()]
@@ -21,22 +22,26 @@ class alan_scott(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.ctype_eq(cardtype.SUPERPOWER):
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active) \
+				and data[0].ctype_eq(cardtype.SUPERPOWER):
 			already_played = False
 			for c in self.player.played.played_this_turn:
-				if c != card and card.name == c.name:
+				if c != data[0] and data[0].name == c.name:
 					already_played = True
 			if not already_played:
 				top_card = player.reveal_card(public = True)
 				if top_card != None and top_card.cost == 0:
 					player.draw_card()
-		return 0
 
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.trigger)
 
 
 class doctor_fate(persona_frame.persona):
@@ -69,45 +74,48 @@ class doctor_fate(persona_frame.persona):
 	#I kind of disagree how its being interpreted on forms, but i am implimenting it thqt way anyways
 	#There should be decition mkainging, like what pairs, but i may just base that on order of cards played
 	#Idealy, if finds the optimum, but that is hard.  nealy impossible with drawing
-	def mod(self,card,player):
-		self.cards_registered.append(card)
-		card.df_power = False
-		card.df_draw = False
-		#initialize all cards that have been played, if they have not been inititalized yet
-		for c in self.player.played.played_this_turn:
-			if not hasattr(c, 'df_power'):
-				self.cards_registered.append(c)
-				c.df_power = False
-				c.df_draw = False
-		for c in self.player.played.played_this_turn:
-			#starts by finding 2 consecutive
-			if c != card and abs(c.cost-card.cost) == 1:
-				#power portion
-				if c.df_power == False and card.df_power == False:
-					c.df_power = True
-					card.df_power = True
-					player.played.plus_power(1)
-					if globe.DEBUG:
-						print(f"Doctor Fate got power because of a {card.name} and {c.name}")
-				#draw portion
-				if c.df_draw == False and card.df_draw == False:
-					#find third match
-					for c2 in self.player.played.played_this_turn:
-						if c2 != c and c2 != card and c2.df_draw == False and (abs(c.cost-c2.cost) == 1 or abs(c2.cost-card.cost) == 1) and c.df_draw == False and card.df_draw == False:
-							card.df_draw = True
-							c.df_draw = True
-							c2.df_draw = True
-							player.draw_card()
-							if globe.DEBUG:
-								print(f"Doctor Fate Drew because of a {card.name}, {c.name}, and {c2.name}")
-
-		return 0
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active):
+			self.cards_registered.append(data[0])
+			data[0].df_power = False
+			data[0].df_draw = False
+			#initialize all cards that have been played, if they have not been inititalized yet
+			for c in player.played.played_this_turn:
+				if not hasattr(c, 'df_power'):
+					self.cards_registered.append(c)
+					c.df_power = False
+					c.df_draw = False
+			for c in player.played.played_this_turn:
+				#starts by finding 2 consecutive
+				if c != data[0] and abs(c.cost-data[0].cost) == 1:
+					#power portion
+					if c.df_power == False and data[0].df_power == False:
+						c.df_power = True
+						data[0].df_power = True
+						player.played.plus_power(1)
+						if globe.DEBUG:
+							print(f"Doctor Fate got power because of a {data[0].name} and {c.name}")
+					#draw portion
+					if c.df_draw == False and data[0].df_draw == False:
+						#find third match
+						for c2 in player.played.played_this_turn:
+							if c2 != c and c2 != data[0] and c2.df_draw == False and (abs(c.cost-c2.cost) == 1 or abs(c2.cost-data[0].cost) == 1) and c.df_draw == False and data[0].df_draw == False:
+								data[0].df_draw = True
+								c.df_draw = True
+								c2.df_draw = True
+								player.draw_card()
+								if globe.DEBUG:
+									print(f"Doctor Fate Drew because of a {data[0].name}, {c.name}, and {c2.name}")
 
 
 	def ready(self):
 		self.cards_registered = []
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.trigger)
 
 	#resets all cards that have been touched
 	def reset(self):
@@ -127,12 +135,21 @@ class jay_garrick(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def draw_power(self):
-		if self.active:
-			revealed = self.player.reveal_card(public = True)
-			if revealed != None and effects.ok_or_no(f"Would you like to discard the {revealed.name}?",self.player,revealed,ai_hint.IFBAD):
-				self.player.discard_a_card(revealed)
-		return
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(immediate,\
+						trigger.DRAW, \
+						self.trigger, \
+						player,ttype,active):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			revealed = player.reveal_card(public = True)
+			if revealed != None and effects.ok_or_no(f"Would you like to discard the {revealed.name}?",player,revealed,ai_hint.IFBAD):
+				player.discard_a_card(revealed)
+
+	def ready(self):
+		self.player.triggers.append(self.trigger)
 
 
 class mister_terricic(persona_frame.persona):
@@ -211,25 +228,26 @@ class power_girl(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.ctype_eq(cardtype.SUPERPOWER):
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active) \
+				and data[0].ctype_eq(cardtype.SUPERPOWER):
 			already_played = False
 			for c in self.player.played.played_this_turn:
-				if c != card and card.name == c.name:
+				if c != data[0] and data[0].name == c.name:
 					already_played = True
 			if not already_played:
 				for c in player.discard.contents:
 					if c.name == "Punch":
 						c.pop_self()
 						player.hand.contents.append(c)
-						return 0
-		return 0
-
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
-
+		self.player.triggers.append(self.trigger)
 
 class stargirl(persona_frame.persona):
 	name = "Stargirl"
@@ -241,23 +259,28 @@ class stargirl(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.defence:
+
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if (trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype,active) \
+				and data[0].defence) \
+				or (trigger.test(not immediate,\
+						trigger.AVOIDED_ATTACK, \
+						self.trigger, \
+						player,ttype,active)):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			player.draw_card(from_card = False)
 			result = effects.choose_one_of("Discard a card",player,player.hand.contents,ai_hint.WORST)
 			player.discard_a_card(result)
-		return 0
 
 
-	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
-
-	def avoided_attack(self,defending):
-		self.player.draw_card(from_card = False)
-		result = effects.choose_one_of("Discard a card",self.player,self.player.hand.contents,ai_hint.WORST)
-		self.player.discard_a_card(result)
-		return
+	def reset(self):
+		self.player.triggers.append(self.trigger)
 
 
 class wildcat(persona_frame.persona):
@@ -270,25 +293,30 @@ class wildcat(persona_frame.persona):
 			return persona_frame.overvalue()
 		return 0
 
-	def mod(self,card,player):
-		if card.name == "Punch" and self.mod in self.player.played.card_mods:
-			hero_played = False
-			villain_played = False
-			for c in self.player.played.played_this_turn:
-				if c.ctype_eq(cardtype.HERO):
-					hero_played = True
-				if c.ctype_eq(cardtype.VILLAIN):
-					villain_played = True
-			if hero_played:
-				player.draw_card(from_card = False)
-			if villain_played:
-				player.draw_card(from_card = False)
-
-			self.player.played.card_mods.remove(self.mod)
-		return 0
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].name == "Punch":
+			if active:
+				hero_played = False
+				villain_played = False
+				for c in self.player.played.played_this_turn:
+					if c.ctype_eq(cardtype.HERO):
+						hero_played = True
+					if c.ctype_eq(cardtype.VILLAIN):
+						villain_played = True
+				if hero_played:
+					player.draw_card(from_card = False)
+				if villain_played:
+					player.draw_card(from_card = False)
+			player.triggers.remove(self.trigger)
 
 
 	def ready(self):
-		if self.active:
-			self.player.played.card_mods.append(self.mod)
+		self.player.triggers.append(self.trigger)
+
 

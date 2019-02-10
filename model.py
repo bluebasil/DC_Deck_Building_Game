@@ -12,6 +12,7 @@ import effects
 import deck_builder
 import globe
 import error_checker
+import queue
 
 from constants import cardtype
 from constants import owners
@@ -20,6 +21,9 @@ from constants import trigger
 
 #Custom exception for ending the game early
 class MainDeckEmpty(Exception):
+    pass
+
+class DupeFailure(Exception):
     pass
 
 """
@@ -63,6 +67,14 @@ class pile:
 			return True
 		else:
 			return False
+
+	def reveal(self):
+		if len(self.contents) > 0:
+			return self.contents[-1]
+		elif self.name == "Main Deck":
+			raise MainDeckEmpty
+		else:
+			return None
 
 	def draw(self):
 		if len(self.contents) > 0:
@@ -161,11 +173,6 @@ class playing(pile):
 			#elif c.owner_type == owners.VILLAINDECK:
 			#	globe.boss.supervillain_stack.add(c)
 
-	#Just overwrites the parent add function
-	#Depreciated
-	def add(self,card):
-		self.play(card)
-
 	#To play a card, run this
 	#Ongoing cards are not played with ongoing = True.
 	#Ongoing is only true when the ongoing pile calls this
@@ -186,26 +193,16 @@ class playing(pile):
 			#For statistics, but has not been fully implimented
 			card.times_played += 1
 			self.contents.append(card)
+			
+		#runs the cards code
+		card.play_action(self.owner)
+		#the card is not officially played until its code is done,
+		#it gets added to 'played this turn' afterwards
 
-		#This will track how much a single card affects the power
-		#Note: I hope to remove the need for each c ard to return the power they add
-		#Should should add power with the 'plus_power' function instead from now on
-		modifier = 0
-
-		#ongoing cards are not considered to be played this turn
 		if not ongoing:
 			self.played_this_turn.append(card)
+			trigger.all(trigger.PLAY,[card],self.owner)
 
-		#Must loop on a copy so that the mods can delete themselves while being run
-		for mod in self.card_mods.copy():
-			modifier += mod(card,self.owner)
-
-		#Paralax double on cards being played after paralax
-		for i in range(self.double_modifier):
-			modifier *= 2
-
-		#Finally adds the total power from this card to the total power
-		self.power += modifier
 		
 
 	def parallax_double(self):
@@ -317,7 +314,7 @@ class player:
 		self.discard.contents = deck_builder.debug_discard(self)
 
 		#Draw the first hand
-		self.draw_card(num=5,from_card = False)
+		self.draw_card(num=5,from_card = False,should_trigger = False)
 
 	#asks the controler directly which persona 
 	def choose_persona(self,persona_list):
@@ -353,24 +350,26 @@ class player:
 
 	#Draws 'num' cards.  Returns the last card that was drawn
 	#the returned card is from legacy
-	def draw_card(self,num = 1,from_card = True):
+	def draw_card(self,num = 1,from_card = True,should_trigger = True):
 		#print("PLAYER HAS BEEN TOLD TO DRAW",self.persona.name,flush = True)
 		all_drawn = []
 		
-		if from_card:
-			self.persona.draw_power()
+		#if from_card:
+		#	self.persona.draw_power()
+		if should_trigger:
+			trigger.all(trigger.DRAW,[num,from_card,all_drawn],self)
 		for i in range(num):
 			#Check that there is a card to draw
 			if not self.manage_reveal():
 				#This will break things, but is so rare it shouldn't happen really?
 				#This will need to be protected for in the future!!
-				print("ERR: No more cards in deck",flush = True)
+				#print("ERR: No more cards in deck",flush = True)
+				pass
 			else:
 				drawn_card = self.deck.draw()
 				all_drawn.append(drawn_card)
 				self.hand.add(drawn_card)
 		
-		trigger.all(trigger.DRAW,[num,from_card,all_drawn],self)
 
 		#Used for cards that say "The first time a card tells you to draw on each of your turns..."
 		self.drawn_card = True
@@ -405,23 +404,34 @@ class player:
 
 	#Depreciated
 	def play(self, cardnum):
+		if globe.DEBUG:
+			print("play-START",flush = True)
 		self.played.play(self.hand.contents.pop(cardnum))
+		globe.boss.clear_queue()
 
 	#Playes the given card IF IT IS IN YOUR HAND
 	#If the card is being played from somewhere else play_and_return or
 	#playing.play directly should be used
 	def play_c(self, card):
 		if card in self.hand.contents:
+			if globe.DEBUG:
+				print("play_c-START",flush = True)
 			self.hand.contents.remove(card)
 			self.played.play(card)
+			globe.boss.clear_queue()
 
-
-	#pops the given card, and then returns it to the top of the given pile
-	#Alot of cards call this and then may manually move the card if it has to not be on top
+	#Given card must be already poped
+	#Plays it, and retusn it to the indicated pile
 	def play_and_return(self, card, pile):
+		save_owner_type = card.owner_type
+		save_owner = card.owner
 		self.played.play(card)
 		card.pop_self()
-		pile.add(card)
+		#gets put back at the location specified, no matetr what
+		#even if it was destroyed
+		card.owner_type = save_owner_type
+		card.owner = save_owner
+		pile.contents.append(card)
 
 	#Formally discards the given card
 	#Triggers anything that needs to know that a card has been discarded
@@ -442,6 +452,8 @@ class player:
 			globe.boss.main_deck.add(card)
 		elif card.owner_type == owners.LINEUP:
 			globe.boss.lineup.add(card)
+		elif card.owner_type == owners.DESTROYED:
+			globe.boss.destroyed_stack.add(card)
 		elif card.owner_type == owners.VILLAINDECK:
 			globe.boss.supervillain_stack.add(card)
 
@@ -454,6 +466,22 @@ class player:
 		self.persona.card_pass_power()
 		trigger.all(trigger.PASS,[card],self)
 
+
+	def click_action(self,action):
+		if action in self.played.special_options:
+			if globe.DEBUG:
+				print("click-START",flush = True)
+			action.click_action(self)
+			globe.boss.clear_queue()
+
+	def get_cost(self,card):
+		results = trigger.all(trigger.PRICE,[card.cost,card],self,pay_forward = True,immediate = True)
+		#since pay forward is on, the cost will already be calculatec
+		predicted_cost = card.cost
+		if len(results) > 0:
+			predicted_cost = results[-1]
+		return predicted_cost
+
 #The following buy or gain functions return False is they are unsucsesfull, and True if the card is gained
 
 	#Tries to buy the SV
@@ -461,19 +489,35 @@ class player:
 		#print("Trying to buy sv",globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv,flush = True)
 		#Is the top SV visible, or is it flipped over.
 		#Do we have enough power (minus discount) to buy the sv
-		if globe.boss.supervillain_stack.current_sv == globe.boss.supervillain_stack.contents[-1] \
-				and self.played.power >= globe.boss.supervillain_stack.contents[-1].cost - self.discount_on_sv:
-			if globe.DEBUG:
-				print(f" {globe.boss.supervillain_stack.contents[-1].name} bought")
-			#This is the only time that SV's can be 'defeated', and therefore defeat=True
-			return self.gain(globe.boss.supervillain_stack.contents[-1],bought = True,defeat = True)
+		if globe.boss.supervillain_stack.current_sv == globe.boss.supervillain_stack.contents[-1]:
+			card = globe.boss.supervillain_stack.contents[-1]
+
+			predicted_cost = self.get_cost(card)
+
+			#remember to take discount_on_sv out once trigger.PRICE has been fully implimented
+			if self.played.power >= predicted_cost - self.discount_on_sv:
+				if globe.DEBUG:
+					print(f" {card.name} bought")
+					print("buy_sv-START",flush = True)
+				#This is the only time that SV's can be 'defeated', and therefore defeat=True
+				if self.gain(card,price = predicted_cost - self.discount_on_sv,defeat = True):
+					globe.boss.clear_queue()
+					return True
 		return False
 
 	def buy_kick(self):
-		if globe.boss.kick_stack.size() > 0 and self.played.power >= globe.boss.kick_stack.contents[-1].cost:
-			if globe.DEBUG:
-				print(f"kick bought")
-			return self.gain(globe.boss.kick_stack.contents[-1],bought = True)
+		if globe.boss.kick_stack.size() > 0:
+			card = globe.boss.kick_stack.contents[-1]
+
+			predicted_cost = self.get_cost(card)
+
+			if self.played.power >= predicted_cost:
+				if globe.DEBUG:
+					print(f"kick bought")
+					print("buy_kick-START",flush = True)
+				if self.gain(card,price = predicted_cost):
+					globe.boss.clear_queue()
+					return True
 		return False
 
 	def gain_a_weakness(self):
@@ -485,74 +529,70 @@ class player:
 	def buy(self,cardnum):
 		if cardnum < 0 or cardnum >= len(globe.boss.lineup.contents):
 			return False
-		card = globe.boss.lineup.contents[cardnum]
-		if self.played.power >= card.cost:
+		
+		predicted_cost = self.get_cost(card)
+
+		if self.played.power >= predicted_cost:
 			#card.bought = True
 			if globe.DEBUG:
 				print(f"{card.name} bought")
+				print("buy-START",flush = True)
 			#self.played.power -= card.cost
-			return self.gain(globe.boss.lineup.contents[cardnum],bought = True)
+			if self.gain(globe.boss.lineup.contents[cardnum],price = predicted_cost):
+				globe.boss.clear_queue()
+				return True
 			#return True
 		return False
 
 	#No discounds have been applied, that may need to be added in the future
 	def buy_c(self,card):
-		if self.played.power >= card.cost and len(card.frozen) == 0:
+		predicted_cost = self.get_cost(card)
+
+		if self.played.power >= predicted_cost and len(card.frozen) == 0:
 			if globe.DEBUG:
 				print(f"{card.name} bought")
-			return self.gain(card,bought = True)
+				print("buy_c-START",flush = True)
+			if self.gain(card,price = predicted_cost):
+				globe.boss.clear_queue()
+				return True
 		return False
 
 	#cards that are bought are also gained
 	#This can return False if the card does not want to be gained (like if it enforces
 	#certain criteria that have not been met)
-	def gain(self, card,bought = False,defeat = False):
 
+	def gain(self, card,price = None,defeat = False):
+		bought = False
 		#Trying to buy card. Have not payed yet, but funds have been secured
-		if bought:
+		if price != None:
+			bought = True
 			#card is frozen, cannot buy
 			if len(card.frozen) != 0:
 				return False
 
-			#Trying to buy card.  Card may resist, if not, it may do other effects
-			if not card.buy_action(self,bought,defeat):
-				return False
+		#Trying to buy card.  Card may resist, if not, it may do other effects
+		if not card.buy_action(self,bought,defeat):
+			return False
+
+		if price != None:
 			# All checks passed, paying
-			if defeat:
-				#avoids negative
-				self.played.power -= max(card.cost - self.discount_on_sv,0)
-			else:
-				self.played.power -= card.cost
+			#avoids negative
+			self.played.power -= max(price,0)
 
 		card.pop_self()
 		self.gained_this_turn.append(card)
 
+		
 		#I can replace redirecting with triggers.  
 		#Right now I will have both features untill I patch the other sets
 		redirected = False
 		results = trigger.all(trigger.GAIN_CARD,[redirected,card,bought,defeat],self,pay_forward = True)
+		#Ownser should be set after gain trigger, so that it can be determined where it came from
+		card.set_owner(player=self)
+
 		if True in results:
 			redirected = True
-		#Redirects the card if nessesary
-		#I would like to change the redirect functionallity to be more plyable
-		if len(self.gain_redirect) > 0:
-
-			for re in self.gain_redirect.copy():
-				#A redirect returns a tuple or tripplet, the first item being a 
-				#boolean representing if the card is to be redirected
-				#The seccond item is the location to be redirected
-				#if a third itme exists, its the index in the final desdinaton
-				#That the card should be put at
-				redirect_responce = re(self,card)
-				#The card can only be redirected once
-				if not redirected and redirect_responce[0]:
-					if len(redirect_responce) == 3:
-						redirect_responce[1].contents.insert(0,card)
-					else:
-						redirect_responce[1].add(card)
-					redirected = True
-
-		card.set_owner(player=self)
+		
 		#If the card has not been redirected, gained cards go in the playes discard
 		if not redirected:
 			self.discard.add(card)
@@ -578,7 +618,10 @@ class player:
 	#but after self.discard_hand and played.turn_end so that Wonder Woman can properly 
 	#add cards to the next hand
 	def end_turn(self):
-		trigger.all(trigger.END_TURN,[],self)
+		if globe.DEBUG:
+			print("end-START",flush = True)
+		trigger.all(trigger.END_TURN,[],self,immediate = True)
+		globe.boss.clear_queue()
 		self.triggers = []
 		self.gain_redirect = []
 		self.discount_on_sv = 0
@@ -587,6 +630,7 @@ class player:
 		self.discard_hand()
 		#used so that cards can choose how many cards to draw next turn or add a card to the enxt hand
 		#must be before played.turn_end and after self.discard_hand
+		#This should follow the trigger model, but unfortunatly i am removing triggers before here
 		for c in self.played.played_this_turn:
 			c.next_turn()
 		#empties cards in play_and returns them to their pile.
@@ -596,7 +640,7 @@ class player:
 		#must be after persona.reset for abilities like wonder woman
 		self.gained_this_turn = []
 		self.discarded_this_turn = []
-		self.draw_card(num=5, from_card = False)
+		self.draw_card(num=5, from_card = False,should_trigger = False)
 
 		#Updates the players score at the end of each of their turns
 		self.calculate_vp()
@@ -649,6 +693,8 @@ class model:
 	turn_number = 0
 	#For error checking/debugging
 	dupe_checker = None
+	#Triggered affects will not run right away
+	trigger_queue = None
 
 	#initialize Game
 	def __init__(self,number_of_players=2):
@@ -669,6 +715,8 @@ class model:
 		self.destroyed_stack = pile("Destroyed")
 		self.persona_list = deck_builder.get_personas()
 
+		self.trigger_queue = []
+
 		#starts the line-up
 		for c in range(5):
 			card_to_add = self.main_deck.draw()
@@ -682,7 +730,7 @@ class model:
 		#If they should not output to the terminal, set this to True
 		#False is usefull for debugging
 		#If a graphic display is used, this wont affect anything that the user sees
-		invisible = True
+		invisible = False
 		pid = 0
 
 		#player initialization
@@ -701,7 +749,7 @@ class model:
 		#controler can be used for testing, which is nice)
 
 		new_player = player(pid,None)
-		new_controler = controlers.cpu(new_player,invisible)
+		new_controler = controlers.human_view(new_player,invisible)
 		new_player.controler = new_controler
 		self.players.append(new_player)
 		pid += 1
@@ -751,6 +799,7 @@ class model:
 		#We are going to keep track of which end condition has been met
 		#'regular' refers to beating all of the SV's
 		end_reason = "regular"
+		check_result = None
 		try:
 			#The game ends when the supervaillin stack is empty
 			while self.supervillain_stack.get_count() > 0:
@@ -773,8 +822,9 @@ class model:
 				current_turn.turn()
 
 				save_whose_turn = self.whose_turn
-				if self.dupe_checker.check():
-					return
+				check_result = self.dupe_checker.check()
+				if check_result[0]:
+					raise DupeFailure({"msg":check_result[1]})
 				#It's between turns for the SV attack
 				self.whose_turn = -1
 
@@ -805,6 +855,12 @@ class model:
 		except MainDeckEmpty:
 			print("Main Deck Ran Out!",flush = True)
 			end_reason = "main_deck"
+		except DupeFailure as e:
+			print("Duplicate or unmatched found",flush = True)
+			details = e.args[0]
+			print(details["msg"],flush = True)
+			output_persona_stats(self.players,"crash",details["msg"])
+			return
 
 		#the game has ended, calculate vp (things may have changed since they last 
 		#calulated their vp at the end of their turn)
@@ -813,10 +869,16 @@ class model:
 
 		output_persona_stats(self.players,end_reason)
 
-
-
 	def register(self,func):
 		self.notify = func
+
+	def clear_queue(self):
+		if globe.DEBUG:
+			print("start clear",flush = True)
+		while len(self.trigger_queue) > 0:
+			self.trigger_queue.pop(0).run()
+		if globe.DEBUG:
+			print("end clear",flush = True)
 
 
 #just forwards with function

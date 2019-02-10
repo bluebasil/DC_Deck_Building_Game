@@ -21,11 +21,29 @@ class citizen_steel(card_frame.card):
 	ctype = cardtype.HERO
 	text = "Draw a card.\nSuper-Villains cost you 1 less to defeat this turn\nfor each Punch you play or have played this turn."
 	image = "crossover_1/images/cards/Citizen Steel 5.jpg"
+	total_discount = 0
 
-	def mod(self,card,player):
-		if card.name == "Punch" and self.mod in player.played.card_mods:
-			player.discount_on_sv += 1
-		return 0
+	def triggerSV(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(immediate,\
+						trigger.PRICE, \
+						self.triggerSV, \
+						player,ttype) \
+				and data[1].owner_type == owners.VILLAINDECK:
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			return data[0] - self.total_discount
+
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].name == "Punch":
+			self.total_discount += 1
 	
 	
 	def play_action(self,player):
@@ -34,8 +52,9 @@ class citizen_steel(card_frame.card):
 		for c in player.played.played_this_turn:
 			if c.name == "Punch":
 				count += 1
-		player.discount_on_sv += count
-		player.played.card_mods.append(self.mod)
+		self.total_discount = count
+		player.triggers.append(self.trigger)
+		player.triggers.append(self.triggerSV)
 		return 0
 
 
@@ -49,6 +68,7 @@ class dr_mid_nite(card_frame.card):
 	image = "crossover_1/images/cards/Dr Mid Nite 4.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		assemble = []
 		for i in range(2):
 			to_add = player.reveal_card(public = False)
@@ -68,7 +88,7 @@ class dr_mid_nite(card_frame.card):
 			result = effects.choose_one_of(f"Place card back on top of your deck ({total_times - len(assemble) + 1}/{total_times})?",player,assemble,ai_hint.WORST)
 			assemble.remove(result)
 			player.deck.contents.append(result)
-		return 2
+		return 0
 
 #Done
 class girl_power(card_frame.card):
@@ -81,7 +101,8 @@ class girl_power(card_frame.card):
 	image = "crossover_1/images/cards/Girl Power 5.jpg"
 	
 	def play_action(self,player):
-		return 2
+		player.played.plus_power(2)
+		return 0
 
 	def defend(self,attacker = None,defender = None):
 		punch = None
@@ -108,7 +129,8 @@ class liberty_belle(card_frame.card):
 	image = "crossover_1/images/cards/Liberty Belle 3.jpg"
 	
 	def play_action(self,player):
-		return 2
+		player.played.plus_power(2)
+		return 0
 
 	def defend(self,attacker = None,defender = None):
 		self.owner.discard_a_card(self)
@@ -130,17 +152,24 @@ class monument_point(card_frame.card):
 	image = "crossover_1/images/cards/Monument Point 6.jpg"
 	ongoing = True
 
-	def mod(self,card,player):
-		#print("MONUMENT POINT TRIGGERED",self.owner.persona.name,player.persona.name,flush = True)
-		if card.name == "Punch" and self.mod in player.played.card_mods:
-			player.played.card_mods.remove(self.mod)
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].name == "Punch":
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			player.triggers.remove(self.trigger)
 			player.draw_card()
-		return 0
+			return True
 	
 	
 	def play_action(self,player):
 		if self in player.ongoing.contents:
-			player.played.card_mods.append(self.mod)
+			player.triggers.append(self.trigger)
 		else:
 			player.ongoing.add(self.pop_self())
 
@@ -149,7 +178,7 @@ class monument_point(card_frame.card):
 				if c.name == "Punch":
 					already_played = True
 			if not already_played:
-				player.played.card_mods.append(self.mod)
+				player.triggers.append(self.trigger)
 		return 0
 
 #done
@@ -162,6 +191,7 @@ class mystic_bolts(card_frame.card):
 	image = "crossover_1/images/cards/Mystic Bolts 6.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(1)
 		instruction_text = "Put up to two cards each with cost 5 or less and\neach with a different cost from your discard pile\ninto your hand. (1/2)"
 		assemble = []
 		for c in player.discard.contents:
@@ -183,7 +213,7 @@ class mystic_bolts(card_frame.card):
 					if result != None:
 						result.pop_self()
 						player.hand.contents.append(result)
-		return 1
+		return 0
 
 #done
 class per_degaton(card_frame.card):
@@ -194,11 +224,20 @@ class per_degaton(card_frame.card):
 	text = "+2 Power\nDiscard any number of cards from your hand.\n+1 Power for each card you discard or have\ndiscarded this turn."
 	image = "crossover_1/images/cards/Per Degaton 5.jpg"
 
-	def trigger(self,ttype,data,player):
-		if ttype == trigger.DISCARD:
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.DISCARD, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].name == "Punch":
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			player.played.plus_power(1)
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		instruction_text = "Discard any number of cards from your hand.\n+1 Power for each card you discard or have\ndiscarded this turn."
 		if len(player.hand.contents) > 0:
 			result = effects.choose_however_many(instruction_text,player,player.hand.contents,ai_hint.IFBAD)
@@ -209,7 +248,8 @@ class per_degaton(card_frame.card):
 		for c in player.discarded_this_turn:
 			total_power += 1
 		player.triggers.append(self.trigger)
-		return total_power
+		player.played.plus_power(total_power)
+		return 0
 
 #done
 class scythe(card_frame.card):
@@ -223,8 +263,9 @@ class scythe(card_frame.card):
 	image = "crossover_1/images/cards/Scythe 3.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		self.attack_action(player)
-		return 2
+		return 0
 
 	def attack_action(self,by_player):
 		for p in globe.boss.players:
@@ -247,6 +288,7 @@ class t_spheres(card_frame.card):
 	image = "crossover_1/images/cards/T Spheres 6.jpg"
 	
 	def play_action(self,player):
+		player.played.plus_power(2)
 		assemble_names = set()
 		assemble = []
 		grand_assemble = []
@@ -281,7 +323,7 @@ class t_spheres(card_frame.card):
 			result = effects.choose_one_of("Put one of the revealed cards on top of your deck",player,revealed,ai_hint.WORST)
 			player.deck.contents.append(result)
 			revealed.remove(result)
-		return 2
+		return 0
 
 #done
 #A rule clarrification says "that is still in play" when the card is moved
@@ -485,18 +527,29 @@ class icicle(card_frame.card):
 	attack_text = "First Appearance - Attack: Each player gains a Weakness\nfor each Hero in the Line-up."
 	image = "crossover_1/images/cards/Icicle 10.jpg"
 
-	def trigger(self,ttype,data,player):
-		if ttype == trigger.END_TURN:
+	#Should not matter if it's immedaite or not
+	#preferably i dont run this twise
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.END_TURN, \
+						self.trigger, \
+						player,ttype):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
 			player.persona.active = True
 
+
 	def play_action(self,player):
+		player.played.plus_power(3)
 		instruction_text = "Choose a foe. That foe flips his super Hero face down until the end of his next turn."
 		result = effects.choose_a_player(instruction_text,player,includes_self = False,hint = ai_hint.WORST)
 		#If their persona is already not active, we dont want to be able to affect it at all
 		if result.persona.active:
 			result.persona.active = False
 			result.triggers.append(self.trigger)
-		return 3
+		return 0
 
 	def first_apearance(self):
 		heros_in_lineup = globe.boss.lineup.get_count(cardtype.HERO)
@@ -561,6 +614,7 @@ class mordru_the_merciless(card_frame.card):
 
 
 	def play_action(self,player):
+		player.played.plus_power(3)
 		instruction_text = "Would you like to shuffle all cards from your\ndiscard pile with cost 1 or greater into your deck."
 		if effects.ok_or_no(instruction_text,player,self,ai_hint.ALWAYS):
 			for c in player.discard.contents.copy():
@@ -568,7 +622,7 @@ class mordru_the_merciless(card_frame.card):
 					c.pop_self()
 					player.deck.contents.append(c)
 			random.shuffle(player.deck.contents)
-		return 3
+		return 0
 
 	def first_apearance(self):
 		for p in globe.boss.players:
@@ -595,17 +649,27 @@ class solomon_grundy(card_frame.card):
 	played_starter = False
 
 	def play_action(self,player):
-		return 3
-
-	def solomon_grundy_mod(self,card,player):
-		if card.ctype_eq(cardtype.STARTER):
-			self.played_starter = True
+		player.played.plus_power(3)
 		return 0
+
+	def trigger(self,ttype,data,player,active,immediate):
+		if globe.DEBUG:
+			print("test",self.name,flush=True)
+		if trigger.test(not immediate,\
+						trigger.PLAY, \
+						self.trigger, \
+						player,ttype) \
+				and data[0].ctype_eq(cardtype.STARTER):
+			if globe.DEBUG:
+				print("active",self.name,flush=True)
+			self.played_starter = True
+			player.triggers.remove(self.trigger)
+
+
 
 	def stack_ongoing(self,player):
 		self.played_starter = False
-		player.played.card_mods.append(self.solomon_grundy_mod)
-
+		player.triggers.append(self.trigger)
 
 	#cannot be bought unless a starter has been played
 	def buy_action(self,player,bought,defeat):
@@ -636,6 +700,7 @@ class ultra_humanite(card_frame.card):
 
 
 	def play_action(self,player):
+		player.played.plus_power(2)
 		if len(player.hand.contents) > 0:
 			result = effects.choose_however_many("Choose any number of cards to put on the bottom of your deck.\nYou will draw that many cards.",player,player.hand.contents,ai_hint.IFBAD)
 			if result != None:
@@ -643,7 +708,7 @@ class ultra_humanite(card_frame.card):
 					c.pop_self()
 					player.deck.contents.insert(0,c)
 				player.draw_card(len(result))
-		return 2
+		return 0
 
 	def first_apearance(self):
 		for p in globe.boss.players:

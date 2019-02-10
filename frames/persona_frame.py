@@ -11,6 +11,8 @@ class persona:
 	active = True
 	image = "base/images/personas/Aquaman MC.jpg"
 	texture = None
+	#:( so that ui dosnt brake
+	rotation = 0
 
 	def __init__(self,player = None):
 		self.texture = arcade.load_texture(self.image)
@@ -24,9 +26,8 @@ class persona:
 	def ai_overvalue(self,card):
 		return 0
 
-	def ready(self):
-		return
-
+	
+#All of these should be added to the queue
 	def gain_power(self,card):
 		return
 
@@ -48,6 +49,20 @@ class persona:
 	def failed_to_avoid_power(self):
 		return
 
+	def avoided_attack(self,defending):
+		return
+#up till here
+
+	#def trigger(self,trigger_id,data,player,pay_forward = False,first_result = False,immediate = False):
+
+	#Happenss at the end of the turn.
+	#Used to set up abilities for the turn
+	def ready(self):
+		return
+
+	#Happens at the end of the turn
+	#Used to clean up anything needed
+	#Also used to set up abilites that should be active during other players turns
 	def reset(self):
 		return
 
@@ -57,8 +72,7 @@ class persona:
 	def ai_is_now_a_good_time(self):
 		return False
 
-	def avoided_attack(self,defending):
-		return
+	
 
 
 #For "has all players superhero/supervillain ext"
@@ -88,8 +102,6 @@ class dispatch(persona):
 		for p in self.persona_list:
 			p.player = p.old_player
 			p.reset()
-
-
 
 	def gain_power(self,card):
 		for p in self.persona_list:
