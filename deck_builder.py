@@ -75,10 +75,10 @@ def get_starting_deck(player):
 	#assemble.append(custom.shazam(player))
 	
 	#assemble.append(custom.catwoman(player))
-	assemble.append(custom.green_arrows_bow(player))
-	assemble.append(custom.green_arrows_bow(player))
-	assemble.append(custom.green_arrows_bow(player))
-	assemble.append(custom.green_arrows_bow(player))
+	#assemble.append(custom.green_arrows_bow(player))
+	#assemble.append(custom.green_arrows_bow(player))
+	#assemble.append(custom.green_arrows_bow(player))
+	#assemble.append(custom.green_arrows_bow(player))
 
 	return assemble
 

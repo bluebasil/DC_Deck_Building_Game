@@ -529,6 +529,7 @@ class player:
 	def buy(self,cardnum):
 		if cardnum < 0 or cardnum >= len(globe.boss.lineup.contents):
 			return False
+		card = globe.boss.lineup.contents[cardnum]
 		
 		predicted_cost = self.get_cost(card)
 
@@ -727,10 +728,8 @@ class model:
 		#any amount can technically be added, but large amounts may not be graphically compatable
 		#right now this is hard coded
 
-		#If they should not output to the terminal, set this to True
-		#False is usefull for debugging
-		#If a graphic display is used, this wont affect anything that the user sees
-		invisible = False
+		
+		invisible = globe.CPU_TERMINAL_INVISIBLE
 		pid = 0
 
 		#player initialization

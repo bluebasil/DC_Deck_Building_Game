@@ -649,6 +649,7 @@ class cpu(controler):
 		#self.boss = boss
 		self.player = player
 		self.invisible = invisible
+		self.slti = globe.TIME_BETWEEN_CPU_MOVES
 
 	def display_thought(self,text,long = False,quick = True):
 		if not self.invisible:

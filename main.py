@@ -3,7 +3,7 @@ import globe
 import view
 import window
 
-
+model.choose_sets()
 globe.view = view.view_controler()
 globe.boss = model.model()
 
