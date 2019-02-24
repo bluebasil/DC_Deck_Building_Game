@@ -4,13 +4,30 @@ from constants import cardtype
 from constants import ai_hint
 from constants import trigger
 
+"""
+effects.py is the intercafe bettween the cointroelrs (player and/or ai's) and the cards
+Cards call different an effects function when a choice has to be made by a player
+These functions then ask the coresponding controler, who then returns a result.
+The result is then verified, and a program friendly answer is returned
 
+The common uses for effects is:
+attack (where a choice to defend if possible is implied)
+choose a player
+choose a card  (from a provided list of cards)
+may choose a card (same as choose a card except the player can choose none)
+ok or no (Boolean questions)
+even or odd (This is a special one for the riddler.  Maybe i should alloe ok_or_no to cover this)
+choose_however_many (allows the player to choose from none to all of the cards listed)
+reveal.  This is a special one, as it dosnt actaully ask a question, but just reveals somehting to a player,
+	Like what was in an opponents hand, or what was on top of their deck, ect.
+"""
+
+# deprecited.  i guess i forgot about .copy()
 def new_assemble(list):
 	assemble = []
 	for i in list:
 		assemble.append(i)
 	return assemble
-
 
 def ensure_int(i):
 	if not type(i) is int:
@@ -37,7 +54,7 @@ def attack(player,card,by_player = None,avoid_twise = False):
 		if result != None:
 			return result
 
-
+	# Looks for any avalable defence cards
 	assemble = []
 	for c in player.hand.contents:
 		if c.defence:
@@ -46,6 +63,7 @@ def attack(player,card,by_player = None,avoid_twise = False):
 		if c.defence:
 			assemble.append(c)
 
+	# If there are any defence cards, ask the defender if they would like to use one of them
 	if len(assemble) > 0:
 		result = player.controler.may_defend(assemble,card,by_player)
 		if result[0] == option.OK:
@@ -71,7 +89,6 @@ def attack(player,card,by_player = None,avoid_twise = False):
 			if by_player != None:
 				#Sent to the attacking player
 				result = trigger.all(trigger.FAILED_TO_AVOID,[player,card],by_player,first_result = True)
-
 				#by_player.persona.failed_to_avoid_power()
 
 			return True
@@ -80,7 +97,8 @@ def attack(player,card,by_player = None,avoid_twise = False):
 			return attack(player,card,by_player)
 	else:
 		if by_player != None:
-			by_player.persona.failed_to_avoid_power()
+			result = trigger.all(trigger.FAILED_TO_AVOID,[player,card],by_player,first_result = True)
+			#by_player.persona.failed_to_avoid_power()
 		return True
 
 def choose_a_player(instruction_text,player,includes_self = True,hint = ai_hint.WORST):
@@ -158,7 +176,7 @@ def choose_even_or_odd(instruction_text,player):
 	else:
 		return choose_even_or_odd(instruction_text,player)
 
-
+# depreciated
 # (no/hand/disccard, if hand or discard: #)
 def may_destroy_card_in_hand_or_discard(player):
 	result = player.controler.may_destroy_card_in_hand_or_discard()
@@ -188,75 +206,6 @@ def may_destroy_card_in_hand_or_discard(player):
 	else:
 		print(f"ERR: invalid responce code: {result[0]}")
 		return may_destroy_card_in_hand_or_discard(player)
-
-
-#(,#)
-"""def discard_a_card(player):
-	result = player.controler.discard_a_card()
-	if globe.DEBUG:
-		print("discard_a_card",result)
-	if result[0] == option.CANNOT:
-		if not player.hand.size() == 0:
-			print(f"ERR: You can.")
-			return discard_a_card(player)
-		else:
-			return(option.CANNOT,)
-	if not ensure_int(result[1]):
-		return discard_a_card(player)
-	elif result[1] < 0 or result[1] >= player.hand.size():
-		print(f"ERR: invalid number. max:{player.hand.size()-1}")
-		return discard_a_card(player)
-	card_to_discard = player.hand.contents.pop(result[1])
-	player.discard.add(card_to_discard)
-	return (option.OK,card_to_discard)"""
-
-"""def x_ray_vision_reveal(player):
-	assemble = []
-	for p in globe.boss.players:
-		if p != player:
-			revealed = p.reveal_card()
-			if revealed != None:
-				assemble.append(revealed)
-	if len(assemble) > 0:
-		result = player.controler.may_play_one_of_these_cards(assemble)
-		if globe.DEBUG:
-			print("x_ray_vision_reveal",result)
-		if result[0] == option.NO:
-			return option.NO
-		elif not ensure_int(result[1]):
-			return x_ray_vision_reveal(player)
-		elif result[1] < 0 or result[1] >= player.hand.size():
-			print("ERR: invalid number")
-			return x_ray_vision_reveal(player)
-		elif assemble[result[1]].ctype_eq(cardtype.LOCATION):
-			print("ERR: Cannot play a location this way")
-			return x_ray_vision_reveal(player)
-
-		#This should be the card that was revealed
-		assemble[result[1]].owner.deck.contents.pop()
-		player.play_and_return(assemble[result[1]],assemble[result[1]].owner.deck)
-		return option.OK
-	return option.CANNOT"""
-
-#(no/ok, if ok:#)
-"""def may_destroy_card_in_discard(player):
-	result = player.controler.may_destroy_card_in_discard()
-	if globe.DEBUG:
-		print("may_destroy_card_in_discard",result)
-	if result[0] == option.NO:
-		return (option.NO,-1)
-	elif result[0] == option.OK:
-		if not ensure_int(result[1]):
-			return may_destroy_card_in_discard(player)
-		elif result[1] < 0 or result[1] >= player.discard.size():
-			print(f"ERR: invalid number. max:{player.discard.size()-1}")
-			return may_destroy_card_in_discard(player)
-		card_to_destroy = player.discard.contents.pop(result[1])
-		card_to_destroy.destroy()
-		return (option.OK,card_to_destroy)
-	else:
-		print(f"ERR: invalid responce code: {result[0]}")
-		return may_destroy_card_in_discard(player)"""
 
 
 def choose_however_many(instruction_text,player,cards,hint):

@@ -1,7 +1,7 @@
 All card names are the property of DC.  Concept and cards are the property of Cryptozoic.
 
 
-This is a personal project to digitalize the DC deck building game by Cryptozoic.  It is not intended for commercial use.
+This is a personal project to digitalize the DC Deck Building game by Cryptozoic.  It is not intended for commercial use.
 
 There is a terminal and graphical interface.  The graphical interface is obviously preffered, but the terminal interface can be good for debugging.
 

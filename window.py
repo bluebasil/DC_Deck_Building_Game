@@ -13,18 +13,21 @@ from constants import option
 import controlers
 import sys, traceback
 
-# --- Constants ---
-SPRITE_SCALING_PLAYER = 0.5
-SPRITE_SCALING_COIN = 0.2
-COIN_COUNT = 50
+# This is a pythoin GUI implimentation.  Ideally this will be replaced with an onling Javascript implimentation.
 
+"""
+Originally, the gui was built in 3000*2000 resolution (I have a 4k monitor)
+Scale was added so that i can use it on my laptop.
+Not going to lie, This is a messy implimentation of thie GUI.  For instance:
+Scale has to be added to mode points, unless they involve the constancts automatically scalled
+"""
 SCREEN_SCALE = 0.5
 SCREEN_WIDTH = int(3000*SCREEN_SCALE)
 SCREEN_HEIGHT = int(2000*SCREEN_SCALE)
 CARD_SCALE = 0.5*SCREEN_SCALE
+
+# Textures
 BASE_TEXTURE = arcade.load_texture("images/back.png")
-#BASE_TEXTURE.height = BASE_TEXTURE.height*SCREEN_SCALE
-#BASE_TEXTURE.width = BASE_TEXTURE.width*SCREEN_SCALE
 BACKGROUND_TEXTURE = arcade.load_texture("images/blue_background2.png")
 CPU_TEXTURE = arcade.load_texture("images/cpu_frame.png")
 POINT_TEXTURE = arcade.load_texture("images/pointer.png")
@@ -34,6 +37,7 @@ CARD_BUTTON_GREEN = [86,197,1]
 SCROLL_TEXTURE = arcade.load_texture("images/scroll.png")
 QUESTION_TEXTURE = arcade.load_texture("images/question.png")
 
+# I don't know if this actually changes something.
 SCROLL_SPEED = 1
 
 display_special = None
