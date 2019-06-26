@@ -1,3 +1,7 @@
+[![Example Video](http://img.youtube.com/vi/GN4hQf9lxzs/0.jpg)](https://www.youtube.com/watch?v=GN4hQf9lxzs&t=15s)
+
+
+
 All card names are the property of DC.  Concept and cards are the property of Cryptozoic.
 
 
