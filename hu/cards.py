@@ -906,3 +906,120 @@ class worlds_mightiest_mortal(card_frame.card):
                 globe.boss.main_deck.contents.append(result)
         return 0
 
+### Locations ###
+class apokolips(card_frame.card):
+
+    name = "Apokolips"
+    vp = 1
+    cost = 5
+    ctype = cardtype.LOCATION
+    text = ("Ongoing: Once during each of your turns, reveal the top card of "
+            "your deck. If it's a Villain, draw it. If not, you may discard it.")
+    image = image_path + "Apokolips.jpg"
+    ongoing = True
+
+    def trigger(self,ttype,data,player,active,immediate):
+        on_top = player.reveal_card()
+        if on_top != None:
+            if on_top.ctype_eq(cardtype.VILLAIN):
+                player.draw_card()
+            else:
+                choosen = effects.may_choose_one_of(self.text,player,on_top,ai_hint.NEVER)
+                if choosen:
+                    player.discard_a_card(choosen)
+
+    def play_action(self,player):
+        if self in player.ongoing.contents:
+            player.triggers.append(self.trigger)
+        else:
+            player.ongoing.add(self.pop_self())
+        return 0
+
+
+class gotham_city(card_frame.card):
+
+    name = "Gotham City"
+    vp = 1
+    cost = 5
+    ctype = cardtype.LOCATION
+    text = ("Ongoing: Once during each of your turns, reveal the top card of "
+            "your deck. If it's an Equipment, draw it. If not, you may discard "
+            "it.")
+    image = image_path + "Gotham City.jpg"
+    ongoing = True
+
+    def trigger(self,ttype,data,player,active,immediate):
+        on_top = player.reveal_card()
+        if on_top != None:
+            if on_top.ctype_eq(cardtype.EQUIPMENT):
+                player.draw_card()
+            else:
+                choosen = effects.may_choose_one_of(self.text,player,on_top,ai_hint.NEVER)
+                if choosen:
+                    player.discard_a_card(choosen)
+
+    def play_action(self,player):
+        if self in player.ongoing.contents:
+            player.triggers.append(self.trigger)
+        else:
+            player.ongoing.add(self.pop_self())
+        return 0
+
+
+class metropolis(card_frame.card):
+
+    name = "Metropolis"
+    vp = 1
+    cost = 5
+    ctype = cardtype.LOCATION
+    text = ("Ongoing: Once during each of your turns, reveal the top card of "
+            "your deck. If it's a Super Power, draw it. If not, you may "
+            "discard it.")
+    image = image_path + "Metropolis.jpg"
+    ongoing = True
+
+    def trigger(self,ttype,data,player,active,immediate):
+        on_top = player.reveal_card()
+        if on_top != None:
+            if on_top.ctype_eq(cardtype.SUPERPOWER):
+                player.draw_card()
+            else:
+                choosen = effects.may_choose_one_of(self.text,player,on_top,ai_hint.NEVER)
+                if choosen:
+                    player.discard_a_card(choosen)
+
+    def play_action(self,player):
+        if self in player.ongoing.contents:
+            player.triggers.append(self.trigger)
+        else:
+            player.ongoing.add(self.pop_self())
+        return 0
+
+
+class new_genesis(card_frame.card):
+
+    name = "New Genesis"
+    vp = 1
+    cost = 5
+    ctype = cardtype.LOCATION
+    text = ("Ongoing: Once during each of your turns, reveal the top card of "
+            "your deck. If it's a Hero, draw it. If not, you may discard it.")
+    image = image_path + "New Genesis.jgp"
+    ongoing = True
+
+    def trigger(self,ttype,data,player,active,immediate):
+        on_top = player.reveal_card()
+        if on_top != None:
+            if on_top.ctype_eq(cardtype.HERO):
+                player.draw_card()
+            else:
+                choosen = effects.may_choose_one_of(self.text,player,on_top,ai_hint.NEVER)
+                if choosen:
+                    player.discard_a_card(choosen)
+
+    def play_action(self,player):
+        if self in player.ongoing.contents:
+            player.triggers.append(self.trigger)
+        else:
+            player.ongoing.add(self.pop_self())
+        return 0
