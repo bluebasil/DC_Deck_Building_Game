@@ -1023,3 +1023,180 @@ class new_genesis(card_frame.card):
         else:
             player.ongoing.add(self.pop_self())
         return 0
+    
+### Super Powers ###
+class canary_cry(card_frame.card):
+
+    name = "Canary Cry"
+    vp = 1
+    cost = 4
+    ctype = cardtype.SUPERPOWER
+    defense = True
+    text = ("You may put a Villain from your discard pile on top of your deck. "
+            "If you choose not to, draw a card. Defense: You may discard this "
+            "card to avoid an Attack. If you do, you may put a Villain with "
+            "cost 7 or less from your discard pile into your hand or draw a "
+            "card.")
+    image = image_path + "Canary Cry.jpg"
+
+    def play_action(self,player):
+        instruction_text = ("You may put a Villain from your discard pile on "
+                            "top of your deck.")
+        villians = []
+        for card in player.discard.contents:
+            if card.ctype_eq(cardtype.VILLAIN):
+                villians.append(card)
+        choosen = effects.may_choose_one_of(instruction_text,player,villians,ai_hint.BEST)
+        if choosen:
+            player.deck.add(choosen.pop_self())
+        else:
+            player.draw_card()
+        return 0
+    
+    def defend(self,attacker = None,defender = None):
+        instruction_text = ("You may discard this "
+            "card to avoid an Attack. If you do, you may put a Villain with "
+            "cost 7 or less from your discard pile into your hand or draw a "
+            "card.")
+        self.owner.discard_a_card(self)
+        villians = []
+        for card in player.discard.contents:
+            if card.ctype_eq(cardtype.VILLAIN) and card.cost <= 7:
+                villians.append(card)
+        choosen = effects.may_choose_one_of(instruction_text,player,villians,ai_hint.BEST)
+        if choosen:
+            player.hand.add(choosen.pop_self())
+        else:
+            player.draw_card()
+        return
+    
+
+class force_field(card_frame.card):
+
+    name = "Force Field"
+    vp = 1
+    cost = 3
+    ctype = cardtype.SUPERPOWER
+    defense = True
+    text = ("Draw a card. Ongoing: Do not discard this card at the end of "
+            "your turn. Defense: While this card is in play, you may put it "
+            "into your discard pile to avoid an Attack.")
+    image = image_path + "Force Field.jpg"
+    ongoing = True
+
+    def play_action(self,player):
+        player.draw_card()
+        return 0
+    
+    def defend(self,attacker = None,defender = None):
+        player.discard_a_card(self)
+        return
+
+
+class power_of_the_green(card_frame.card):
+
+    name = "Power Of The Green"
+    vp = 1
+    cost = 3
+    ctype = cardtype.SUPERPOWER
+    text = ("Put a Location from your discard pile into play. If you control "
+            "a Location, +3 Power. Otherwise, +2 Power.")
+    image = image_path + "Power of the Green.jpg"
+
+    def play_action(self,player):
+        instruction_text = "Put a Location from your discard pile into play."
+        locations = []
+        power = 2
+        for card in player.discard.contents:
+            if card.ctype_eq(cardtype.LOCATION):
+                locations.append(card)
+        choosen = effects.choose_one_of(instruction_text,player,locatoins,ai_hint.RANDOM)
+        if choosen:
+            player.playing.add(choosen)
+        for card in player.playing.contents:
+            if card.ctype_eq(cardtype.LOCATION):
+                power = 3
+                break
+        player.played.plus_power(power)
+        return 0
+
+
+class shazam(card_frame.card):
+
+    name = "Shazam!"
+    vp = 1
+    cost = 7
+    ctype = cardtype.SUPERPOWER
+    text = ("+2 Power. Reveal and play the top card of the main deck, then "
+            "return it to the top of the main deck.")
+    image = image_path + "Shazam.jpg"
+    top_card = None
+
+    def play_action(self,player):
+        player.played.plus_power(2)
+        instruction_text = ("Reveal and play the top card of the main deck, then "
+            "return it to the top of the main deck.")
+        self.top_card = globe.boss.main_deck.draw()
+        player.playing.add(top_card)
+        return 0
+
+    def end_of_turn(self):
+        self.top_card.pop_self()
+        return
+
+
+class starbolt(card_frame.card):
+
+    name = "Starbolt"
+    vp = 1
+    cost = 5
+    ctype = cardtype.SUPERPOWER
+    text = ("+2 Power and an additional +1 Power for each Super Power in your "
+            "discard pile.")
+    image = image_path + "Starbolt.jpg"
+
+    def play_action(self,player):
+        power = 2
+        for card in player.discard.contents:
+            if card.ctype_eq(cardtype.SUPERPOWER):
+                power += 1
+        player.played.plus_power(power)
+        return 0
+    
+    
+class teleportation(card_frame.card):
+
+    name = "Teleportation"
+    vp = 1
+    cost = 7
+    ctype = cardtype.SUPERPOWER
+    text = ("Gain the top card of the Main Deck and put it into your hand.")
+    image = image_path + "Teleportation.jpg"
+
+    def play_action(self,player):
+        top_card = globe.boss.main_deck.draw()
+        player.hand.add(top_card.pop_self())
+        return 0
+    
+    
+class whirlwind(card_frame.card):
+
+    name = "Whirlwind"
+    vp = 1
+    cost = 2
+    ctype = cardtype.SUPERPOWER
+    text = ("+1 Power. If this is the first card you have played this turn, "
+            "you may discard your hand and draw four cards.")
+    image = image_path + "Whirlwind.jpg"
+
+    def play_action(self,player):
+        player.played.plus_power(1)
+        if player.played.contents <= 1:
+            for card in player.played.contents:
+                if card.name == self.name:
+                    if effects.ok_or_no("Would you like to discard your hand?",
+                                        player,None,ai_hint.RANDOM):
+                        player.discard_hand()
+                        player.draw_card(4)
+        return 0
+
