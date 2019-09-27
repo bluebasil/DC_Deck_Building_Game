@@ -1405,6 +1405,7 @@ class hel(card_frame.card):
     vp = 5
     cost = 9
     ctype = cardtype.VILLAIN
+    owner_type = owners.VILLAINDECK
     text = ("Reveal and draw cards from the top of your deck until you have "
             "drawn 7 or greater cost worth of cards.  "
             "FIRST APPEARANCE -- ATTACK: Each player reveals the top three "
@@ -1448,6 +1449,7 @@ class hector_hammond(card_frame.card):
     vp = 6
     cost = 11
     ctype = cardtype.VILLAIN
+    owner_type = owners.VILLAINDECK
     text = ("You may put up to two cards from your discard pile into your "
             "hand. If you choose not to, +3 Power. "
             "FIRST APPEARANCE -- ATTACK: Each player gains the top card of the "
@@ -1491,6 +1493,7 @@ class helspont(card_frame.card):
     vp = 5
     cost = 10
     ctype = cardtype.VILLAIN
+    owner_type = owners.VILLAINDECK
     text = ("You may put any number of cards of one card type and with cost 3 "
             "or less from your discard pile into your hand. If you choose not "
             "to, +3 Power. FIRST APPEARANCE -- ATTACK: Put a Location you "
@@ -1542,6 +1545,7 @@ class mongul(card_frame.card):
     vp = 6
     cost = 11
     ctype = cardtype.VILLAIN
+    owner_type = owners.VILLAINDECK
     text = ("+2 Power and draw two cards. Then destroy a card in your hand. "
             "FIRST APPEARANCE -- ATTACK: Each player discards a Power Ring or "
             "two random cards from his hand.")
@@ -1584,6 +1588,7 @@ class mr_freeze(card_frame.card):
     vp = 5
     cost = 9
     ctype = cardtype.VILLAIN
+    owner_type = owners.VILLAINDECK
     text = ("You may gain all Equipment from the Line-Up and put them into "
             "your hand. If you choose not to, +3 Power. "
             "FIRST APPEARANCE -- ATTACK: Destroy all Equipment in the Line-Up. "
@@ -1630,6 +1635,7 @@ class nekron(card_frame.card):
     vp = 6
     cost = 12
     ctype = cardtype.VILLAIN
+    owner_type = owners.VILLAINDECK
     text = ("Destroy up to three cards in your hand and/or discard pile. "
             "For each you destroy, draw a card. "
             "FIRST APPEARANCE -- ATTACK: Each player totals the cost of the "
@@ -1689,6 +1695,7 @@ class trigon(card_frame.card):
     vp = 6
     cost = 12
     ctype = cardtype.VILLAIN
+    owner_type = owners.VILLAINDECK
     text = ("Look at the top two cards of the main deck. Put one into your "
             "hand and the other on the bottom of the main deck. "
             "FIRST APPEARANCE -- ATTACK: Each player destroys a card with "
@@ -1729,6 +1736,7 @@ class vandal_savage(card_frame.card):
     vp = 4
     cost = 8
     ctype = cardtype.VILLAIN
+    owner_type = owners.VILLAINDECK
     text = ("When you play this card, leave it in front of you for the rest "
             "of the game. Ongoing: +1 Power.")
     image = image_path + "Vandal Savage.jpg"
