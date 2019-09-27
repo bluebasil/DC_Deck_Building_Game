@@ -1737,7 +1737,7 @@ class vandal_savage(card_frame.card):
     def trigger(self, ttype, data, player, active, immediate):
         if globe.DEBUG:
             print("test", self.name, flush=True)
-        if trigger.test(not immediate, trigger.PLAY, self.trigger, player, ttype) and player.playing.contents == 1:
+        if trigger.test(not immediate, trigger.PLAY, self.trigger, player, ttype) and len(player.playing.contents) == 1:
             if globe.DEBUG:
                 print("active", self.name, flush=True)
             player.played.plus_power(1)
