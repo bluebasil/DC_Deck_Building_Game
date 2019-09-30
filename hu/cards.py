@@ -59,7 +59,7 @@ class green_lantern_power_ring(card_frame.card):
     vp = 0
     cost = 5
     ctype = cardtype.EQUIPMENT
-    defence = True
+    defense = True
     text = ("+2 Power. Defense: You may discard this card to avoid an Attack. "
             "If you do, draw two cards. At end of game, "
             "this card is worth 1 VP for each Power Ring in your deck.")
@@ -88,7 +88,7 @@ class helmet_of_fate(card_frame.card):
     vp = 1
     cost = 3
     ctype = cardtype.EQUIPMENT
-    defence = True
+    defense = True
     text = ("+2 Power Defense: You may discard this card and any number of "
             "other cards to avoid an Attack. If you do, draw cards equal to "
             "the number of other cards discarded.")
@@ -315,7 +315,7 @@ class skeets(card_frame.card):
     vp = 1
     cost = 4
     ctype = cardtype.EQUIPMENT
-    defence = True
+    defense = True
     text = ("You may put a Hero from your discard pile on top of your deck. "
             "If you choose not to, draw a card. Defense: You may discard this "
             "card to avoid an attack. If you do, you may put a Hero from your "
