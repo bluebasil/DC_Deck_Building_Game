@@ -1788,14 +1788,14 @@ class black_lantern_corps(card_frame.card):
         return
     
 
-class blood_brother(card_frame.card):
+class brother_blood(card_frame.card):
 
-    name = "Blood Brother"
+    name = "Brother Blood"
     vp = 2
     cost = 6
     ctype = cardtype.VILLAIN
     text = ("+4 Power")
-    image = image_path + "Blood Brother.jpg"
+    image = image_path + "Brother Blood.jpg"
 
     def play_action(self,player):
         player.played.plus_power(4)
