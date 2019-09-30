@@ -499,16 +499,17 @@ class daughter_of_gotham_city(card_frame.card):
         player.played.plus_power(1)
         count = 2
         instruction_text = "Select up to two Punch cards to put into your hand."
-        while count > 0:
-            punches = []
-            for card in player.discard.contents:
-                if card.name == "Punch":
-                    punches.append(card)
-            choosen = effects.may_choose_one_of(instruction_text, player,
-                                                punches, ai_hint.ALWAYS)
-            if choosen:
-                player.hand.add(choosen.pop_self())
-                count -= 1
+        if len(player.discard.contents) > 0:
+            while count > 0:
+                punches = []
+                for card in player.discard.contents:
+                    if card.name == "Punch":
+                        punches.append(card)
+                choosen = effects.may_choose_one_of(instruction_text, player,
+                                                    punches, ai_hint.ALWAYS)
+                if choosen:
+                    player.hand.add(choosen.pop_self())
+                    count -= 1
         return 0
 
 
