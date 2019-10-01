@@ -1508,7 +1508,7 @@ class hel(card_frame.card):
         for p in globe.boss.players:
             cards = []
             while len(cards) < 3:
-                cards.append(player.reveal_card())
+                cards.append(p.reveal_card())
             for card in cards:
                 if card.cost < 1:
                     p.discard_a_card(card)
