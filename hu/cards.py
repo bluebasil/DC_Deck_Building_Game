@@ -52,7 +52,7 @@ class blue_lantern_power_ring(card_frame.card):
             if played_card.ctype_eq(cardtype.HERO):
                 power += 1
         player.played.plus_power(power)
-        player.trigger.append(self.trigger)
+        player.triggers.append(self.trigger)
         return 0
 
     def calculate_vp(self, all_cards):
@@ -150,7 +150,7 @@ class indigo_tribe_power_ring(card_frame.card):
         if len(assemble) > 0:
             choosen = effects.choose_one_of(instruction_text, player, assemble,
                                             ai_hint.BEST)
-        player.played.plus_power(choosen.power)
+            player.played.plus_power(choosen.power)
         return 0
 
     def calculate_vp(self, all_cards):
