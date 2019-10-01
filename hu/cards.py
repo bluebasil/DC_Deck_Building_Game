@@ -958,7 +958,9 @@ class apokolips(card_frame.card):
             else:
                 choosen = effects.ok_or_no(it, player, on_top, ai_hint.IFBAD)
                 if choosen:
-                    player.discard_a_card(on_top)
+                    if effects.ok_or_no("discard?", player, on_top,
+                                        ai_hint.IFBAD):
+                        player.discard.contents.add(on_top.pop_self())
         player.triggers.remove(self.trigger)
 
     def play_action(self, player):
@@ -989,7 +991,9 @@ class gotham_city(card_frame.card):
             else:
                 choosen = effects.ok_or_no(it,player,on_top,ai_hint.IFBAD)
                 if choosen:
-                    player.discard_a_card(on_top)
+                    if effects.ok_or_no("discard?", player, on_top,
+                                        ai_hint.IFBAD):
+                        player.discard.contents.add(on_top.pop_self())
         player.triggers.remove(self.trigger)
 
     def play_action(self, player):
@@ -1020,7 +1024,8 @@ class metropolis(card_frame.card):
             else:
                 choosen = effects.ok_or_no(it, player, on_top, ai_hint.IFBAD)
                 if choosen:
-                    player.discard_a_card(on_top)
+                    if effects.ok_or_no("discard?",player,on_top,ai_hint.IFBAD):
+                        player.discard.contents.add(on_top.pop_self())
         player.triggers.remove(self.trigger)
 
     def play_action(self, player):
@@ -1050,7 +1055,9 @@ class new_genesis(card_frame.card):
             else:
                 choosen = effects.ok_or_no(it, player, on_top, ai_hint.IFBAD)
                 if choosen:
-                    player.discard_a_card(on_top)
+                    if effects.ok_or_no("discard?", player, on_top,
+                                        ai_hint.IFBAD):
+                        player.discard.contents.add(on_top.pop_self())
         player.triggers.remove(self.trigger)
 
     def play_action(self, player):
