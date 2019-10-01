@@ -34,15 +34,25 @@ class blue_lantern_power_ring(card_frame.card):
         "this card is worth 1 VP for each Power Ring in your deck.")
     image = image_path + "Blue Lantern Power Ring.jpg"
 
+    def trigger(self, ttype, data, player, active, immediate):
+        if globe.DEBUG:
+            print("test", self.name, flush=True)
+        if trigger.test(not immediate, trigger.PLAY, self.trigger, player,
+                        ttype) and data[0].ctype_eq(cardtype.HERO):
+            if globe.DEBUG:
+                print("active", self.name, flush=True)
+            player.played.plus_power(1)
+
     def play_action(self, player):
         power = 1
         for discarded_card in player.discard.contents:
             if discarded_card.ctype_eq(cardtype.HERO):
                 power += 1
-        for played_card in player.playing.played_this_turn:
+        for played_card in player.played.contents:
             if played_card.ctype_eq(cardtype.HERO):
                 power += 1
         player.played.plus_power(power)
+        player.trigger.append(self.trigger)
         return 0
 
     def calculate_vp(self, all_cards):
@@ -116,7 +126,7 @@ class helmet_of_fate(card_frame.card):
 
         redraw = len(result)
 
-        self.owener.draw_card(redraw)
+        self.owner.draw_card(redraw)
         return
 
 
@@ -135,11 +145,11 @@ class indigo_tribe_power_ring(card_frame.card):
                             "played this turn")
         assemble = []
         for c in player.played.contents:
-            if c.name != self.name and c != player.played_this_turn[-1]:
+            if c.name != self.name and c != player.played.played_this_turn[-1]:
                 assemble.append(c)
         if len(assemble) > 0:
             choosen = effects.choose_one_of(instruction_text, player, assemble,
-                                            ai_hint.BBST)
+                                            ai_hint.BEST)
         player.played.plus_power(choosen.power)
         return 0
 
@@ -161,7 +171,7 @@ class legion_flight_ring(card_frame.card):
     image = image_path + "Legion Flight Ring.jpg"
 
     def play_action(self, player):
-        self.owner.draw_card(1)
+        player.draw_card(1)
         return 0
 
 
@@ -180,7 +190,7 @@ class mind_control_hat(card_frame.card):
 
     def play_action(self, player):
         self.attack_action(player)
-        self.owner.draw_card(2)
+        player.draw_card(2)
         jervis_played = False
         instruction_text = ("If you play or have played Jervis Tetch "
                             "this turn, you may play "
@@ -335,7 +345,7 @@ class skeets(card_frame.card):
             if choosen:
                 player.deck.contents.append(choosen)
             else:
-                self.owner.draw_card(1)
+                player.draw_card(1)
         return 0
 
     def defend(self, attacker=None, defender=None):
@@ -497,19 +507,26 @@ class daughter_of_gotham_city(card_frame.card):
 
     def play_action(self, player):
         player.played.plus_power(1)
-        count = 2
         instruction_text = "Select up to two Punch cards to put into your hand."
+        punches = []
         if len(player.discard.contents) > 0:
-            while count > 0:
-                punches = []
-                for card in player.discard.contents:
-                    if card.name == "Punch":
-                        punches.append(card)
+            for card in player.discard.contents:
+                if card.name == "Punch":
+                    punches.append(card)
+            if len(punches) > 0:
                 choosen = effects.may_choose_one_of(instruction_text, player,
                                                     punches, ai_hint.ALWAYS)
                 if choosen:
                     player.hand.add(choosen.pop_self())
-                    count -= 1
+                    punches.remove(choosen)
+                    if len(punches) > 0:
+                        choosen = effects.may_choose_one_of(instruction_text,
+                                                            player,
+                                                            punches,
+                                                            ai_hint.ALWAYS)
+                        if choosen:
+                            player.hand.add(choosen.pop_self())
+
         return 0
 
 
@@ -701,7 +718,7 @@ class plastic_man(card_frame.card):
             "turn. Plastic Man becomes a copy of that card (and is now also an "
             "Equipment).")
     image = image_path + "Plastic Man.jpg"
-
+    copy_of = None
     def play_action(self, player):
         equipments = []
         for card in player.discard.contents:
@@ -713,12 +730,13 @@ class plastic_man(card_frame.card):
         if len(equipments) > 0:
             choosen = effects.choose_one_of(self.text, player, equipments,
                                             ai_hint.BEST)
-            self.name = choosen.name
-            self.ctype = cardtype.EQUIPMENT
-            self.image = choosen.image
-            choosen.play_action(self, player)
+            self.copy_of = choosen
+            player.played.add(choosen)
         return 0
 
+    def end_of_turn(self):
+        if self.copy_of:
+            self.copy_of.pop_self()
 
 class raven(card_frame.card):
     name = "Raven"
@@ -730,7 +748,7 @@ class raven(card_frame.card):
 
     def play_action(self, player):
         player.played.plus_power(1)
-        self.owner.draw_card(1)
+        player.draw_card(1)
         return 0
 
 
@@ -744,7 +762,7 @@ class saint_walker(card_frame.card):
     image = image_path + "Saint Walker.jpg"
 
     def play_action(self, player):
-        self.owner.draw_card(1)
+        player.draw_card(1)
         return 0
 
     def calculate_vp(self, all_cards):
@@ -880,7 +898,7 @@ class wonder_of_the_knight(card_frame.card):
                                             ai_hint.RANDOM)
             if choosen:
                 player.hand.add(choosen.pop_self())
-        self.owner.draw_card(1)
+        player.draw_card(1)
         return 0
 
 
@@ -933,14 +951,15 @@ class apokolips(card_frame.card):
 
     def trigger(self, ttype, data, player, active, immediate):
         on_top = player.reveal_card()
+        it = "Do you want to discard the card?"
         if on_top != None:
             if on_top.ctype_eq(cardtype.VILLAIN):
                 player.draw_card()
             else:
-                choosen = effects.may_choose_one_of(self.text, player, on_top,
-                                                    ai_hint.NEVER)
+                choosen = effects.ok_or_no(it, player, on_top, ai_hint.IFBAD)
                 if choosen:
-                    player.discard_a_card(choosen)
+                    player.discard_a_card(on_top)
+        player.triggers.remove(self.trigger)
 
     def play_action(self, player):
         if self in player.ongoing.contents:
@@ -963,14 +982,15 @@ class gotham_city(card_frame.card):
 
     def trigger(self, ttype, data, player, active, immediate):
         on_top = player.reveal_card()
+        it = "Do you want to discard the card?"
         if on_top != None:
             if on_top.ctype_eq(cardtype.EQUIPMENT):
                 player.draw_card()
             else:
-                choosen = effects.may_choose_one_of(self.text, player, on_top,
-                                                    ai_hint.NEVER)
+                choosen = effects.ok_or_no(it,player,on_top,ai_hint.IFBAD)
                 if choosen:
-                    player.discard_a_card(choosen)
+                    player.discard_a_card(on_top)
+        player.triggers.remove(self.trigger)
 
     def play_action(self, player):
         if self in player.ongoing.contents:
@@ -993,14 +1013,15 @@ class metropolis(card_frame.card):
 
     def trigger(self, ttype, data, player, active, immediate):
         on_top = player.reveal_card()
+        it = "Do you want to discard the card?"
         if on_top != None:
             if on_top.ctype_eq(cardtype.SUPERPOWER):
                 player.draw_card()
             else:
-                choosen = effects.may_choose_one_of(self.text, player, on_top,
-                                                    ai_hint.NEVER)
+                choosen = effects.ok_or_no(it, player, on_top, ai_hint.IFBAD)
                 if choosen:
-                    player.discard_a_card(choosen)
+                    player.discard_a_card(on_top)
+        player.triggers.remove(self.trigger)
 
     def play_action(self, player):
         if self in player.ongoing.contents:
@@ -1022,14 +1043,15 @@ class new_genesis(card_frame.card):
 
     def trigger(self, ttype, data, player, active, immediate):
         on_top = player.reveal_card()
+        it = "Do you want to discard the card?"
         if on_top != None:
             if on_top.ctype_eq(cardtype.HERO):
                 player.draw_card()
             else:
-                choosen = effects.may_choose_one_of(self.text, player, on_top,
-                                                    ai_hint.NEVER)
+                choosen = effects.ok_or_no(it, player, on_top, ai_hint.IFBAD)
                 if choosen:
-                    player.discard_a_card(choosen)
+                    player.discard_a_card(on_top)
+        player.triggers.remove(self.trigger)
 
     def play_action(self, player):
         if self in player.ongoing.contents:
@@ -1051,11 +1073,16 @@ class oa(card_frame.card):
     ongoing = True
 
     def trigger(self, ttype, data, player, active, immediate):
-        if globe.boss.supervillain_stack.contents.cost >= 10:
+        if globe.boss.supervillain_stack.contents[-1].cost >= 10:
             player.draw_card()
 
     def play_action(self,player):
-        player.triggers.append(self.trigger)
+        if self in player.ongoing.contents:
+            player.triggers.append(self.trigger)
+        else:
+            player.ongoing.add(self.pop_self())
+        return 0
+
         return 0
 
 
@@ -1107,7 +1134,7 @@ class canary_cry(card_frame.card):
             if choosen:
                 player.hand.add(choosen.pop_self())
             else:
-                player.draw_card()
+                self.owner.draw_card()
         return
 
 
@@ -1123,12 +1150,20 @@ class force_field(card_frame.card):
     image = image_path + "Force Field.jpg"
     ongoing = True
 
+    # def trigger(self, ttype, data, player, active, immediate):
+    #     player.draw_card()
+    #     player.trigger.remove(self.trigger)
+
     def play_action(self, player):
-        player.draw_card()
+
+        if self in player.ongoing.contents:
+            player.draw_card()
+        else:
+            player.ongoing.add(self.pop_self())
         return 0
 
     def defend(self, attacker=None, defender=None):
-        player.discard_a_card(self)
+        self.owner.discard_a_card(self)
         return
 
 
@@ -1149,14 +1184,12 @@ class power_of_the_green(card_frame.card):
             if card.ctype_eq(cardtype.LOCATION):
                 locations.append(card)
         if len(locations) > 0:
-            choosen = effects.choose_one_of(instruction_text, player, locatoins,
+            choosen = effects.choose_one_of(instruction_text, player, locations,
                                             ai_hint.RANDOM)
             if choosen:
-                player.playing.add(choosen)
-        for card in player.playing.contents:
-            if card.ctype_eq(cardtype.LOCATION):
-                power = 3
-                break
+                player.played.add(choosen)
+        if len(player.ongoing.contents) > 0:
+            power = 3
         player.played.plus_power(power)
         return 0
 
@@ -1177,7 +1210,7 @@ class shazam(card_frame.card):
             "Reveal and play the top card of the main deck, then "
             "return it to the top of the main deck.")
         self.top_card = globe.boss.main_deck.draw()
-        player.playing.add(top_card)
+        player.played.add(top_card)
         return 0
 
     def end_of_turn(self):
@@ -1262,7 +1295,7 @@ class amazo(card_frame.card):
         instruction_text = ("You may choose another Villain and/or Hero you "
                             "played this turn. Play them again this turn. "
                             "If you choose not to, +3 Power. ")
-        for card in player.playing.contents:
+        for card in player.played.contents:
             if card.ctype_eq(cardtype.HERO) or card.ctype_eq(cardtype.VILLAIN):
                 cards.append(card)
         self.card_1 = effects.may_choose_one_of(instruction_text, player,
@@ -1272,9 +1305,9 @@ class amazo(card_frame.card):
             cards.index(self.card_1).pop()
             self.card_2 = effects.may_choose_one_of(instruction_text, player,
                                                     cards, ai_hint.BEST)
-            player.playing.add(self.card_1)
+            player.played.add(self.card_1)
             if self.card_2:
-                player.playing.add(self.card_2)
+                player.played.add(self.card_2)
         else:
             player.played.plus_power(power)
         return 0
@@ -1336,7 +1369,7 @@ class arkillo(card_frame.card):
             for card in p.hand.contents:
                 card_total += card.cost
             players.append([p, card_total])
-        players.sort(reverse=True)
+        players.sort(reverse=True,key=lambda x: x[1])
         highest = players[0][1]
         p_gained = []
         for total in players:
@@ -1433,7 +1466,7 @@ class graves(card_frame.card):
                                             ai_hint.RANDOM)
             pcards.append([p, choosen.cost])
             choosen.destroy(p)
-        pcards.sort(reverse=True)
+        pcards.sort(reverse=True,key=lambda x: x[1])
         highest = pcards[0][1]
         count = 0
         for x in pcards:
@@ -1528,7 +1561,8 @@ class hector_hammond(card_frame.card):
 
     def first_apearance(self):
         for p in globe.boss.players:
-            card = p.gain(globe.boss.main_deck.contents[-1])
+            card = globe.boss.main_deck.contents[-1]
+            p.gain(card)
             if card.cost >= 4:
                 p.gain_a_weakness()
                 p.gain_a_weakness()
@@ -1731,7 +1765,7 @@ class nekron(card_frame.card):
             for card in p.hand.contents:
                 total_cost += card.cost
             player_totals.append([p, total_cost])
-        player_totals.sort(reverse=True)
+        player_totals.sort(reverse=True,key=lambda x: x[1])
         highest = []
         for p in player_totals:
             if p[1] == player_totals[0][1]:
@@ -1809,7 +1843,7 @@ class vandal_savage(card_frame.card):
         if globe.DEBUG:
             print("test", self.name, flush=True)
         if trigger.test(not immediate, trigger.PLAY, self.trigger, player,
-                        ttype) and len(player.playing.contents) == 1:
+                        ttype) and len(player.played.contents) == 1:
             if globe.DEBUG:
                 print("active", self.name, flush=True)
             player.played.plus_power(1)
@@ -1884,7 +1918,7 @@ class deadshot(card_frame.card):
     def attack_action(self, by_player):
         for p in globe.boss.players:
             if p != by_player:
-                top_card = player.reveal_card()
+                top_card = p.reveal_card()
                 if top_card != None and top_card.cost >= 1:
                     p.discard_a_card(top_card)
         return
@@ -2176,10 +2210,11 @@ class parasite(card_frame.card):
                 for card in p.hand.contents:
                     if card.cost >= 3:
                         cards.append(card)
-                choosen = effects.choose_one_of(it, p, cards, ai_hint.WORST)
-                if choosen:
-                    p.discard_a_card(choosen)
-                    discarded = True
+                if len(cards) > 0:
+                    choosen = effects.choose_one_of(it, p, cards, ai_hint.WORST)
+                    if choosen:
+                        p.discard_a_card(choosen)
+                        discarded = True
                 if discarded and len(p.discard.contents) > 0:
                     for card in p.discard.contents:
                         if card.name == "Punch":
