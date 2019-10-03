@@ -682,9 +682,11 @@ class kyle_rayner(card_frame.card):
             player.played.plus_power(2)
             count = 0
             for card in player.played.played_this_turn:
-                if "power ring" in card.name:
+                if "power ring" in card.name.lower():
                     count += 1
             if count >= 3:
+                print("Game ended due to power rings")
+                self.vp = 100
                 # TODO: Find a better way to end the game.
                 while len(globe.boss.supervillain_stack.contents) > 0:
                     globe.boss.supervillain_stack.contents.pop()
@@ -916,24 +918,24 @@ class worlds_mightiest_mortal(card_frame.card):
         top_cards = []
         total_times = len(top_cards)
         for i in range(2):
-            next_card = globe.boss.main_deck.reveal_card(public=False)
+            next_card = globe.boss.main_deck.contents[-1]
             if next_card != None:
                 next_card.pop_self()
                 top_cards.append(next_card)
         while len(top_cards) > 0:
             result = effects.may_choose_one_of(
-                f"Place card into the lineup "
-                f"({total_times - len(top_cards) + 1}/{total_times})?",
+                f"Place card into the lineup ",
                 player, top_cards, ai_hint.RANDOM)
             if result:
+                result.set_owner(owners.LINEUP)
                 top_cards.remove(result)
                 globe.boss.lineup.contents.append(result)
             else:
                 result = effects.may_choose_one_of(
-                    f"Place card back on top of the main deck "
-                    f"({total_times - len(top_cards) + 1}/{total_times})?",
+                    f"Place card back on top of the main deck ",
                     player, top_cards, ai_hint.RANDOM)
                 top_cards.remove(result)
+                result.set_owner(owners.MAINDECK)
                 globe.boss.main_deck.contents.append(result)
         return 0
 
@@ -1217,7 +1219,7 @@ class shazam(card_frame.card):
             "Reveal and play the top card of the main deck, then "
             "return it to the top of the main deck.")
         self.top_card = globe.boss.main_deck.draw()
-        player.played.add(top_card)
+        player.played.add(self.top_card)
         return 0
 
     def end_of_turn(self):
@@ -1305,7 +1307,8 @@ class amazo(card_frame.card):
         for card in player.played.contents:
             if card.ctype_eq(cardtype.HERO) or card.ctype_eq(cardtype.VILLAIN):
                 cards.append(card)
-        self.card_1 = effects.may_choose_one_of(instruction_text, player,
+        if len(cards) > 0:
+            self.card_1 = effects.may_choose_one_of(instruction_text, player,
                                                 cards, ai_hint.BEST)
         power = 3
         if self.card_1:
@@ -1321,24 +1324,23 @@ class amazo(card_frame.card):
 
     def first_apearance(self):
         instruction_text = "Select a card to pass to the right."
-        if len(player.played.played_this_turn) == 0:
-            cards_to_pass = []
-            instruction_text = "Choose a card to pass to the hand of the player to your left."
-            for p in globe.boss.players:
-                if len(p.hand.contents) > 0:
-                    cards_to_pass.append(
-                        effects.choose_one_of(instruction_text, p,
-                                              p.hand.contents, ai_hint.WORST))
-                    # Alerts any relevant persona powers (harly quin)
-                    p.persona.card_pass_power()
-                else:
-                    cards_to_pass.append(None)
-            for i, p in enumerate(globe.boss.players):
-                current = cards_to_pass[i - 1]
-                if current:
-                    current.pop_self()
-                    current.set_owner(p)
-                    p.hand.contents.append(current)
+        cards_to_pass = []
+        instruction_text = "Choose a card to pass to the hand of the player to your left."
+        for p in globe.boss.players:
+            if len(p.hand.contents) > 0:
+                cards_to_pass.append(
+                    effects.choose_one_of(instruction_text, p,
+                                          p.hand.contents, ai_hint.WORST))
+                # Alerts any relevant persona powers (harly quin)
+                p.persona.card_pass_power()
+            else:
+                cards_to_pass.append(None)
+        for i, p in enumerate(globe.boss.players):
+            current = cards_to_pass[i - 1]
+            if current:
+                current.pop_self()
+                current.set_owner(p)
+                p.hand.contents.append(current)
 
     def end_of_turn(self):
         self.card_1.pop_self()
@@ -1430,10 +1432,11 @@ class black_adam(card_frame.card):
             for card in p.discard.contents:
                 if card.ctype_eq(cardtype.HERO):
                     cards.append(card)
-            card_to_destroy = effects.choose_one_of(instruction_text, p, cards,
+            if len(cards) > 0:
+                card_to_destroy = effects.choose_one_of(instruction_text, p, cards,
                                                     ai_hint.WORST)
-            if card_to_destroy:
-                card_to_destroy.destroy(player)
+                if card_to_destroy:
+                    card_to_destroy.destroy(player)
         return
 
 
@@ -1623,7 +1626,7 @@ class helspont(card_frame.card):
                 if card.ctype_eq(cardtype.LOCATION):
                     locations.append(card)
             if len(locations) != 0:
-                result = effects.choose_one_of(it, p, locaitions,
+                result = effects.choose_one_of(it, p, locations,
                                                ai_hint.WORST)
                 p.discard_a_card(result)
             else:
