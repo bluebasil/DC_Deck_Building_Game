@@ -112,7 +112,7 @@ class helmet_of_fate(card_frame.card):
         instruction_text = ("You may discard this card and any number of "
                             "other cards to avoid an Attack. If you do, draw cards equal to "
                             "the number of other cards discarded")
-        collection = player.hand.contents.copy()
+        assemble = player.hand.contents.copy()
         self.owner.discard_a_card(self)
         # cards_to_discard = effects.may_choose_one_of(
         #     instruction_text, player, collection, ai_hint.IFBAD
@@ -243,7 +243,8 @@ class orange_lantern_power_ring(card_frame.card):
                                                 assemble,
                                                 ai_hint.BEST)
             if choosen != None:
-                player.gain(choosen)
+                choosen.set_owner(player)
+                player.hand.contents.append(choosen.pop_self())
             else:
                 player.played.plus_power(2)
         return 0
@@ -426,7 +427,8 @@ class white_lantern_power_battery(card_frame.card):
     def play_action(self, player):
         assemble = []
         for card in globe.boss.lineup.contents:
-            if "power ring" in c.name.lower():
+            if "power ring" in card.name.lower():
+                card.set_owner(player)
                 player.hand.contents.append(card)
                 globe.boss.lineup.contents.pop(card)
             assemble.append(card)
@@ -434,7 +436,8 @@ class white_lantern_power_battery(card_frame.card):
         if len(assemble) > 0:
             choosen = effects.choose_one_of(instruction_text, player, assemble,
                                             ai_hint.BEST)
-            player.deck.contents.append(choosen)
+            choosen.set_owner(player)
+            player.deck.contents.append(choosen.pop_self())
 
         return 0
 
@@ -1709,7 +1712,8 @@ class mr_freeze(card_frame.card):
             choice = effects.ok_or_no(it, player, cards, ai_hint.IFBAD)
         if choice:
             for card in cards:
-                player.gain(card)
+                card.set_owner(player)
+                player.hand.contents.append(card.pop_self())
         else:
             player.played.plus_power(3)
         return 0
@@ -2076,6 +2080,7 @@ class larfleeze(card_frame.card):
                 choosen = effects.may_choose_one_of(it, player, cards,
                                                     ai_hint.IFGOOD)
                 if choosen:
+                    choosen.set_owner(player)
                     player.hand.add(choosen.pop_self())
         else:
             player.played.plus_power(3)
