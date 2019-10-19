@@ -722,7 +722,6 @@ class plastic_man(card_frame.card):
     text = ("Choose an Equipment in your discard pile or that you played this "
             "turn. Plastic Man becomes a copy of that card (and is now also an "
             "Equipment).")
-    image_list = ["Plastic Man.jpg", "Batarang.jpg"]
     image = image_path + "Plastic Man.jpg"
     copy_of = None
     def play_action(self, player):
