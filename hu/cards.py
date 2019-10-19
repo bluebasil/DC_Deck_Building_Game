@@ -722,6 +722,7 @@ class plastic_man(card_frame.card):
     text = ("Choose an Equipment in your discard pile or that you played this "
             "turn. Plastic Man becomes a copy of that card (and is now also an "
             "Equipment).")
+    image_list = ["Plastic Man.jpg", "Batarang.jpg"]
     image = image_path + "Plastic Man.jpg"
     copy_of = None
     def play_action(self, player):
@@ -735,13 +736,29 @@ class plastic_man(card_frame.card):
         if len(equipments) > 0:
             choosen = effects.choose_one_of(self.text, player, equipments,
                                             ai_hint.BEST)
-            self.copy_of = choosen
-            player.played.add(choosen)
+            # sets the card name to the Equipment name
+            self.name = choosen.name
+
+            # sets the ctype to the Equipment ctype
+            self.ctype = choosen.ctype
+
+            # Making a backup reference of the
+            # Card image to revert for end turn
+            self.copy_of = self.texture
+
+            # setting the Card image as the Equipment card image
+            self.texture = choosen.texture
+
+            choosen.play_action(player)
         return 0
 
     def end_of_turn(self):
+        # reverting the card back to the original
+        # might be a better way to do so
         if self.copy_of:
-            self.copy_of.pop_self()
+            self.name = "Plastic Man"
+            self.ctype = cardtype.HERO
+            self.texture = self.copy_of
 
 class raven(card_frame.card):
     name = "Raven"
@@ -965,7 +982,7 @@ class apokolips(card_frame.card):
                 if choosen:
                     if effects.ok_or_no("discard?", player, on_top,
                                         ai_hint.IFBAD):
-                        player.discard.contents.add(on_top.pop_self())
+                        player.discard.contents.append(on_top.pop_self())
         player.triggers.remove(self.trigger)
 
     def play_action(self, player):
@@ -998,7 +1015,7 @@ class gotham_city(card_frame.card):
                 if choosen:
                     if effects.ok_or_no("discard?", player, on_top,
                                         ai_hint.IFBAD):
-                        player.discard.contents.add(on_top.pop_self())
+                        player.discard.contents.append(on_top.pop_self())
         player.triggers.remove(self.trigger)
 
     def play_action(self, player):
@@ -1030,7 +1047,7 @@ class metropolis(card_frame.card):
                 choosen = effects.ok_or_no(it, player, on_top, ai_hint.IFBAD)
                 if choosen:
                     if effects.ok_or_no("discard?",player,on_top,ai_hint.IFBAD):
-                        player.discard.contents.add(on_top.pop_self())
+                        player.discard.contents.append(on_top.pop_self())
         player.triggers.remove(self.trigger)
 
     def play_action(self, player):
@@ -1062,7 +1079,7 @@ class new_genesis(card_frame.card):
                 if choosen:
                     if effects.ok_or_no("discard?", player, on_top,
                                         ai_hint.IFBAD):
-                        player.discard.contents.add(on_top.pop_self())
+                        player.discard.contents.append(on_top.pop_self())
         player.triggers.remove(self.trigger)
 
     def play_action(self, player):
