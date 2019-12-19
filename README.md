@@ -14,7 +14,7 @@ For instructions on running the game, see below.
 So Far
 ------
 
-* Graphical user interface, written 100% in Python with the 'arcade' library.  Eventually goal of converting to a multiplayer web experiace for i can play with a couple of my friends
+* Graphical user interface, written 100% in Python with the 'arcade' library.  Theoretical eventually goal of converting to a multiplayer web experience 
 * Base set cards, supervillains, and personas (large cards) are fully programmed and functional
 * Heros Unite personas are in
 * Forever Evil is in
@@ -48,7 +48,7 @@ Make sure that the controlers set in the __init__ function of the model class in
 
 Other things that you may want to set:
 in globe.py:
-* TIME_BETWEEN_CPU_MOVES can be changed to change the delay that is imposed between CPU moves.  0 means the the CPU's do everything instantly, which allows for quuicker games, but harder to follow.
+* TIME_BETWEEN_CPU_MOVES can be changed to change the delay that is imposed between CPU moves.  0 means the the CPU's do everything instantly, which allows for quicker games, but harder to follow.
 * DEBUG and CPU_TERMINAL_INVISIBLE can also be set here
 
 
