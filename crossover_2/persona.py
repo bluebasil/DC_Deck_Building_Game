@@ -54,19 +54,19 @@ class felicity_smoak(persona_frame.persona):
 
 class john_diggle(persona_frame.persona):
 	name = "John Diggle"
-	text = "When you use a Defence to avoid an Attack, you may put that card\nunder your Super Hero. Once during each of your turns, you may put\na Defence card from under your Super Hero on top of your deck."
+	text = "When you use a Defense to avoid an Attack, you may put that card\nunder your Super Hero. Once during each of your turns, you may put\na Defense card from under your Super Hero on top of your deck."
 	image = "crossover_2/images/personas/John Diggle MC.jpg"
 	action = None
 
 	def ai_overvalue(self,card):
-		if card.defence:
+		if card.defense:
 			return persona_frame.overvalue()
 		return 0
 
 	def special_action_click(self,player):
 		assemble = []
 		for c in player.under_superhero.contents:
-			if c.defence:
+			if c.defense:
 				assemble.append(c)
 		if len(assemble) > 0:
 			instruction_text = "Would you like to put a defense from under your\nsuper hero, on top of your deck?"
