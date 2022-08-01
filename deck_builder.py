@@ -7,7 +7,7 @@ from crossover_1 import deck as c1_deck
 from crossover_2 import deck as c2_deck
 from hu import deck as hu_deck
 # For testing individual cards
-from base import cards as custom
+from hu import cards as custom
 # I have just implimented the personas of HU for now.  They can be accessed if any_pick == True
 # from hu import persona as hu_personas
 from frames import card_frame
@@ -18,7 +18,7 @@ import globe
 decks = [base_deck.this_set,fe_deck.this_set,hu_deck.this_set,c1_deck.this_set,c2_deck.this_set]
 choosen_sets = []
 #Specifies weather small set personas muct be picked when playing with small sets
-any_pick = False
+any_pick = True
 
 # This is a terminal interface to choose which sets we are playing with.
 # Right now, it must be called before everything else
@@ -85,9 +85,14 @@ def get_starting_deck(player):
 	#assemble.append(custom.shazam(player))
 	#assemble.append(custom.catwoman(player))
 	#assemble.append(custom.green_arrows_bow(player))
-	#assemble.append(custom.green_arrows_bow(player))
-	#assemble.append(custom.green_arrows_bow(player))
-	#assemble.append(custom.green_arrows_bow(player))
+	# assemble.append(custom.eclipso(player))
+	# assemble.append(custom.belle_reve(player))
+	# assemble.append(custom.indigo_tribe_power_ring(player))
+	for card, num in hu_deck.deck.items():
+		assemble.append(card(player))
+
+	assemble.append(custom.jervis_tetch(player))
+	assemble.append(custom.mind_control_hat(player))
 
 	return assemble
 
