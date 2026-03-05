@@ -1,8 +1,11 @@
 from constants import option
 import globe
-from constants import cardtype
 from constants import ai_hint
 from constants import trigger
+from frames import card_frame, persona_frame
+import model
+from typing import Union
+import enum
 
 """
 effects.py is the intercafe bettween the cointroelrs (player and/or ai's) and the cards
@@ -49,7 +52,7 @@ def attack_all(card):
 
 
 # Returns true if hit by attack
-def attack(player, card, by_player=None, avoid_twise=False):
+def attack(player, card: card_frame.card, by_player=None, avoid_twise: bool = False, cannot_defend_with=None):
     if by_player is not None:
         # Triggers that dosn't affect the parent code return None
         # if the trigger wants to override this attack, it returns
@@ -67,21 +70,35 @@ def attack(player, card, by_player=None, avoid_twise=False):
         if c.defense:
             assemble.append(c)
 
+    # Just used so that the AI's dont get caught in an infinite loop if a card fails to defend
+    if cannot_defend_with is not None:
+        for c in cannot_defend_with:
+            if c in assemble:
+                assemble.remove(c)
+
     # If there are any defense cards, ask the defender if they would like to use one of them
     if len(assemble) > 0:
         result = player.controler.may_defend(assemble, card, by_player)
         if result[0] == option.OK:
             if not ensure_int(result[1]):
-                return attack(player, card, by_player)
+                return attack(player, card, by_player, avoid_twise=avoid_twise, cannot_defend_with=cannot_defend_with)
             elif result[1] < 0 or result[1] >= len(assemble):
                 print("Err: invalid number")
-                return attack(player, card, by_player)
+                return attack(player, card, by_player, avoid_twise=avoid_twise, cannot_defend_with=cannot_defend_with)
             else:
                 # Attack avoided
-                assemble[result[1]].defend(attacker=by_player, defender=player)
+                did_defend = assemble[result[1]].defend(attacker=by_player, defender=player)
+                if did_defend is not None and did_defend is False:
+                    print("Err: Card did not defend.")
+                    if cannot_defend_with is None:
+                        cannot_defend_with = [assemble[result[1]]]
+                    else:
+                        cannot_defend_with.append(assemble[result[1]])
+                    return attack(player, card, by_player, avoid_twise=avoid_twise, cannot_defend_with=cannot_defend_with)
+
                 # avoid twise, like in crossover 2's deadshot
                 if avoid_twise:
-                    return attack(player, card, by_player, avoid_twise=False)
+                    return attack(player, card, by_player, avoid_twise=False, cannot_defend_with=cannot_defend_with)
                 else:
                     # If you avoid the attack but not twise when nessesary (crossover 2's deadshot)
                     # do you get to trigger your avoided attack abilities?
@@ -107,7 +124,8 @@ def attack(player, card, by_player=None, avoid_twise=False):
         return True
 
 
-def choose_a_player(instruction_text, player, includes_self=True, hint=ai_hint.WORST, source=None):
+def choose_a_player(instruction_text: str, player, includes_self: bool = True,
+                    hint: ai_hint = ai_hint.WORST, source: Union[card_frame.card, persona_frame.persona] = None):
     assemble = []
     for i, p in enumerate(globe.boss.players):
         if p != player or includes_self:
@@ -124,25 +142,34 @@ def choose_a_player(instruction_text, player, includes_self=True, hint=ai_hint.W
     return assemble[result].player
 
 
-def choose_one_of(instruction_text, player, cards, hint=ai_hint.WORST, source=None):
+def choose_one_of(instruction_text, player, cards: Union[list[card_frame.card], enum.Enum], hint=ai_hint.WORST,
+                  source=None) -> card_frame.card:
     result = player.controler.choose_one_of(instruction_text, player, cards, hint, source=source)
     if globe.DEBUG:
         print("choose_one_of", result)
-    if not ensure_int(result[0]):
-        return choose_one_of(instruction_text, player, cards)
-    elif result[0] < 0 or result[0] >= len(cards):
-        print(f"ERR: invalid number. max:{len(cards) - 1}")
-        return choose_one_of(instruction_text, player, cards)
-    return cards[result[0]]
+    if type(result[0]) == int:
+        # return
+        # if not ensure_int(result[0]):
+        #     return choose_one_of(instruction_text, player, cards)
+        if result[0] < 0 or result[0] >= len(cards):
+            print(f"ERR: invalid number. max:{len(cards) - 1}")
+            return choose_one_of(instruction_text, player, cards)
+
+        return cards[result[0]]
+    elif result[0] in cards:
+        return result[0]
+    print(f"ERR: invalid responce code.  Got {result}, not in {cards}.")
+    return choose_one_of(instruction_text, player, cards)
 
 
-def may_choose_one_of(instruction_text, player, cards, hint=ai_hint.BEST, source=None):
+def may_choose_one_of(instruction_text, player, cards: Union[list[card_frame.card], list[enum.Enum]], hint=ai_hint.BEST,
+                      source=None) -> card_frame.card:
     if len(cards) == 0:
         return None
     result = player.controler.may_choose_one_of(instruction_text, player, cards, hint, source=source)
     if globe.DEBUG:
         print("may_choose_one_of", result)
-    if result[0] == option.NO:
+    if result[0] == option.NO or len(result) == 0:
         return None
     elif result[0] == option.OK:
         if not ensure_int(result[1]):
@@ -151,8 +178,10 @@ def may_choose_one_of(instruction_text, player, cards, hint=ai_hint.BEST, source
             print(f"ERR: invalid number. max:{len(cards) - 1}")
             return may_choose_one_of(instruction_text, player, cards, hint, source=None)
         return cards[result[1]]
+    elif result[0] in cards:
+        return result[0]
     else:
-        print(f"ERR: invalid responce code")
+        print(f"ERR: invalid responce code.  Got {result[0]}, not in {cards}.")
         return may_choose_one_of(instruction_text, player, cards, hint, source=None)
 
 

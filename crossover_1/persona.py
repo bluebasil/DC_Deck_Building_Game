@@ -1,4 +1,4 @@
-from constants import cardtype
+from constants2 import CardType
 import effects
 from constants import ai_hint
 import globe
@@ -19,7 +19,7 @@ class alan_scott(persona_frame.persona):
     image = "crossover_1/images/personas/Alan Scott MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.SUPERPOWER):
+        if card.ctype_eq(CardType.SUPERPOWER):
             return persona_frame.overvalue()
         return 0
 
@@ -29,7 +29,7 @@ class alan_scott(persona_frame.persona):
         if trigger.test(not immediate,
                         trigger.PLAY,
                         self.trigger,
-                        player, ttype, active) and data[0].ctype_eq(cardtype.SUPERPOWER):
+                        player, ttype, active) and data[0].ctype_eq(CardType.SUPERPOWER):
             already_played = False
             for c in self.player.played.played_this_turn:
                 if c != data[0] and data[0].name == c.name:
@@ -160,7 +160,7 @@ class mister_terricic(persona_frame.persona):
     action = None
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.EQUIPMENT):
+        if card.ctype_eq(CardType.EQUIPMENT):
             # Really need equipment
             return persona_frame.overvalue() * 2
         return 0
@@ -181,7 +181,7 @@ class mister_terricic(persona_frame.persona):
 
                     equipment_assemble = []
                     for c in assemble:
-                        if c.ctype_eq(cardtype.EQUIPMENT):
+                        if c.ctype_eq(CardType.EQUIPMENT):
                             equipment_assemble.append(c)
                     effects.reveal(f"These were the top 3 cards on {player.persona.name}'s deck", player, assemble)
                     if len(equipment_assemble) > 0:
@@ -204,14 +204,14 @@ class mister_terricic(persona_frame.persona):
 
     def ready(self):
         if self.active:
-            self.action = actions.special_action("Mister Terrific", self.special_action_click)
+            self.action = actions.special_action("Mister Terrific", self.special_action_click, self)
             self.player.played.special_options.append(self.action)
 
     # If there is more than a 50% chance of getting a card that does anything,
     def ai_is_now_a_good_time(self):
         total_left = 0
         for c in self.player.deck.contents:
-            if c.ctype_eq(cardtype.EQUIPMENT):
+            if c.ctype_eq(CardType.EQUIPMENT):
                 total_left += 1
         if total_left / (len(self.player.deck.contents) + 1) > 0.2:
             if self.action in self.player.played.special_options:
@@ -226,7 +226,7 @@ class power_girl(persona_frame.persona):
     image = "crossover_1/images/personas/Power Girl MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.SUPERPOWER):
+        if card.ctype_eq(CardType.SUPERPOWER):
             return persona_frame.overvalue()
         return 0
 
@@ -236,7 +236,7 @@ class power_girl(persona_frame.persona):
         if trigger.test(not immediate,
                         trigger.PLAY,
                         self.trigger,
-                        player, ttype, active) and data[0].ctype_eq(cardtype.SUPERPOWER):
+                        player, ttype, active) and data[0].ctype_eq(CardType.SUPERPOWER):
             already_played = False
             for c in self.player.played.played_this_turn:
                 if c != data[0] and data[0].name == c.name:
@@ -287,7 +287,7 @@ class wildcat(persona_frame.persona):
     image = "crossover_1/images/personas/Wildcat MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.HERO) or card.ctype_eq(cardtype.VILLAIN):
+        if card.ctype_eq(CardType.HERO) or card.ctype_eq(CardType.VILLAIN):
             return persona_frame.overvalue()
         return 0
 
@@ -302,9 +302,9 @@ class wildcat(persona_frame.persona):
                 hero_played = False
                 villain_played = False
                 for c in self.player.played.played_this_turn:
-                    if c.ctype_eq(cardtype.HERO):
+                    if c.ctype_eq(CardType.HERO):
                         hero_played = True
-                    if c.ctype_eq(cardtype.VILLAIN):
+                    if c.ctype_eq(CardType.VILLAIN):
                         villain_played = True
                 if hero_played:
                     player.draw_card(from_card=False)

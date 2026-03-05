@@ -1,16 +1,16 @@
+from __future__ import annotations
 import globe
-from constants import cardtype
 from constants import owners
 from constants import trigger
+from constants2 import CardType
 import arcade
-# from __future__ import annotations
 
 
 class card:
     name = ""
     vp = 0
     cost = 0
-    ctype:cardtype = cardtype.ANY
+    ctype:CardType = CardType.ANY
     # All cards must manually set these
     defense = False
     attack = False
@@ -33,16 +33,22 @@ class card:
 
     def __init__(self, owner=None):
         self.owner = owner
-        if owner != None:
+        if owner is not None:
             self.owner_type = owners.PLAYER
         self.texture = arcade.load_texture(self.image)
         self.frozen = []
 
-    def get_ctype(self):
+    def get_ctype(self) -> list[CardType]:
         return [self.ctype]
 
-    def ctype_eq(self, ctype:cardtype) -> bool:
+    def ctype_eq(self, ctype:CardType) -> bool:
         return self.ctype == ctype
+
+    def ctype_intersect(self, c:card) -> bool:
+        for type in c.get_ctype():
+            if self.ctype_eq(type):
+                return True
+        return False
 
     def play_action(self, player):
         return 0
@@ -122,38 +128,40 @@ class card:
         # print(self.name,location[0].name,location[1])
         if location is not None:
             location[0].contents.remove(self)
+            if location[2]:
+                trigger.all(trigger.LEFT_PLAY, [self], location[3])
         return self
 
     def find_self(self):
         # why am i not checking by ownership type?
         if self in globe.boss.lineup.contents:
-            return (globe.boss.lineup, globe.boss.lineup.contents.index(self))
+            return globe.boss.lineup, globe.boss.lineup.contents.index(self), False, None
         elif self in globe.boss.destroyed_stack.contents:
-            return (globe.boss.destroyed_stack, globe.boss.destroyed_stack.contents.index(self))
+            return globe.boss.destroyed_stack, globe.boss.destroyed_stack.contents.index(self), False, None
         elif self in globe.boss.main_deck.contents:
-            return (globe.boss.main_deck, globe.boss.main_deck.contents.index(self))
+            return globe.boss.main_deck, globe.boss.main_deck.contents.index(self), False, None
         elif self in globe.boss.kick_stack.contents:
-            return (globe.boss.kick_stack, globe.boss.kick_stack.contents.index(self))
+            return globe.boss.kick_stack, globe.boss.kick_stack.contents.index(self), False, None
         elif self in globe.boss.weakness_stack.contents:
-            return (globe.boss.weakness_stack, globe.boss.weakness_stack.contents.index(self))
+            return globe.boss.weakness_stack, globe.boss.weakness_stack.contents.index(self), False, None
         elif self in globe.boss.supervillain_stack.contents:
-            return (globe.boss.supervillain_stack, globe.boss.supervillain_stack.contents.index(self))
+            return globe.boss.supervillain_stack, globe.boss.supervillain_stack.contents.index(self), False, None
         for p in globe.boss.players:
             if self in p.hand.contents:
-                return (p.hand, p.hand.contents.index(self))
+                return p.hand, p.hand.contents.index(self), False, p
             elif self in p.discard.contents:
-                return (p.discard, p.discard.contents.index(self))
+                return p.discard, p.discard.contents.index(self), False, p
             elif self in p.ongoing.contents:
-                return (p.ongoing, p.ongoing.contents.index(self))
+                return p.ongoing, p.ongoing.contents.index(self), True, p
             elif self in p.played.contents:
-                return (p.played, p.played.contents.index(self))
+                return p.played, p.played.contents.index(self), False, p
             elif self in p.deck.contents:
-                return (p.deck, p.deck.contents.index(self))
+                return p.deck, p.deck.contents.index(self), False, p
             elif self in p.under_superhero.contents:
-                return (p.under_superhero, p.under_superhero.contents.index(self))
+                return p.under_superhero, p.under_superhero.contents.index(self), False, p
             # Firestorm.  May interact weirdly, firestorm always puts it back on superhero i think
             elif self in p.over_superhero.contents:
-                return (p.over_superhero, p.over_superhero.contents.index(self))
+                return p.over_superhero, p.over_superhero.contents.index(self), False, p
 
     # return self
 
@@ -168,7 +176,7 @@ class card:
 class weakness(card):
     name = "Weakness"
     vp = -1
-    ctype = cardtype.WEAKNESS
+    ctype = CardType.WEAKNESS
     owner_type = owners.WEAKNESS
     image = "base/images/cards/weakness.jpeg"
 
@@ -176,14 +184,14 @@ class weakness(card):
 class vunerability(card):
     name = "Vunerability"
     vp = 0
-    ctype = cardtype.STARTER
+    ctype = CardType.STARTER
     image = "base/images/cards/Vulnerability.jpg"
 
 
 class punch(card):
     name = "Punch"
     vp = 0
-    ctype = cardtype.STARTER
+    ctype = CardType.STARTER
     text = "+1 Power"
     image = "base/images/cards/Punch.jpg"
 
@@ -196,7 +204,7 @@ class kick(card):
     name = "Kick"
     vp = 1
     cost = 3
-    ctype = cardtype.SUPERPOWER
+    ctype = CardType.SUPERPOWER
     owner_type = owners.KICK
     text = "+2 Power"
     image = "base/images/cards/Kick.jpeg"

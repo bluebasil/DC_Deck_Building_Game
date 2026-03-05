@@ -47,6 +47,13 @@ FAILED_TO_AVOID = 10
 # data[1] is the attacking card
 ROTATE = 11
 # Not Yet Designed
+LEFT_PLAY = 12
+# Designed to be used for things like disabling triggers or effects after an ongoing card leaves play
+# data[0] card that left play
+BEFORE_PLAY = 13
+# Designed for things like affecting the next card that is played.  Originally for Teen Titans>Garfield Logan
+# data[0] is the card to be played
+# BEGIN_TURN
 
 # Trigger function heder:
 """

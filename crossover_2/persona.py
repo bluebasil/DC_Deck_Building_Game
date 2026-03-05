@@ -1,4 +1,4 @@
-from constants import cardtype
+from constants2 import CardType
 import effects
 from constants import ai_hint
 import globe
@@ -18,7 +18,7 @@ class felicity_smoak(persona_frame.persona):
 	image = "crossover_2/images/personas/Felicity Smoak MC.jpg"
 
 	def ai_overvalue(self,card):
-		if card.ctype_eq(cardtype.HERO):
+		if card.ctype_eq(CardType.HERO):
 			return persona_frame.overvalue()
 		return 0
 
@@ -29,10 +29,10 @@ class felicity_smoak(persona_frame.persona):
 						trigger.PLAY, \
 						self.trigger, \
 						player,ttype,active) \
-				and data[0].ctype_eq(cardtype.HERO):
+				and data[0].ctype_eq(CardType.HERO):
 			hero_count = 0
 			for c in self.player.played.played_this_turn:
-				if c.ctype_eq(cardtype.HERO):
+				if c.ctype_eq(CardType.HERO):
 					hero_count += 1
 			if hero_count == 2:
 				instruction_text = "Would you like to put a card from the main deck under Felicity Smoak?"
@@ -98,7 +98,7 @@ class john_diggle(persona_frame.persona):
 
 	def ready(self):
 		if self.active:
-			self.action = actions.special_action("John Diggle",self.special_action_click)
+			self.action = actions.special_action("John Diggle",self.special_action_click, self)
 			self.player.played.special_options.append(self.action)
 	
 	def reset(self):
@@ -116,7 +116,7 @@ class oliver_queen(persona_frame.persona):
 	image = "crossover_2/images/personas/Oliver Queen MC.jpg"
 
 	def ai_overvalue(self,card):
-		if card.ctype_eq(cardtype.EQUIPMENT):
+		if card.ctype_eq(CardType.EQUIPMENT):
 			#Really need equipment
 			return persona_frame.overvalue()
 		return 0
@@ -127,7 +127,7 @@ class oliver_queen(persona_frame.persona):
 				instruction_text = "You may discard a card from your hand]\n. If it's an Equipment, you may put it under your Super Hero. if it's\nnot, put a random card from under your Super Hero into your hand."
 				result = effects.may_choose_one_of(instruction_text,self.player,self.player.hand.contents,ai_hint.IFBAD)
 				if result != None:
-					if result.ctype_eq(cardtype.EQUIPMENT):
+					if result.ctype_eq(CardType.EQUIPMENT):
 						result.pop_self()
 						self.player.under_superhero.contents.append(result)
 					else:
@@ -142,14 +142,14 @@ class roy_harper(persona_frame.persona):
 	action = None
 
 	def ai_overvalue(self,card):
-		if card.ctype_eq(cardtype.SUPERPOWER):
+		if card.ctype_eq(CardType.SUPERPOWER):
 			return -persona_frame.overvalue()
 		return 0
 
 	def special_action_click(self,player):
 		assemble = []
 		for c in globe.boss.lineup.contents:
-			if c.ctype_eq(cardtype.SUPERPOWER):
+			if c.ctype_eq(CardType.SUPERPOWER):
 				assemble.append(c)
 		if len(assemble) > 0:
 			instruction_text = "Would you like to put a Super Power from the line up under your persona?"
@@ -175,7 +175,7 @@ class roy_harper(persona_frame.persona):
 						c.destroy(self.player)
 
 
-			self.action = actions.special_action("Roy Harper",self.special_action_click)
+			self.action = actions.special_action("Roy Harper",self.special_action_click, self)
 			self.player.played.special_options.append(self.action)
 
 
@@ -192,7 +192,7 @@ class sara_lance(persona_frame.persona):
 	action = None
 
 	def ai_overvalue(self,card):
-		if card.ctype_eq(cardtype.VILLAIN):
+		if card.ctype_eq(CardType.VILLAIN):
 			return persona_frame.overvalue()
 		return 0
 
@@ -204,7 +204,7 @@ class sara_lance(persona_frame.persona):
 						self.trigger, \
 						player,ttype,active) \
 				and data[1].owner_type == owners.LINEUP \
-				and data[1].ctype_eq(cardtype.VILLAIN) \
+				and data[1].ctype_eq(CardType.VILLAIN) \
 				and data[0] == False \
 				and effects.ok_or_no(f"Would you like to put {data[1].name} under your Super Hero?",player,data[1],ai_hint.ALWAYS):
 			if globe.DEBUG:
@@ -215,7 +215,7 @@ class sara_lance(persona_frame.persona):
 	def special_action_click(self,player):
 		assemble = []
 		for c in player.under_superhero.contents:
-			if c.ctype_eq(cardtype.VILLAIN):
+			if c.ctype_eq(CardType.VILLAIN):
 				assemble.append(c)
 		if len(assemble) > 0:
 			instruction_text = "Would you like to put a Villain from under\nyour super hero on the bottom of your deck?"
@@ -230,7 +230,7 @@ class sara_lance(persona_frame.persona):
 	def ready(self):
 		self.player.triggers.append(self.trigger)
 		if self.active:
-			self.action = actions.special_action("Sara Lance",self.special_action_click)
+			self.action = actions.special_action("Sara Lance",self.special_action_click, self)
 			self.player.played.special_options.append(self.action)
 		
 

@@ -1,4 +1,4 @@
-from constants import cardtype
+from constants2 import CardType
 from constants import owners
 import effects
 from constants import option
@@ -17,7 +17,7 @@ class citizen_steel(card_frame.card):
     name = "Citizen Steel"
     vp = 1
     cost = 5
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = "Draw a card.\nSuper-Villains cost you 1 less to defeat this turn\nfor each Punch you play or have played this turn."
     image = "crossover_1/images/cards/Citizen Steel 5.jpg"
     total_discount = 0
@@ -61,7 +61,7 @@ class dr_mid_nite(card_frame.card):
     name = "Dr. Mid-Nite"
     vp = 1
     cost = 4
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = "+2 Power\nLook at the top two cards of your deck. You may\ndiscard any of them and put the rest back in\nany order."
     image = "crossover_1/images/cards/Dr Mid Nite 4.jpg"
 
@@ -96,7 +96,7 @@ class girl_power(card_frame.card):
     name = "Girl Power"
     vp = 1
     cost = 5
-    ctype = cardtype.SUPERPOWER
+    ctype = CardType.SUPERPOWER
     defense = True
     text = "+2 Power\nDefense:: You may reveal this card and discard\nit or a Punch to avoid an Attack. If you do,\ndraw a card."
     image = "crossover_1/images/cards/Girl Power 5.jpg"
@@ -127,7 +127,7 @@ class liberty_belle(card_frame.card):
     name = "Liberty Belle"
     vp = 1
     cost = 3
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     defense = True
     text = "+2 Power\nDefense:: You may discard this card to avoid an\nAttack. If you do, draw three cards and put two\ncards from your hand on top of your deck."
     image = "crossover_1/images/cards/Liberty Belle 3.jpg"
@@ -152,7 +152,7 @@ class monument_point(card_frame.card):
     name = "Monument Point"
     vp = 2
     cost = 6
-    ctype = cardtype.LOCATION
+    ctype = CardType.LOCATION
     text = "Ongoing: When you play your first Punch on each of your turns, draw a card."
     image = "crossover_1/images/cards/Monument Point 6.jpg"
     ongoing = True
@@ -190,7 +190,7 @@ class mystic_bolts(card_frame.card):
     name = "Mystic Bolts"
     vp = 2
     cost = 6
-    ctype = cardtype.SUPERPOWER
+    ctype = CardType.SUPERPOWER
     text = "+1 Power\nPut up to two cards each with cost 5 or less and\neach with a different cost from your discard pile\ninto your hand."
     image = "crossover_1/images/cards/Mystic Bolts 6.jpg"
 
@@ -225,7 +225,7 @@ class per_degaton(card_frame.card):
     name = "Per Degaton"
     vp = 1
     cost = 5
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = "+2 Power\nDiscard any number of cards from your hand.\n+1 Power for each card you discard or have\ndiscarded this turn."
     image = "crossover_1/images/cards/Per Degaton 5.jpg"
 
@@ -259,7 +259,7 @@ class scythe(card_frame.card):
     name = "Scythe"
     vp = 1
     cost = 3
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = "+2 Power"
     attack = True
     attack_text = "Attack:: Each foe gains a Weakness unless\nthey reveals a Starter from his hand."
@@ -275,7 +275,7 @@ class scythe(card_frame.card):
             if p != by_player and effects.attack(p, self, by_player):
                 has_starter = False
                 for c in p.hand.contents:
-                    if c.ctype_eq(cardtype.STARTER):
+                    if c.ctype_eq(CardType.STARTER):
                         has_starter = True
                 if not has_starter:
                     p.gain_a_weakness()
@@ -287,7 +287,7 @@ class t_spheres(card_frame.card):
     name = "T-Spheres"
     vp = 2
     cost = 6
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = "+2 Power\nChoose a card name. Reveal the top three cards of\nyour deck. Put all cards with that name into your\nhand and the rest on top in any order"
     image = "crossover_1/images/cards/T Spheres 6.jpg"
 
@@ -339,7 +339,7 @@ class the_hourglass(card_frame.card):
     name = "The Hourglass"
     vp = 1
     cost = 4
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = "Choose another card with cost 6 or less you\nplayed this turn. At the end of turn, put that card\ninto your hand. (If it is yours and still in play)"
     image = "crossover_1/images/cards/The Hourglass 4.jpg"
     card_choosen = None
@@ -374,7 +374,7 @@ class eclipso(card_frame.card):
     name = "Eclipso"
     vp = 7
     cost = 14
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "You are considered to have the game text of each foe's Super Hero.\nEach foe discards the top card of his deck. You may play each of the\ndiscarded cards this turn, and then return them to their discard piles."
     attack_text = "First Appearance - Attack: Each player discards a card for each Villain in his hand."
@@ -406,7 +406,7 @@ class eclipso(card_frame.card):
                     self.discarded_cards.append(card_to_discard)
                     p.discard_a_card(card_to_discard)
         if len(self.discarded_cards) > 0:
-            self.action = actions.special_action("Eclipso", self.special_action_click)
+            self.action = actions.special_action("Eclipso", self.special_action_click, self)
             player.played.special_options.append(self.action)
         return 0
 
@@ -418,7 +418,7 @@ class eclipso(card_frame.card):
         for p in globe.boss.players:
             if effects.attack(p, self):
                 # effects.reveal(f"This was {p.persona.name}'s hand",p,p.hand.contents)
-                num_heros = p.hand.get_count(cardtype.VILLAIN)
+                num_heros = p.hand.get_count(CardType.VILLAIN)
                 for i in range(num_heros):
                     instruction_text = f"You had {num_heros} heros in you hand.  Choose a card to discard ({i + 1}/{num_heros})"
                     if p.hand.size() > 0:
@@ -432,7 +432,7 @@ class gentleman_ghost(card_frame.card):
     name = "Gentleman Ghost"
     vp = 6
     cost = 13
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "Put all cards with cost 0 from your discard pile into your hand. Then,\nyou may pass a card from your hand into the discard pile of each foe."
     attack_text = "First Appearance - Attack: Each player destroys two different cards with cost 1 or greater in his discard pile."
@@ -485,7 +485,7 @@ class gog(card_frame.card):
     name = "Gog"
     vp = 7
     cost = 15
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "Stack Ongling:: At the start of each player's turn, he discards a\ncard unless he destroys a card in his discard pile."
     attack_text = "First Appearance - Attack: Each player discards a random\ncard. The player(s) that discarded the card with the highest cost\ndiscard an additional card."
@@ -530,7 +530,7 @@ class icicle(card_frame.card):
     name = "Icicle"
     vp = 5
     cost = 10
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "+3 Power and choose a foe.\nThat foe flips his super Hero face down until the end of his next turn."
     attack_text = "First Appearance - Attack: Each player gains a Weakness\nfor each Hero in the Line-up."
@@ -560,7 +560,7 @@ class icicle(card_frame.card):
         return 0
 
     def first_apearance(self):
-        heros_in_lineup = globe.boss.lineup.get_count(cardtype.HERO)
+        heros_in_lineup = globe.boss.lineup.get_count(CardType.HERO)
         for p in globe.boss.players:
             if effects.attack(p, self):
                 for i in range(heros_in_lineup):
@@ -573,7 +573,7 @@ class kobra(card_frame.card):
     name = "Kobra"
     vp = 6
     cost = 11
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "Draw four cards, and then discard two of those cards."
     attack_text = "First Appearance - Attack: Each player reveals the\ntop five cards of his deck and discards all cards with cost\n1 or greater. Put the rest back in any order."
@@ -614,7 +614,7 @@ class mordru_the_merciless(card_frame.card):
     name = "Mordru The Merciless"
     vp = 5
     cost = 9
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "+3 Power\nYou may shuffle all cards with cost 1 or greater from your discard pile into your deck."
     attack_text = "First Appearance - Attack: Each player discards a card\nwith cost 3 or greater."
@@ -649,7 +649,7 @@ class solomon_grundy(card_frame.card):
     name = "Solomon Grundy"
     vp = '*'
     cost = 8
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "+3 Power\nStack Ongoing:: Solomon Frundy can't be defeated unless you played a\nStarter this turn.\nAt the end of the game, Solomon Grundy is worth !VP for each Starter in your deck."
     image = "crossover_1/images/cards/Solomon Grundy 8.jpg"
@@ -667,7 +667,7 @@ class solomon_grundy(card_frame.card):
                         trigger.PLAY, \
                         self.trigger, \
                         player, ttype) \
-                and data[0].ctype_eq(cardtype.STARTER):
+                and data[0].ctype_eq(CardType.STARTER):
             if globe.DEBUG:
                 print("active", self.name, flush=True)
             self.played_starter = True
@@ -689,7 +689,7 @@ class solomon_grundy(card_frame.card):
         for c in all_cards:
             # print(len(all_cards),c,all_cards,flush = True)
             # print(c.name,flush = True)
-            if c.ctype_eq(cardtype.STARTER):
+            if c.ctype_eq(CardType.STARTER):
                 amount_of_starters += 1
         return amount_of_starters
 
@@ -698,7 +698,7 @@ class ultra_humanite(card_frame.card):
     name = "Ultra-Humanite"
     vp = 6
     cost = 12
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "+2 Power\nPut any number of cards from your hand on the bottom of your deck,\nand then draw that many cards."
     attack_text = "First Appearance - Attack: Each player gains two Weakness\ncards and puts them on the bottom of his deck."

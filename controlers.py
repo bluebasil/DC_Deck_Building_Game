@@ -3,8 +3,9 @@ from constants import ai_hint
 import time
 import random
 import globe
-from constants import cardtype
+from constants2 import CardType
 from frames import actions
+import enum
 
 view = None
 
@@ -90,7 +91,7 @@ class human_view(controler):
             # print(len(globe.bus.on_bus),flush = True)
             if len(globe.bus.on_bus) > 0:
                 result = process()
-                if result != None:
+                if result is not None:
                     return result
             time.sleep(0.1)
 
@@ -108,21 +109,39 @@ class human_view(controler):
                 if current.content in self.player.hand.contents:
                     self.player.play_c(current.content)
                     globe.bus.clear()
+                    return
 
                 # lineup to buy
                 if current.content in globe.boss.lineup.contents:
                     self.player.buy_c(current.content)
                     globe.bus.clear()
+                    return
 
                 # kick to buy
                 if current.content in globe.boss.kick_stack.contents:
                     self.player.buy_kick()
                     globe.bus.clear()
+                    return
 
                 # sv to buy
                 if current.content in globe.boss.supervillain_stack.contents:
                     self.player.buy_supervillain()
                     globe.bus.clear()
+                    return
+
+                card_option = None
+                for special_option in self.player.played.special_options:
+                    if special_option.card is not None and special_option.card == current.content:
+                        if card_option is None:
+                            card_option = special_option
+                        else:
+                            # Multiple options exist for the same card... not sure how to proceed
+                            globe.bus.clear()
+                            return None
+                if card_option:
+                    self.player.click_action(card_option)
+                    globe.bus.clear()
+                    return
 
             if current.header == "button":
 
@@ -135,6 +154,7 @@ class human_view(controler):
                     self.player.click_action(current.content)
                     # .click_action(self.player)
                     globe.bus.clear()
+                    return
 
         print(f"Current power: {self.player.played.power}", flush=True)
         self.await_turn(process)
@@ -156,6 +176,7 @@ class human_view(controler):
 
                 # hand to play
                 if current.content in persona_list:
+                    globe.bus.clear()
                     return current.content
 
         choosen = self.await_turn(process)
@@ -189,6 +210,12 @@ class human_view(controler):
         return self.await_turn(process)
 
     def choose_one_of(self, instruction_text, player, cards, hint, source=None):
+        # options = []
+        #         # for c in cards:
+        #         #     if isinstance(c,enum.Enum):
+        #         #         options.append(c.name)
+        #         #     else:
+        #         #         options.append(c)
         options = cards
         globe.bus.clear()
         text = instruction_text
@@ -205,6 +232,11 @@ class human_view(controler):
                 if current.content in options:
                     globe.bus.clear()
                     return [options.index(current.content)]
+
+            if current.header == "button":
+                if current.content in options:
+                    globe.bus.clear()
+                    return [current.content]
 
         return self.await_turn(process)
 
@@ -236,6 +268,11 @@ class human_view(controler):
                 if current.content == option.NO:
                     globe.bus.clear()
                     return [option.NO]
+
+                if current.content in options:
+                    globe.bus.clear()
+                    return [current.content]
+
 
         return self.await_turn(process)
 
@@ -668,7 +705,7 @@ class cpu(controler):
             return 750
         if card.name == "Punch":
             return 250
-        if card.ctype_eq(cardtype.LOCATION):
+        if card.ctype_eq(CardType.LOCATION):
             return -1
         return card.cost
 
@@ -695,6 +732,8 @@ class cpu(controler):
                 self.display_thought("(Differtent cards than expected)", quick=False)
                 self.player.hand.contents.sort(key=self.sort_by_play_order)
             self.player.persona.ai_is_now_a_good_time()
+            for sa in self.player.played.special_options:
+                sa.click_action(self.player)
 
         self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} has {self.player.played.power} power!",
                              quick=False)
@@ -726,16 +765,16 @@ class cpu(controler):
         return (option.OK, 0)
 
     def choose_one_of(self, instruction_text, player, cards, hint, source=None):
-        cards.sort(key=self.sort_by_cost)
         self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} got:{instruction_text}")
+        if hint == ai_hint.RANDOM:
+            return [random.randint(0, len(cards) - 1)]
+        cards.sort(key=self.sort_by_cost)
         if hint == ai_hint.BEST:
             self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[-1].name}")
             return [len(cards) - 1]
         elif hint == ai_hint.WORST:
             self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}")
             return [0]
-        elif hint == ai_hint.RANDOM:
-            return [random.randint(0, len(cards) - 1)]
         self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} choose {cards[0].name}")
         return [0]
 
@@ -856,4 +895,40 @@ class cpu_greedy(cpu):
                 f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)",
                 quick=False)
 
+        return
+
+
+class cpu_chatgpt_minimal(cpu):
+    #gptrim
+    def turn(self):
+        global view
+        self.display_thought(f"Begining of AI {self.player.pid}'s turn", quick=False)
+        # self.player.hand.contents.sort(key=self.sort_by_play_order),
+
+        if self.player.hand.size() > 0:
+            prompt = "You are playing a deck building game where the objective is to have the most victory points (vp) at the end of the game (when the last super villain is bought/defeated).  You can buy cards from the lineup using power, which you get by playing cards.  The order of cards you play matters. You control cards that you have played that turn, or ongoing from a previous turn."
+            prompt += "Here are the cards in your hand.  Respond with only the names of the cards in the order that you choose to play them, seperated by commas.  Do not respond with anything else.\n"
+
+            for c in self.player.hand.contents:
+                prompt += f"- name: {c.name} type: {c.ctype} text: {c.text}\n"
+
+            self.display_thought(f"{prompt}", quick=False)
+
+        while self.player.hand.size() > 0:
+            self.player.play(0)
+        self.display_thought(f"AI {self.player.pid}-{self.player.persona.name} has {self.player.played.power} power!",
+                             quick=False)
+
+        if globe.boss.supervillain_stack.size() > 0 and self.player.played.power >= \
+                globe.boss.supervillain_stack.contents[-1].cost:
+            self.player.buy_supervillain()
+            self.display_thought(
+                f"AI {self.player.pid}-{self.player.persona.name} is buying the supervillain! ({self.player.played.power} power left)",
+                quick=False)
+
+        while self.player.played.power >= 3 and globe.boss.kick_stack.size() > 0:
+            self.player.buy_kick()
+            self.display_thought(
+                f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)",
+                quick=False)
         return

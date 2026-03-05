@@ -1,20 +1,20 @@
-import model
-import time
-from constants import cardtype
+
+from constants2 import CardType
 import controlers
 import globe
 
 
+
 class view_controler():
     window = None
-    colour = {cardtype.STARTER: '\033[93m',
-              cardtype.WEAKNESS: '\033[92m',
-              cardtype.HERO: '\033[94m',
-              cardtype.VILLAIN: '\033[91m',
-              cardtype.SUPERPOWER: '\033[96m',
-              cardtype.EQUIPMENT: '\033[89m',
-              cardtype.LOCATION: '\033[95m',
-              cardtype.ANY: '\033[0m'}
+    colour = {CardType.STARTER: '\033[93m',
+              CardType.WEAKNESS: '\033[92m',
+              CardType.HERO: '\033[94m',
+              CardType.VILLAIN: '\033[91m',
+              CardType.SUPERPOWER: '\033[96m',
+              CardType.EQUIPMENT: '\033[89m',
+              CardType.LOCATION: '\033[95m',
+              CardType.ANY: '\033[0m'}
 
     def __init__(self, window=None):
         self.window = window
@@ -26,7 +26,7 @@ class view_controler():
     def print_card(self, card, num=0):
         print("\033[;7m" + self.colour[
             card.ctype] + f"{num:<2} {card.name:<20}vp:{card.vp:>2} cost:{card.cost:>2}  {card}" + self.colour[
-                  cardtype.ANY] + \
+                  CardType.ANY] + \
               f"\n{card.text}\n{card.attack_text}", flush=True)
         print("------------------------------------", flush=True)
 
@@ -58,7 +58,7 @@ class view_controler():
         if globe.boss.supervillain_stack.current_sv == globe.boss.supervillain_stack.contents[-1]:
             self.print_card(globe.boss.supervillain_stack.current_sv)
         else:
-            print("\033[;7m" + f"Unkown" + self.colour[cardtype.ANY] + \
+            print("\033[;7m" + f"Unkown" + self.colour[CardType.ANY] + \
                   f"\n\n", flush=True)
         print("------------------------------------", flush=True)
         print("------------------------------------------------")

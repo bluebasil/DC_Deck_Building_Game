@@ -12,6 +12,7 @@ from frames import actions
 from constants import option
 import controlers
 import sys, traceback
+import enum
 
 # This is a pythoin GUI implimentation.  Ideally this will be replaced with an onling Javascript implimentation.
 
@@ -21,7 +22,7 @@ Scale was added so that i can use it on my laptop.
 Not going to lie, This is a messy implimentation of thie GUI.  For instance:
 Scale has to be added to mode points, unless they involve the constancts automatically scalled
 """
-SCREEN_SCALE = 1
+SCREEN_SCALE = 0.5
 SCREEN_WIDTH = int(3000 * SCREEN_SCALE)
 SCREEN_HEIGHT = int(2000 * SCREEN_SCALE)
 CARD_SCALE = 0.5 * SCREEN_SCALE
@@ -36,6 +37,7 @@ CARD_BUTTON_TEXTURE = arcade.load_texture("images/largebutton_new.png")
 CARD_BUTTON_GREEN = [138, 134, 134]  # [86, 197, 1]
 SCROLL_TEXTURE = arcade.load_texture("images/scroll.png")
 QUESTION_TEXTURE = arcade.load_texture("images/question.png")
+CLICK_ICON_TEXTURE = arcade.load_texture("images/click2.png")
 
 SMALL_BUTTON_1 = arcade.load_texture("images/small_button.png")
 SMALL_BUTTON_2 = arcade.load_texture("images/small_button_selected.png")
@@ -203,7 +205,8 @@ class drawable:
     def draw(self):
         # for c in self.children.values():
         #	c.set_gone()
-        # self.children = []
+        # self.children = []6
+
         # self.jminx = self.jminy = self.jmaxx = self.jmaxy = 0
         return
 
@@ -287,7 +290,7 @@ class drawable:
         return False
 
 
-def draw_stack_size(stack, x, y, scale=1):
+def draw_stack_size(stack, x, y, scale: float = 1):
     x = x + BASE_TEXTURE.width * CARD_SCALE * 0.5 * scale - 30 * SCREEN_SCALE
     y = y + BASE_TEXTURE.height * CARD_SCALE * 0.5 * scale - 30 * SCREEN_SCALE
     arcade.draw_rectangle_filled(x, y, 50 * SCREEN_SCALE, 50 * SCREEN_SCALE, arcade.color.BLACK)
@@ -303,11 +306,11 @@ class boss(drawable):
         global display_special
         super().draw()
 
-        if PREVIEW.cur_card != None:
+        if PREVIEW.cur_card is not None:
             card_ratio = BASE_TEXTURE.height / BASE_TEXTURE.width
             # print("DRAWCARD",card_ratio,SCREEN_HEIGHT-(SCREEN_WIDTH*0.2*card_ratio)/2,SCREEN_WIDTH*0.2,SCREEN_WIDTH*0.2*card_ratio,flush = True)
             arcade.draw_texture_rectangle(SCREEN_WIDTH * 0.9, SCREEN_HEIGHT - (SCREEN_WIDTH * 0.2 * card_ratio) / 2,
-                                          SCREEN_WIDTH * 0.2, \
+                                          SCREEN_WIDTH * 0.2,
                                           SCREEN_WIDTH * 0.2 * card_ratio, PREVIEW.cur_card.texture, 0)
 
         # player
@@ -397,19 +400,20 @@ class boss(drawable):
 
         if globe.boss.whose_turn == 0:
             for i, special_option in enumerate(globe.boss.players[globe.boss.whose_turn].played.special_options):
+                # if special_option.card is None: # or special_option.card not in globe.boss.players[globe.boss.whose_turn].ongoing.contents:
                 option = self.get_drawable(button, f"special_action_{i}")
                 option.draw(special_option, special_option.button_text, SCREEN_WIDTH * 0.1,
                             SCREEN_HEIGHT * 0.4 + i * (option.jmaxy - option.jminy + 15))
 
         query = self.get_drawable(question, f"question")
-        if globe.bus.display != None:
+        if globe.bus.display is not None:
             query.draw(globe.bus.display, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         else:
             query.set_gone()
 
         # print(f"display special {display_special}",flush = True)
         custom = self.get_drawable(question, f"over_display")
-        if display_special != None:
+        if display_special is not None:
             custom_dialog = event_bus.question("", None, display_special.last_contents)
             custom.depth = -100
             custom.draw(custom_dialog, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
@@ -606,12 +610,16 @@ class player(drawable):
         end_turn_button.draw(actions.ENDTURN, "End Turn", x, y)
 
         ongoing = self.get_drawable(pile, "ongoing")
-        ongoing.draw(player.ongoing.contents, SCREEN_WIDTH - BASE_TEXTURE.width * CARD_SCALE / 2,
-                     1.5 * (BASE_TEXTURE.height * CARD_SCALE + 15))
+        # ongoing.draw(player.ongoing.contents, SCREEN_WIDTH - BASE_TEXTURE.width * CARD_SCALE / 2,
+        #              1.5 * (BASE_TEXTURE.height * CARD_SCALE + 15))
+        ongoing.draw_squished(player.ongoing.contents, SCREEN_WIDTH - BASE_TEXTURE.width * CARD_SCALE / 2,
+                              1.5 * (BASE_TEXTURE.height * CARD_SCALE + 15), width=2000, visible=True, justify="right")
 
         hand = self.get_drawable(pile, "hand")
-        hand.draw(player.hand.contents, SCREEN_WIDTH - BASE_TEXTURE.width * CARD_SCALE / 2,
-                  BASE_TEXTURE.height * CARD_SCALE / 2, justify="right")
+        hand.draw_squished(player.hand.contents, SCREEN_WIDTH - BASE_TEXTURE.width * CARD_SCALE / 2,
+                           BASE_TEXTURE.height * CARD_SCALE / 2, width=2000, visible=True, justify="right")
+        # hand.draw_squishedw(player.hand.contents, SCREEN_WIDTH - BASE_TEXTURE.width * CARD_SCALE / 2,
+        #           BASE_TEXTURE.height * CARD_SCALE / 2, justify="right")
 
         self.assemble_juristiction()
 
@@ -684,6 +692,10 @@ class pile(drawable):
             elif c == option.ODD:
                 text = "Odd"
             new_option.draw(c, text, x, y, True)
+            new_option.depth = depth
+        elif isinstance(c, enum.Enum):
+            new_option = self.get_drawable(button, c)
+            new_option.draw(c, c.name, x, y, True)
             new_option.depth = depth
         else:
             new_card = self.get_drawable(card, f"{i}")
@@ -816,6 +828,10 @@ class card(drawable):
         # print(card.name)
         width = BASE_TEXTURE.width * CARD_SCALE * scale
         height = BASE_TEXTURE.height * CARD_SCALE * scale
+        if card.texture is None:
+            print(card.__dict__, flush=True)
+            raise Exception()
+
         arcade.draw_texture_rectangle(x, y, width, height, card.texture, card.rotation)
 
         self.set_juristiction(x - width / 2, y - height / 2, x + width / 2, y + height / 2)
@@ -824,6 +840,18 @@ class card(drawable):
         # arcade.draw_point(x+width/2, y+height/2, arcade.color.RED, 10)
         if hasattr(card, 'frozen') and len(card.frozen) > 0:
             arcade.draw_circle_filled(x, y, width * 0.33, [255, 255, 255, 200])
+
+        if card in globe.boss.players[globe.boss.whose_turn].ongoing.contents or card in globe.boss.players[
+            globe.boss.whose_turn].played.contents:
+            number_of_options = 0
+            for i, special_option in enumerate(globe.boss.players[globe.boss.whose_turn].played.special_options):
+                if special_option.card == card:
+                    number_of_options += 1
+            if number_of_options == 1:
+                arcade.draw_texture_rectangle(x + width / 2 - width * 0.15, y + height / 2 - width * 0.15, width * 0.2,
+                                              width * 0.2, CLICK_ICON_TEXTURE, 0)
+            elif number_of_options > 1:
+                arcade.draw_circle_filled(x + 2 * width / 5, y + 2 * height / 5, width * 0.1, [129, 34, 19, 255])
 
     def draw_down(self, x, y, scale=1):
         super().draw()
@@ -866,6 +894,24 @@ class personas(drawable):
             arcade.draw_texture_rectangle(x, y, width, height, BASE_TEXTURE, 0)
         # arcade.draw_point(x, y, arcade.color.RED, 10)
         self.set_juristiction(x - width / 2, y - height / 2, x + width / 2, y + height / 2)
+
+        number_of_options = 0
+        for i, special_option in enumerate(globe.boss.players[globe.boss.whose_turn].played.special_options):
+            if special_option.card == persona:
+                number_of_options += 1
+        if number_of_options == 1:
+            arcade.draw_texture_rectangle(x + width / 2 - width * 0.15, y + height / 2 - width * 0.15, width * 0.2,
+                                          width * 0.2, CLICK_ICON_TEXTURE, 0)
+        elif number_of_options > 1:
+            arcade.draw_circle_filled(x + 2 * width / 5, y + 2 * height / 5, width * 0.1, [129, 34, 19, 255])
+
+    def mouse_up(self, mouse, x, y):
+        if not mouse.consumed and self.check_collision(x, y) and self.persona != None:
+            mouse.consumed = True
+
+            if not mouse.silent:
+                # print("(Card click)",flush = True)
+                globe.bus.card_clicked(self.persona)
 
     def mouse_move(self, preview, x, y):
         if not preview.consumed and self.check_collision(x, y) and self.persona != None:
@@ -966,16 +1012,16 @@ class question(drawable):
         # arcade.draw_rectangle_filled(x, y, width, height,[0,0,0,225])
         arcade.draw_texture_rectangle(x, y, width, height, QUESTION_TEXTURE, 0)
 
-        if PREVIEW.cur_card != None:
+        if PREVIEW.cur_card is not None:
             card_ratio = BASE_TEXTURE.height / BASE_TEXTURE.width
             # print("DRAWCARD",card_ratio,SCREEN_HEIGHT-(SCREEN_WIDTH*0.2*card_ratio)/2,SCREEN_WIDTH*0.2,SCREEN_WIDTH*0.2*card_ratio,flush = True)
-            arcade.draw_texture_rectangle(SCREEN_WIDTH * 0.2 / 2, y, SCREEN_WIDTH * 0.2, \
+            arcade.draw_texture_rectangle(SCREEN_WIDTH * 0.2 / 2, y, SCREEN_WIDTH * 0.2,
                                           SCREEN_WIDTH * 0.2 * card_ratio, PREVIEW.cur_card.texture, 0)
 
         text_size = 22
         # text_offset = len(question.text)*6+4
         arcade.draw_text(f"{question.text}", x, y + height * 0.25, arcade.color.WHITE, text_size)
-        if question.card != None:
+        if question.card is not None:
             choices = self.get_drawable(card, "explain")
             choices.draw(question.card, x - BASE_TEXTURE.width * CARD_SCALE, y + height * 0.25)
 
@@ -1010,6 +1056,7 @@ def thread_game(thread_name, delay):
 
 def main():
     model.choose_sets()
+
     print("Setting up even bus...", flush=True)
     globe.bus = event_bus.event_bus()
     print("Setting up controlers...", flush=True)

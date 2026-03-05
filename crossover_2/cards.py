@@ -1,4 +1,4 @@
-from constants import cardtype
+from constants2 import CardType
 from constants import owners
 import effects
 from constants import option
@@ -16,7 +16,7 @@ class arrows_bow(card_frame.card):
     name = "Arrow's Bow"
     vp = 1
     cost = 3
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = "You may put a random card from under your\nSuper Hero into your hand. if you choose not to,\n+2 Power"
     image = "crossover_2/images/cards/Arrows Bow 3.jpg"
 
@@ -38,7 +38,7 @@ class bronze_tiger(card_frame.card):
     name = "Bronze Tiger"
     vp = 2
     cost = 6
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = "+2 Power"
     attack_text = "Attack:: Each foe reveals a card from his hand and puts it\nunder his Super Hero.\nIf one or more foes does not reveal a card with cost 1 or\ngreater, draw two cards."
     image = "crossover_2/images/cards/Bronze Tiger 6.jpg"
@@ -78,7 +78,7 @@ class collapsible_staff(card_frame.card):
     name = "Collapsible Staff"
     vp = 1
     cost = 4
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = "Draw a card. Gain all Villains in the Line-Up, and then put them under your Super Hero."
     image = "crossover_2/images/cards/Collapsible Staff 4.jpg"
 
@@ -87,7 +87,7 @@ class collapsible_staff(card_frame.card):
 
         assemble = []
         for c in globe.boss.lineup.contents:
-            if c.ctype_eq(cardtype.VILLAIN):
+            if c.ctype_eq(CardType.VILLAIN):
                 assemble.append(c)
         for c in assemble:
             player.gain(c)
@@ -100,7 +100,7 @@ class detective_lance(card_frame.card):
     name = "Detective Lance"
     vp = 2
     cost = 6
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = "+3 Power\nName a card, and then look under any one foe's\nSuper Hero. Gain a card with that name from under\nthat Super Hero."
     image = "crossover_2/images/cards/Detective Lance 6.jpg"
 
@@ -141,7 +141,7 @@ class explosive_arrow(card_frame.card):
     name = "Explosive Arrow"
     vp = 1
     cost = 2
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = "+1 Power and choose a foe"
     attack_text = "Attack:: Destroy a card under that foe's Super Hero,\nand then put this card under your Super Hero."
     image = "crossover_2/images/cards/Explosive Arrow.jpg"
@@ -168,7 +168,7 @@ class huntress(card_frame.card):
     name = "Huntress"
     vp = 1
     cost = 5
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = "+2 Power\nYou may destroy a card in your hand or discard\npile for each Villain you buy or gain this turn."
     image = "crossover_2/images/cards/Huntress 5.jpg"
 
@@ -176,7 +176,7 @@ class huntress(card_frame.card):
         if trigger.test(not immediate,
                         trigger.GAIN_CARD,
                         self.trigger,
-                        player, ttype) and data[1].ctype_eq(cardtype.VILLAIN):
+                        player, ttype) and data[1].ctype_eq(CardType.VILLAIN):
             assemble = []
             assemble.extend(player.discard.contents)
             assemble.extend(player.hand.contents)
@@ -196,7 +196,7 @@ class laurel_lance(card_frame.card):
     name = "Laurel Lance"
     vp = 1
     cost = 2
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = "You may put a card from you hand under your\nSuper Hero. If you choose not to, you may put a\ncard from under your Super Hero into  your hand."
     image = "crossover_2/images/cards/Laurel Lance 2.jpg"
 
@@ -221,7 +221,7 @@ class mirakuru(card_frame.card):
     name = "Mirakuru"
     vp = 1
     cost = 5
-    ctype = cardtype.SUPERPOWER
+    ctype = CardType.SUPERPOWER
     text = "If this is the first card you play this turn, you may\nput it nad your hand under your Super Hero. If you\ndo, draw four cards.\nOtherwise, draw a card."
     image = "crossover_2/images/cards/Mirakuru 5.jpg"
 
@@ -246,7 +246,7 @@ class moira_queen(card_frame.card):
     name = "Moira Queen"
     vp = '*'
     cost = 3
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = "Put the top card of the main deck under your Super Hero.\nAt the end of the game, this is worth 1 VP for each different\ncard under your Super Hero."
     image = "crossover_2/images/cards/Moira Queen 3.jpg"
 
@@ -268,7 +268,7 @@ class mr_blank(card_frame.card):
     name = "Mr. Blank"
     vp = 1
     cost = 4
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = "+2 Power and choose a foe"
     attack_text = "Attack:: Look at the cards under that foe's Super Hero and put one of them under your Super Hero."
     image = "crossover_2/images/cards/Mr Blank 4.jpg"
@@ -296,7 +296,7 @@ class promise_to_a_friend(card_frame.card):
     name = "Promise To A Friend"
     vp = 1
     cost = 3
-    ctype = cardtype.SUPERPOWER
+    ctype = CardType.SUPERPOWER
     text = "Ongoing: +1 Power and you may not destroy\ncards during your turn."
     image = "crossover_2/images/cards/Promise to a Friend 3.jpg"
     ongoing = True
@@ -321,7 +321,7 @@ class shado(card_frame.card):
     name = "Shado"
     vp = 1
     cost = 4
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     defense = True
     text = "+1 Power and draw a card\nDefense:: You may put this card under your Super Hero to\navoid an Attack. If you do, draw two cards and you may put\na card from your hand under your Super Hero."
     image = "crossover_2/images/cards/Shado 4.jpg"
@@ -348,7 +348,7 @@ class verdant(card_frame.card):
     name = "Verdant"
     vp = 2
     cost = 6
-    ctype = cardtype.LOCATION
+    ctype = CardType.LOCATION
     text = "Ongoing: At the start of each of your turns, you\nmay put a card from your hand under your Super\nHero. If you do, draw a card."
     image = "crossover_2/images/cards/Verdant 6.jpg"
     ongoing = True
@@ -370,7 +370,7 @@ class you_have_failed_this_city(card_frame.card):
     name = "You Have Failed This City"
     vp = 1
     cost = 5
-    ctype = cardtype.SUPERPOWER
+    ctype = CardType.SUPERPOWER
     text = "+2 Power and choose a foe"
     attack_text = "Attack:: The chosen foe discards a random card."
     image = "crossover_2/images/cards/You Have Failed This City 5.jpg"
@@ -395,7 +395,7 @@ class brother_blood(card_frame.card):
     name = "Brother Blood"
     vp = 6
     cost = 13
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "+4 Power and draw a card."
     attack_text = "First Appearance - Attack: Each player reveals the top card\nof the main dekc and puts it under his Super Hero. If it's not a\nSuper Power, discard all c ards with cost 4 or greater."
@@ -413,7 +413,7 @@ class brother_blood(card_frame.card):
                 effects.reveal(f"This will be under {p.persona.name}'s Super Hero.", p, [top_card])
                 top_card.set_owner(p)
                 p.under_superhero.contents.append(top_card)
-                if not top_card.ctype_eq(cardtype.SUPERPOWER):
+                if not top_card.ctype_eq(CardType.SUPERPOWER):
                     for c in p.hand.contents.copy():
                         if c.cost >= 4:
                             p.discard_a_card(c)
@@ -425,7 +425,7 @@ class china_white(card_frame.card):
     name = "China White"
     vp = 5
     cost = 9
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "+3 Power and you may destory a card in your hand or discard\npile."
     attack_text = "First Appearance - Attack: Each player reveals the top card\nof the main deck and puts it under his Super Hero. If it's not a\nHero, discard a random card."
@@ -450,7 +450,7 @@ class china_white(card_frame.card):
                 effects.reveal(f"This will be under {p.persona.name}'s Super Hero.", p, [top_card])
                 top_card.set_owner(p)
                 p.under_superhero.contents.append(top_card)
-                if not top_card.ctype_eq(cardtype.HERO):
+                if not top_card.ctype_eq(CardType.HERO):
                     if len(p.hand.contents) > 0:
                         result = random.choice(p.hand.contents)
                         p.discard_a_card(result)
@@ -461,7 +461,7 @@ class count_vertigo(card_frame.card):
     name = "Count Virtigo"
     vp = 6
     cost = 11
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "Draw three cards and then put one of them under your superhero."
     attack_text = "First Appearance - Attack: Reveal the top two cards of your deck.\nPut one of them under your Super Hero, and put the other under the Super Hero of the player on your left."
@@ -508,7 +508,7 @@ class deadshot(card_frame.card):
     name = "Deadshot"
     vp = 5
     cost = 10
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "+3 Power. Your next Attack this turn must be avoided twise."
     attack_text = "First Appearance - Attack: Each player reveals the top card\nof the main deck and puts it under his Super Hero. If it's not a\nHero, discard a random card."
@@ -534,7 +534,7 @@ class deadshot(card_frame.card):
                 effects.reveal(f"This will be under {p.persona.name}'s Super Hero.", p, [top_card])
                 top_card.set_owner(p)
                 p.under_superhero.contents.append(top_card)
-                if not top_card.ctype_eq(cardtype.VILLAIN):
+                if not top_card.ctype_eq(CardType.VILLAIN):
                     assemble = []
                     for c in p.hand.contents:
                         if c.cost <= 3:
@@ -553,9 +553,9 @@ class edward_fyers(card_frame.card):
     name = "Edward Fyers"
     vp = 4
     cost = 8
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
-    text = "Ongoing: The first time a card tells you ro draw one or\nmore cards during each of your turns, you may put one\nof the cards drawn this was under your Super Hero."
+    text = "Ongoing: The first time a card tells you to draw one or\nmore cards during each of your turns, you may put one\nof the cards drawn this was under your Super Hero."
     image = "crossover_2/images/cards/Edward Fyers 8.jpg"
     ongoing = True
 
@@ -588,7 +588,7 @@ class isabel_rochev(card_frame.card):
     name = "Isabel Rochev"
     vp = 7
     cost = 14
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "Choose a player. gain a card from under that player's\nSuper Hero, and then put it into your hand."
     attack_text = "First Appearance - Attack: Each player puts the highest cost card from his hand under his Super Hero."
@@ -629,7 +629,7 @@ class malcolm_merlyn(card_frame.card):
     name = "Malcolm Merlyn"
     vp = 6
     cost = 12
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = "+3 Power. Defense: You may reveal this card from your hand to avoid an Attack."
     attack_text = "First Appearance - Attack: Each player reveals the top card\nof the main deck and puts it under his Super Hero. If it's not a\nHero, discard a random card."
@@ -651,7 +651,7 @@ class malcolm_merlyn(card_frame.card):
                 effects.reveal(f"This will be under {p.persona.name}'s Super Hero.", p, [top_card])
                 top_card.set_owner(p)
                 p.under_superhero.contents.append(top_card)
-                if not top_card.ctype_eq(cardtype.EQUIPMENT):
+                if not top_card.ctype_eq(CardType.EQUIPMENT):
                     p.gain_a_weakness()
         return
 
@@ -660,7 +660,7 @@ class slade_wilson(card_frame.card):
     name = "Slade Wilson"
     vp = 7
     cost = 15
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = ""
     attack_text = "First Appearance - Attack: This Attack cannot be\navoided. Each player destroys six cards with different\ncard types under his Super Hero. For each card type you\nfail to destroy this way, discard a card."

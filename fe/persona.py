@@ -1,4 +1,4 @@
-from constants import cardtype
+from constants2 import CardType
 import effects
 from constants import ai_hint
 import globe
@@ -31,7 +31,7 @@ class bane(persona_frame.persona):
         if trigger.test(not immediate, trigger.PLAY, self.trigger, player, ttype, active) and player.played.played_this_turn.index(data[0]) == 0 and data[0].cost >= 1:
             if globe.DEBUG:
                 print("active", self.name, flush=True)
-            self.action = actions.special_action("Bane", self.special_action_click)
+            self.action = actions.special_action("Bane", self.special_action_click,self)
             player.played.special_options.append(self.action)
             player.triggers.remove(self.trigger)
 
@@ -52,7 +52,7 @@ class bizarro(persona_frame.persona):
     def special_action_click(self, player):
         to_remove = []
         for c in self.player.discard.contents:
-            if c.ctype_eq(cardtype.WEAKNESS):
+            if c.ctype_eq(CardType.WEAKNESS):
                 to_remove.append(c)
                 if len(to_remove) == 2:
                     for w in to_remove:
@@ -67,7 +67,7 @@ class bizarro(persona_frame.persona):
     def ready(self):
         self.player.triggers.append(self.trigger)
         if self.active:
-            self.action = actions.special_action("Bizarro", self.special_action_click)
+            self.action = actions.special_action("Bizarro", self.special_action_click,self)
             self.player.played.special_options.append(self.action)
 
     def ai_is_now_a_good_time(self):
@@ -89,7 +89,7 @@ class black_adam(persona_frame.persona):
     image = "fe/images/personas/Black Adam MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.SUPERPOWER):
+        if card.ctype_eq(CardType.SUPERPOWER):
             return persona_frame.overvalue()
         return 0
 
@@ -99,7 +99,7 @@ class black_adam(persona_frame.persona):
         if trigger.test(not immediate,
                         trigger.PLAY,
                         self.trigger,
-                        player, ttype, active) and data[0].ctype_eq(cardtype.SUPERPOWER):
+                        player, ttype, active) and data[0].ctype_eq(CardType.SUPERPOWER):
             if globe.DEBUG:
                 print("active", self.name, flush=True)
             instruction_text = "Would you like to destory it? If you do, draw a card and gain 1 VP."
@@ -202,7 +202,7 @@ class lex_luther(persona_frame.persona):
     image = "fe/images/personas/Lex Luthor MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.HERO):
+        if card.ctype_eq(CardType.HERO):
             return persona_frame.overvalue()
         return 0
 
@@ -210,7 +210,7 @@ class lex_luther(persona_frame.persona):
     def reset(self):
         if self.active:
             for c in self.player.gained_this_turn:
-                if c.ctype_eq(cardtype.HERO):
+                if c.ctype_eq(CardType.HERO):
                     self.player.draw_card(from_card=False)
 
 
@@ -266,7 +266,7 @@ class the_joker(persona_frame.persona):
     action = None
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.VILLAIN):
+        if card.ctype_eq(CardType.VILLAIN):
             return persona_frame.overvalue()
         return 0
 
@@ -274,7 +274,7 @@ class the_joker(persona_frame.persona):
         instruction_text = "You may destory one of the villains you\nhave played this turn.  If you do, draw a card and Attack::\nEach foes gains a Weakness."
         assemble = []
         for c in player.played.played_this_turn:
-            if c.ctype_eq(cardtype.VILLAIN):
+            if c.ctype_eq(CardType.VILLAIN):
                 assemble.append(c)
         result = effects.may_choose_one_of(instruction_text, player, assemble, ai_hint.IFBAD)
         if result != None:
@@ -294,10 +294,10 @@ class the_joker(persona_frame.persona):
         if trigger.test(not immediate,
                         trigger.PLAY,
                         self.trigger,
-                        player, ttype) and data[0].ctype_eq(cardtype.VILLAIN):
+                        player, ttype) and data[0].ctype_eq(CardType.VILLAIN):
             if globe.DEBUG:
                 print("active", self.name, flush=True)
-            self.action = actions.special_action("The Joker", self.special_action_click)
+            self.action = actions.special_action("The Joker", self.special_action_click,self)
             player.played.special_options.append(self.action)
             player.triggers.remove(self.trigger)
 

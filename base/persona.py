@@ -1,4 +1,4 @@
-from constants import cardtype
+from constants2 import CardType
 import effects
 from constants import ai_hint
 import globe
@@ -39,7 +39,7 @@ class batman(persona_frame.persona):
     image = "base/images/personas/Batman MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.EQUIPMENT):
+        if card.ctype_eq(CardType.EQUIPMENT):
             return persona_frame.overvalue()
         return 0
 
@@ -49,7 +49,7 @@ class batman(persona_frame.persona):
         if trigger.test(not immediate,
                         trigger.PLAY,
                         self.trigger,
-                        player, ttype, active) and data[0].ctype_eq(cardtype.EQUIPMENT):
+                        player, ttype, active) and data[0].ctype_eq(CardType.EQUIPMENT):
             if globe.DEBUG:
                 print("active", self.name, flush=True)
             player.played.plus_power(1)
@@ -64,7 +64,7 @@ class cyborg(persona_frame.persona):
     image = "base/images/personas/Cyborg MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.SUPERPOWER) or card.ctype_eq(cardtype.EQUIPMENT):
+        if card.ctype_eq(CardType.SUPERPOWER) or card.ctype_eq(CardType.EQUIPMENT):
             return persona_frame.overvalue()
         return 0
 
@@ -74,7 +74,7 @@ class cyborg(persona_frame.persona):
         if trigger.test(not immediate,
                         trigger.PLAY,
                         self.triggerEQ,
-                        player, ttype) and data[0].ctype_eq(cardtype.EQUIPMENT):
+                        player, ttype) and data[0].ctype_eq(CardType.EQUIPMENT):
             if globe.DEBUG:
                 print("active - EQ", self.name, flush=True)
             if active:
@@ -87,7 +87,7 @@ class cyborg(persona_frame.persona):
         if trigger.test(not immediate,
                         trigger.PLAY,
                         self.triggerSP,
-                        player, ttype) and data[0].ctype_eq(cardtype.SUPERPOWER):
+                        player, ttype) and data[0].ctype_eq(CardType.SUPERPOWER):
             if globe.DEBUG:
                 print("active - SP", self.name, flush=True)
             if active:
@@ -158,7 +158,7 @@ class hawkman(persona_frame.persona):
     # image = "base/images/personas/Aquaman MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.HERO):
+        if card.ctype_eq(CardType.HERO):
             return persona_frame.overvalue()
         return 0
 
@@ -168,7 +168,7 @@ class hawkman(persona_frame.persona):
         if trigger.test(not immediate,
                         trigger.PLAY,
                         self.trigger,
-                        player, ttype, active) and data[0].ctype_eq(cardtype.HERO):
+                        player, ttype, active) and data[0].ctype_eq(CardType.HERO):
             if globe.DEBUG:
                 print("active", self.name, flush=True)
             player.played.plus_power(1)
@@ -183,7 +183,7 @@ class superman(persona_frame.persona):
     image = "base/images/personas/Superman MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.SUPERPOWER):
+        if card.ctype_eq(CardType.SUPERPOWER):
             return persona_frame.overvalue()
         return 0
 
@@ -193,7 +193,7 @@ class superman(persona_frame.persona):
         if trigger.test(not immediate,
                         trigger.PLAY,
                         self.trigger,
-                        player, ttype, active) and data[0].ctype_eq(cardtype.SUPERPOWER):
+                        player, ttype, active) and data[0].ctype_eq(CardType.SUPERPOWER):
             if globe.DEBUG:
                 print("active", self.name, flush=True)
             already_played = False
@@ -213,7 +213,7 @@ class wonder_woman(persona_frame.persona):
     image = "base/images/personas/Wonder Woman MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.VILLAIN):
+        if card.ctype_eq(CardType.VILLAIN):
             return persona_frame.overvalue()
         return 0
 
@@ -221,7 +221,7 @@ class wonder_woman(persona_frame.persona):
     def reset(self):
         if self.active:
             for c in self.player.gained_this_turn:
-                if c.ctype_eq(cardtype.VILLAIN):
+                if c.ctype_eq(CardType.VILLAIN):
                     self.player.draw_card(from_card=False)
 
 
@@ -231,7 +231,7 @@ class martian_manhunter(persona_frame.persona):
     image = "base/images/personas/Martian Manhunter MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.VILLAIN) or card.ctype_eq(cardtype.HERO):
+        if card.ctype_eq(CardType.VILLAIN) or card.ctype_eq(CardType.HERO):
             return persona_frame.overvalue()
         return 0
 
@@ -241,13 +241,13 @@ class martian_manhunter(persona_frame.persona):
         if trigger.test(not immediate,
                         trigger.PLAY,
                         self.triggerVI,
-                        player, ttype, active) and data[0].ctype_eq(cardtype.VILLAIN):
+                        player, ttype, active) and data[0].ctype_eq(CardType.VILLAIN):
 
             if globe.DEBUG:
                 print("active - VI", self.name, flush=True)
             villain_count = 0
             for c in player.played.played_this_turn:
-                if c.ctype_eq(cardtype.VILLAIN):
+                if c.ctype_eq(CardType.VILLAIN):
                     villain_count += 1
             if villain_count >= 2:
                 player.played.plus_power(3)
@@ -259,12 +259,12 @@ class martian_manhunter(persona_frame.persona):
         if trigger.test(not immediate,
                         trigger.PLAY,
                         self.triggerHE,
-                        player, ttype, active) and data[0].ctype_eq(cardtype.HERO):
+                        player, ttype, active) and data[0].ctype_eq(CardType.HERO):
             if globe.DEBUG:
                 print("active - HE", self.name, flush=True)
             villain_count = 0
             for c in player.played.played_this_turn:
-                if c.ctype_eq(cardtype.HERO):
+                if c.ctype_eq(CardType.HERO):
                     villain_count += 1
             if villain_count >= 2:
                 player.played.plus_power(3)

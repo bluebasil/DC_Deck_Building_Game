@@ -9,17 +9,19 @@ They should probably be split up into seperate files infact...
 import random
 import controlers
 import effects
-import deck_builder
+
 import globe
 import error_checker
 import queue
 
-from constants import cardtype
+from constants2 import CardType
 from constants import owners
 from constants import ai_hint
 from constants import trigger
 
 from frames import card_frame, persona_frame
+
+from typing import Optional
 
 
 # Custom exception for ending the game early
@@ -62,20 +64,20 @@ class pile:
     # but i think it's more pyhonic to deal with the contents list
     # directly, so they are depreciated
     # depreciated
-    def shuffle(self):
+    def shuffle(self) -> None:
         random.shuffle(self.contents)
 
     # depreciated
-    def size(self):
+    def size(self) -> int:
         return len(self.contents)
 
-    def can_draw(self, number=1):
+    def can_draw(self, number: int = 1) -> bool:
         if self.size() >= number:
             return True
         else:
             return False
 
-    def reveal(self):
+    def reveal(self) -> Optional[card_frame.card]:
         if len(self.contents) > 0:
             return self.contents[-1]
         elif self.name == "Main Deck":
@@ -83,7 +85,16 @@ class pile:
         else:
             return None
 
-    def draw(self):
+    # def reveal_and_pop(self, number):
+    #     assemble = []
+    #     for i in range(number):
+    #         to_add = player.reveal_card(public=False, number=1)
+    #         if to_add is not None:
+    #             assemble.append(to_add)
+    #             to_add.pop_self()
+    #             fhiuaiuefs
+
+    def draw(self) -> Optional[card_frame.card]:
         if len(self.contents) > 0:
             return self.contents.pop()
         elif self.name == "Main Deck":
@@ -92,16 +103,16 @@ class pile:
             return None
 
     # depreciated
-    def add(self, card):
+    def add(self, card: card_frame.card) -> None:
         self.contents.append(card)
 
     # depreciated
-    def add_bottom(self, card):
+    def add_bottom(self, card: card_frame.card) -> None:
         self.contents.insert(0, card)
 
     # used well, but maybe should be depreciated?
-    def get_count(self, find_type=cardtype.ANY):
-        if find_type == cardtype.ANY:
+    def get_count(self, find_type: CardType = CardType.ANY):
+        if find_type == CardType.ANY:
             return self.size()
         else:
             count = 0
@@ -200,10 +211,13 @@ class playing(pile):
         # Note, ongoing cards are considered in play by the game rules, so if something refers
         # to in-play cards, they have to both check the ongoing and playing pile
         if not ongoing:
-            # For statistics, but has not been fully implimented
+            # For statistics, but has not been fully implemented
             card.times_played += 1
             self.contents.append(card)
+            print(f"GOING TO TRIGGER BEFORE PLAY for {card.name}", flush=True)
+            trigger.all(trigger.BEFORE_PLAY, [card], self.owner, immediate=True)
 
+        print(f"ABOUT TO PLAY {card.name}", flush=True)
         # runs the cards code
         card.play_action(self.owner)
         # the card is not officially played until its code is done,
@@ -295,10 +309,9 @@ class player:
     # and gaining vps
     triggers = []
 
-    def __init__(self, pid, controler: controlers.controler):
+    def __init__(self, pid):
         # persona is not initialized until the use has chosen a persona.
         # If personas are chosen before game, they  should be initialized here
-        self.controler = controler
         self.pid = pid
 
         # Initialize all piles, with self as their owner
@@ -320,12 +333,16 @@ class player:
         self.triggers = []
 
         # Initialize the players sterting deck
-        self.deck.contents = deck_builder.get_starting_deck(self)
+        # self.deck.contents = deck_builder.get_starting_deck(self)
 
         # For degugging if cards are required in the discard
-        self.discard.contents = deck_builder.debug_discard(self)
+        # self.discard.contents = deck_builder.debug_discard(self)
 
         # Draw the first hand
+        # self.draw_card(num=5, from_card=False, should_trigger=False)
+
+    def start(self, controler: controlers.controler):
+        self.controler = controler
         self.draw_card(num=5, from_card=False, should_trigger=False)
 
     # asks the controler directly which persona
@@ -362,7 +379,7 @@ class player:
 
     # Draws 'num' cards.  Returns the last card that was drawn
     # the returned card is from legacy
-    def draw_card(self, num=1, from_card=True, should_trigger=True):
+    def draw_card(self, num: int = 1, from_card: bool = True, should_trigger: bool = True):
         # print("PLAYER HAS BEEN TOLD TO DRAW",self.persona.name,flush = True)
         all_drawn = []
 
@@ -392,7 +409,7 @@ class player:
     # Maybe this should take a number of cards to reveal, beacuse cards that have
     # 'look at the top three cards of your deck' have to do some annoying things to get the top 3
     # (They pop the card after reveling, in a loop, and then later put the cards back)
-    def reveal_card(self, public=True, number=1) -> card_frame.card:
+    def reveal_card(self, public: bool = True, number: int = 1):
         if not self.manage_reveal(number=number):
             return None
         can_reveal = min(len(self.deck.contents), number)
@@ -405,19 +422,17 @@ class player:
         return top_cards[0]
 
     # If the deck is empty, shuffle the discard pile into the deck
-    def manage_reveal(self, number=1):
+    def manage_reveal(self, number: int = 1):
         if not self.deck.can_draw(number=number):
             self.deck.contents = self.discard.contents
             self.discard.contents = []
             self.deck.shuffle()
-            if self.deck.size() == 0:
-                return False
-            return True
+            return self.deck.can_draw(number=number)
         else:
             return True
 
     # Depreciated
-    def play(self, cardnum):
+    def play(self, cardnum: int):
         if globe.DEBUG:
             print("play-START", flush=True)
         self.played.play(self.hand.contents.pop(cardnum))
@@ -426,7 +441,7 @@ class player:
     # Playes the given card IF IT IS IN YOUR HAND
     # If the card is being played from somewhere else play_and_return or
     # playing.play directly should be used
-    def play_c(self, card):
+    def play_c(self, card: card_frame.card):
         if card in self.hand.contents:
             if globe.DEBUG:
                 print("play_c-START", flush=True)
@@ -436,7 +451,7 @@ class player:
 
     # Given card must be already poped
     # Plays it, and retusn it to the indicated pile
-    def play_and_return(self, card, pile=None):
+    def play_and_return(self, card: card_frame.card, pile: pile = None):
         if pile is None:
             pile = card.find_self()[0]
         save_owner_type = card.owner_type
@@ -452,7 +467,7 @@ class player:
 
     # Formally discards the given card
     # Triggers anything that needs to know that a card has been discarded
-    def discard_a_card(self, card: card_frame.card, valid_tigger=True):
+    def discard_a_card(self, card: card_frame.card, valid_tigger: bool = True):
         card.pop_self()
         if valid_tigger:
             # self.persona.discard_power()
@@ -479,7 +494,7 @@ class player:
 
     # Call this if a card has been passed, to triggerharly quins ability
     # I would like to create a 'move' method on a card that automatically calls this is a card changes owners
-    def card_has_been_passed(self, card):
+    def card_has_been_passed(self, card: card_frame.card):
         self.persona.card_pass_power()
         trigger.all(trigger.PASS, [card], self)
 
@@ -490,7 +505,7 @@ class player:
             action.click_action(self)
             globe.boss.clear_queue()
 
-    def get_cost(self, card):
+    def get_cost(self, card: card_frame.card):
         results = trigger.all(trigger.PRICE, [card.cost, card], self, pay_forward=True, immediate=True)
         # since pay forward is on, the cost will already be calculatec
         predicted_cost = card.cost
@@ -616,7 +631,7 @@ class player:
         return True
 
     # Adds vp tokens
-    def gain_vp(self, amount:int):
+    def gain_vp(self, amount: int):
         self.vp += amount
         self.persona.gain_vp_power()
         trigger.all(trigger.GAIN_VP, [amount], self)
@@ -676,6 +691,12 @@ class player:
         self.score = vp + self.vp
         return self.score
 
+    def controls(self) -> list[card_frame.card]:
+        for c in self.played.contents:
+            yield c
+        for c in self.ongoing.contents:
+            yield c
+
 
 """
 model as in from model/view/controler
@@ -683,6 +704,8 @@ Controls the game board
 global.boss refers to the instantiation of this object, which is probably bad practise, but so niice
 #This object contains the game loop
 """
+
+import deck_builder
 
 
 class model:
@@ -695,7 +718,7 @@ class model:
     destroyed_stack = None
 
     # This list of players in the match
-    players = []
+    players : list[player] = []
     player_score = []
 
     # I do not belive this is used
@@ -763,29 +786,39 @@ class model:
         # (althought the view can be made before the contoler, and the terminal
         # controler can be used for testing, which is nice)
 
-        new_player = player(pid, None)
+        new_player = player(pid)
+        new_player.deck.contents = deck_builder.get_starting_deck(new_player)
         new_controler = controlers.human_view(new_player, invisible)
-        new_player.controler = new_controler
+        new_player.start(new_controler)
         self.players.append(new_player)
         pid += 1
 
-        new_player = player(pid, None)
-        new_controler = controlers.cpu(new_player, invisible)
-        new_player.controler = new_controler
+        new_player = player(pid)
+        new_player.deck.contents = deck_builder.get_starting_deck(new_player)
+        new_controler = controlers.cpu_chatgpt_minimal(new_player, invisible)
+        new_player.start(new_controler)
         self.players.append(new_player)
         pid += 1
-
-        new_player = player(pid, None)
-        new_controler = controlers.cpu(new_player, invisible)
-        new_player.controler = new_controler
-        self.players.append(new_player)
-        pid += 1
-
-        new_player = player(pid, None)
-        new_controler = controlers.cpu(new_player, invisible)
-        new_player.controler = new_controler
-        self.players.append(new_player)
-        pid += 1
+        # new_player = player(pid)
+        # new_player.deck.contents = deck_builder.get_starting_deck(new_player)
+        # new_controler = controlers.cpu(new_player, invisible)
+        # new_player.start(new_controler)
+        # self.players.append(new_player)
+        # pid += 1
+        #
+        # new_player = player(pid)
+        # new_player.deck.contents = deck_builder.get_starting_deck(new_player)
+        # new_controler = controlers.cpu(new_player, invisible)
+        # new_player.start(new_controler)
+        # self.players.append(new_player)
+        # pid += 1
+        #
+        # new_player = player(pid)
+        # new_player.deck.contents = deck_builder.get_starting_deck(new_player)
+        # new_controler = controlers.cpu(new_player, invisible)
+        # new_player.start(new_controler)
+        # self.players.append(new_player)
+        # pid += 1
 
     # asks each player what their persona shall be
     # starting player can be set by changing whos turn

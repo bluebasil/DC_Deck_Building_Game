@@ -5,6 +5,7 @@ import io
 import controlers
 import traceback
 import sys
+from datetime import datetime
 
 
 class dupe_checker:
@@ -69,17 +70,27 @@ class dupe_checker:
                         # This is done in the 'discard_a_card' area
                         if p.owner != c.owner and p != globe.boss.players[
                             globe.boss.whose_turn].played and p.name != "Ongoing":
+                            print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), file=buf, flush=True)
                             print(
                                 "ERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO",
-                                file=buf)
-                            print(f"Owner not set properly.", c.name, c, c.owner, p.name, p.owner, file=buf)
+                                flush=True)
+                            print("---Card Debug Info:---", flush=True)
+                            print(c.__dict__, flush=True)
+                            print("---Card Owner Debug Info:---", flush=True)
+                            print(c.owner.__dict__)
+                            print("---Pile Debug Info:---", flush=True)
+                            print(p.__dict__, flush=True)
+                            print("---Pile Owner Debug Info:---", flush=True)
+                            print(p.owner.__dict__)
+                            print(f"Owner not set properly.", c.name, c, c.owner, p.name, p.owner, file=buf, flush=True)
                             if c.owner != None:
-                                print("card owner:", c.owner.persona.name, file=buf)
+                                print("card owner:", c.owner.persona.name, file=buf, flush=True)
                             if p.owner != None:
                                 print("pile owner:", p.owner.persona.name, file=buf)
                             self.keep_checking = False
                     count += add
                 if count != 1:
+                    print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), file=buf)
                     print(
                         "ERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO",
                         file=buf)

@@ -1,4 +1,4 @@
-from constants import cardtype
+from constants2 import CardType
 import effects
 from constants import ai_hint
 import globe
@@ -30,7 +30,7 @@ class batgirl(persona_frame.persona):
 
     def ready(self):
         if self.active:
-            self.action = actions.special_action("Batgirl", self.special_action_click)
+            self.action = actions.special_action("Batgirl", self.special_action_click, self)
             self.player.played.special_options.append(self.action)
 
     # If there is more than a 50% chance of getting a card that does anything,
@@ -52,7 +52,7 @@ class black_canary(persona_frame.persona):
     image = "hu/images/personas/Black Canary HU MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.VILLAIN):
+        if card.ctype_eq(CardType.VILLAIN):
             return persona_frame.overvalue()
         return 0
 
@@ -63,7 +63,7 @@ class black_canary(persona_frame.persona):
                         trigger.PLAY,
                         self.trigger,
                         player, ttype, active) \
-                and data[0].ctype_eq(cardtype.VILLAIN):
+                and data[0].ctype_eq(CardType.VILLAIN):
             if globe.DEBUG:
                 print("active", self.name, flush=True)
             already_played = False
@@ -123,7 +123,7 @@ class hawkman(persona_frame.persona):
     image = "hu/images/personas/Hawkman MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.HERO):
+        if card.ctype_eq(CardType.HERO):
             return persona_frame.overvalue()
         return 0
 
@@ -131,7 +131,7 @@ class hawkman(persona_frame.persona):
         if globe.DEBUG:
             print("test", self.name, flush=True)
         if trigger.test(not immediate, trigger.PLAY, self.trigger, player, ttype, active) \
-                and data[0].ctype_eq(cardtype.HERO):
+                and data[0].ctype_eq(CardType.HERO):
             if globe.DEBUG:
                 print("active", self.name, flush=True)
             player.played.plus_power(1)
@@ -146,7 +146,7 @@ class nightwing(persona_frame.persona):
     image = "hu/images/personas/Nightwing MC.jpg"
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.EQUIPMENT):
+        if card.ctype_eq(CardType.EQUIPMENT):
             return persona_frame.overvalue()
         return 0
 
@@ -157,12 +157,12 @@ class nightwing(persona_frame.persona):
                         trigger.PLAY,
                         self.trigger,
                         player, ttype, active) \
-                and data[0].ctype_eq(cardtype.EQUIPMENT):
+                and data[0].ctype_eq(CardType.EQUIPMENT):
             if globe.DEBUG:
                 print("active", self.name, flush=True)
             number_played = 0
             for c in self.player.played.played_this_turn:
-                if c.ctype_eq(cardtype.EQUIPMENT):
+                if c.ctype_eq(CardType.EQUIPMENT):
                     number_played += 1
             if number_played == 1:
                 player.played.plus_power(1)
@@ -183,13 +183,13 @@ class red_tornado(persona_frame.persona):
 
     def get_typecount(self):
         return {
-            cardtype.HERO: self.player.deck.get_count(cardtype.HERO) + self.player.discard.get_count(cardtype.HERO) + 1,
-            cardtype.VILLAIN: self.player.deck.get_count(cardtype.VILLAIN) + self.player.discard.get_count(
-                cardtype.VILLAIN) + 1,
-            cardtype.SUPERPOWER: self.player.deck.get_count(cardtype.SUPERPOWER) + self.player.discard.get_count(
-                cardtype.SUPERPOWER) + 1,
-            cardtype.EQUIPMENT: self.player.deck.get_count(cardtype.EQUIPMENT) + self.player.discard.get_count(
-                cardtype.EQUIPMENT) + 1}
+            CardType.HERO: self.player.deck.get_count(CardType.HERO) + self.player.discard.get_count(CardType.HERO) + 1,
+            CardType.VILLAIN: self.player.deck.get_count(CardType.VILLAIN) + self.player.discard.get_count(
+                CardType.VILLAIN) + 1,
+            CardType.SUPERPOWER: self.player.deck.get_count(CardType.SUPERPOWER) + self.player.discard.get_count(
+                CardType.SUPERPOWER) + 1,
+            CardType.EQUIPMENT: self.player.deck.get_count(CardType.EQUIPMENT) + self.player.discard.get_count(
+                CardType.EQUIPMENT) + 1}
 
     def ai_overvalue(self, card):
         card_types = self.get_typecount()
@@ -213,7 +213,7 @@ class red_tornado(persona_frame.persona):
 
     def ready(self):
         if self.active:
-            self.action = actions.special_action("Red Tornado", self.special_action_click)
+            self.action = actions.special_action("Red Tornado", self.special_action_click, self)
             self.player.played.special_options.append(self.action)
 
     # If there is more than a 50% chance of getting a card that does anything,
@@ -247,7 +247,7 @@ class shazam(persona_frame.persona):
 
     def ready(self):
         if self.active:
-            self.action = actions.special_action("Shazam", self.special_action_click)
+            self.action = actions.special_action("Shazam", self.special_action_click, self)
             self.player.played.special_options.append(self.action)
 
     # IDK, never?
@@ -262,14 +262,14 @@ class starfire(persona_frame.persona):
     action = None
 
     def ai_overvalue(self, card):
-        if card.ctype_eq(cardtype.SUPERPOWER):
+        if card.ctype_eq(CardType.SUPERPOWER):
             return persona_frame.overvalue()
         return 0
 
     def special_action_click(self, player):
         # We must ensure that we are doing this on our turn
         if player.pid == globe.boss.whose_turn:
-            if globe.boss.lineup.get_count(cardtype.SUPERPOWER) == 0:
+            if globe.boss.lineup.get_count(CardType.SUPERPOWER) == 0:
                 self.player.draw_card(from_card=False)
                 player.played.special_options.remove(self.action)
                 return True
@@ -277,7 +277,7 @@ class starfire(persona_frame.persona):
 
     def ready(self):
         if self.active:
-            self.action = actions.special_action("Starfire", self.special_action_click)
+            self.action = actions.special_action("Starfire", self.special_action_click, self)
             self.player.played.special_options.append(self.action)
 
     # If there is more than a 50% chance of getting a card that does anything,
