@@ -648,8 +648,10 @@ class player:
     # add cards to the next hand
     def end_turn(self):
         if globe.DEBUG:
-            print("end-START", flush=True)
+            print("end-START (triggering immediate)", flush=True)
         trigger.all(trigger.END_TURN, [], self, immediate=True)
+        if globe.DEBUG:
+            print("end-START (triggering non-immediate)", flush=True)
         globe.boss.clear_queue()
         self.triggers = []
         self.gain_redirect = []
@@ -729,7 +731,7 @@ class model:
     # Tracks whoes turn it is
     whose_turn = 0
     # All the avalable personas ensures that the players cannot choose duplicate
-    persona_list = []
+    persona_list : list[persona_frame.persona] = []
     # for statistics
     turn_number = 0
     # For error checking/debugging
@@ -793,32 +795,34 @@ class model:
         self.players.append(new_player)
         pid += 1
 
+        # new_player = player(pid)
+        # new_player.deck.contents = deck_builder.get_starting_deck(new_player)
+        # new_controler = controlers.cpu_chatgpt_minimal(new_player, invisible)
+        # new_player.start(new_controler)
+        # self.players.append(new_player)
+        # pid += 1
+
+
         new_player = player(pid)
         new_player.deck.contents = deck_builder.get_starting_deck(new_player)
-        new_controler = controlers.cpu_chatgpt_minimal(new_player, invisible)
+        new_controler = controlers.cpu(new_player, invisible)
         new_player.start(new_controler)
         self.players.append(new_player)
         pid += 1
-        # new_player = player(pid)
-        # new_player.deck.contents = deck_builder.get_starting_deck(new_player)
-        # new_controler = controlers.cpu(new_player, invisible)
-        # new_player.start(new_controler)
-        # self.players.append(new_player)
-        # pid += 1
-        #
-        # new_player = player(pid)
-        # new_player.deck.contents = deck_builder.get_starting_deck(new_player)
-        # new_controler = controlers.cpu(new_player, invisible)
-        # new_player.start(new_controler)
-        # self.players.append(new_player)
-        # pid += 1
-        #
-        # new_player = player(pid)
-        # new_player.deck.contents = deck_builder.get_starting_deck(new_player)
-        # new_controler = controlers.cpu(new_player, invisible)
-        # new_player.start(new_controler)
-        # self.players.append(new_player)
-        # pid += 1
+        
+        new_player = player(pid)
+        new_player.deck.contents = deck_builder.get_starting_deck(new_player)
+        new_controler = controlers.cpu(new_player, invisible)
+        new_player.start(new_controler)
+        self.players.append(new_player)
+        pid += 1
+        
+        new_player = player(pid)
+        new_player.deck.contents = deck_builder.get_starting_deck(new_player)
+        new_controler = controlers.cpu_greedy(new_player, invisible)
+        new_player.start(new_controler)
+        self.players.append(new_player)
+        pid += 1
 
     # asks each player what their persona shall be
     # starting player can be set by changing whos turn
@@ -927,7 +931,7 @@ class model:
 
     def clear_queue(self):
         if globe.DEBUG:
-            print("start clear", flush=True)
+            print(f"start clear: {len(self.trigger_queue)}", flush=True)
         while len(self.trigger_queue) > 0:
             self.trigger_queue.pop(0).run()
         if globe.DEBUG:

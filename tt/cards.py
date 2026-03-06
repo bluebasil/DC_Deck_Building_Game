@@ -8,6 +8,7 @@ import random
 import arcade
 from frames import actions
 from frames import card_frame
+from frames import persona_frame
 from constants import trigger
 import model
 
@@ -194,7 +195,7 @@ class bunker(card_frame.card):
 
     def play_action(self, player: model.player):
         it = "Choose one card of each type to put into your hand."
-        cards = player.reveal_card(True, 3)
+        cards : list[card_frame.card]= player.reveal_card(True, 3)
         for t in CardType.valid_cardtypes():
             this_type = []
             for c in cards:
@@ -249,10 +250,10 @@ class cassie_sandsmark(card_frame.card):
     text = "+2 Power and an additional +1 Power for each different Equipment you control."
     image = "tt/images/cards/Cassie Sandsmark 5.jpg"
 
-    def play_action(self, player):
+    def play_action(self, player: model.player):
         self._plus_power(player, 2)
         card_names = set()
-        for c in player.controls:
+        for c in player.controls():
             if c.ctype_eq(CardType.EQUIPMENT):
                 if c.name not in card_names:
                     card_names.add(c.name)
@@ -265,11 +266,11 @@ class cinderblock(card_frame.card):
     vp = 1
     cost = 3
     ctype = CardType.VILLAIN
-    text = "Draw a card.  You may put a Defence card from your discard pile on you of your deck."
+    text = "Draw a card.  You may put a Defense card from your discard pile on you of your deck."
     image = "tt/images/cards/Cinderblock 3.jpg"
 
     def play_action(self, player: model.player):
-        it = "You may put a Defence card from your discard pile on you of your deck."
+        it = "You may put a Defense card from your discard pile on you of your deck."
         player.draw_card()
         cards = []
         for c in player.discard.contents:
@@ -505,30 +506,36 @@ class garfield_logan(card_frame.card):
     ongoing = True
     affected_cards = []
 
-    def trigger(self, ttype, data, player: model.player, active, immediate):
+    def trigger(self, ttype, data: list[card_frame.card], player: model.player, active, immediate):
         if trigger.test(immediate, trigger.BEFORE_PLAY, self.trigger, player, ttype):
             player.triggers.remove(self.trigger)
 
             local_cardtype = self.next_card_type
 
+            # this prevents infinite loops if for any way this is triggered twise on the same card.
+            if data[0].ctype_eq(local_cardtype):
+                print("already has this same type" , flush=True)
+                return
+
             def replace_get_ctype(true_self=data[0]):
+                print("Using modified get_ctype", flush=True)
                 all_type = [local_cardtype]
                 all_type.extend(true_self.old_get_ctype())
                 return all_type
 
-            def replace_ctype_eq(card_type: CardType, true_self=data[0]):
-                print("DHFDKSF")
-                print(card_type)
-                print(local_cardtype)
-                if card_type == local_cardtype:
-                    return True
-                return true_self.old_ctype_eq(card_type)
+            # def replace_ctype_eq(card_type: CardType, true_self=data[0]):
+            #     print("DHFDKSF")
+            #     print(card_type)
+            #     print(local_cardtype)
+            #     if card_type == local_cardtype:
+            #         return True
+            #     return true_self.old_ctype_eq(card_type)
 
             data[0].old_get_ctype = data[0].get_ctype
             data[0].old_ctype_eq = data[0].ctype_eq
 
             data[0].get_ctype = replace_get_ctype
-            data[0].ctype_eq = replace_ctype_eq
+            # data[0].ctype_eq = replace_ctype_eq
 
             print("BEFORE PLAY:", flush=True)
             print(data[0].name, flush=True)
@@ -540,14 +547,20 @@ class garfield_logan(card_frame.card):
             player.triggers.append(self.cleanup_trigger)
 
     def cleanup_trigger(self, ttype, data, player: model.player, active, immediate):
+        print("testing for cleanup", flush=True)
         if trigger.test(not immediate, trigger.END_TURN, self.cleanup_trigger, player, ttype):
+            print("CLEANUP triggered", flush=True)
             player.triggers.remove(self.cleanup_trigger)
             for c in self.affected_cards:
                 print("CLEANUP", flush=True)
 
                 c.get_ctype = c.old_get_ctype
-                c.ctype_eq = c.old_ctype_eq
-            c.affected_cards = []
+                # c.ctype_eq = c.old_ctype_eq
+                c.old_get_ctype = None
+
+            self.affected_cards = []
+        else:
+            print("test rejected", flush=True)
 
     def special_action_click(self, player: model.player):
         it = "Choose a card type, The next card you play or discard this turn also has that card type this turn."
@@ -704,7 +717,7 @@ class jaime_reyes(card_frame.card):
     cost = 4
     ctype = CardType.HERO
     defense = True
-    text = "+2 Power.  Defense: You may put this card, if you do, play it during your next turn."
+    text = "+2 Power.  Defense: You may put this card in play, if you do, play it during your next turn."
     image = "tt/images/cards/Jaime Reyes.jpg"
 
     def play_action(self, player: model.player):
@@ -721,9 +734,10 @@ class jaime_reyes(card_frame.card):
 
     def special_action_click(self, player: model.player):
         print("JR TRIGGERED", flush=True)
+        player.played.special_options.remove(self.action)
         self.pop_self()
         player.played.play(self)
-        player.played.special_options.remove(self.action)
+        
 
     def defend(self, attacker: model.player = None, defender: model.player = None):
         if self in defender.hand.contents:
@@ -1095,7 +1109,7 @@ class clock_king(card_frame.card):
     cost = 9
     ctype = CardType.VILLAIN
     text = "You may gain all Equipment from the Line-Up and put one in your hand. if you choose not to, +2 Power."
-    image = "tt/images/cards/tt/Clock King 9.jpg"
+    image = "tt/images/cards/Clock King 9.jpg"
 
     def play_action(self, player):
         instruction_text_1 = "Would you like to gain all equipment in the line up (and put one in your hand)? if you choose not to, +3 Power."
@@ -1137,7 +1151,7 @@ class dr_light(card_frame.card):
     cost = 12
     ctype = CardType.VILLAIN
     text = "+1 Power for each diferent color among cards in play."
-    image = "tt/images/cards/tt/Dr Light 12.jpg"
+    image = "tt/images/cards/Dr Light 12.jpg"
 
     def play_action(self, player: model.player):
         colors = set()
@@ -1167,7 +1181,7 @@ class harvest(card_frame.card):
     cost = 9
     ctype = CardType.VILLAIN
     text = "You may gain all Heros from the Line-Up and put one in your hand. if you choose not to, +2 Power."
-    image = "tt/images/cards/tt/Harvest 9.jpg"
+    image = "tt/images/cards/Harvest 9.jpg"
 
     def play_action(self, player):
         instruction_text_1 = "Would you like to gain all heros in the line up (and put one in your hand)? if you choose not to, +3 Power."
@@ -1209,7 +1223,7 @@ class psimon(card_frame.card):
     cost = 10
     ctype = CardType.VILLAIN
     text = "Look at the top five cards of your deck, draw and play two of them, then put the rest back in any order."
-    image = "tt/images/cards/tt/Psimon 10.jpg"
+    image = "tt/images/cards/Psimon 10.jpg"
 
     def play_action(self, player: model.player):
         assemble = []
@@ -1240,8 +1254,6 @@ class psimon(card_frame.card):
             if effects.attack(p, self):
                 contributing_players.append(p)
 
-
-
         for p in contributing_players:
             if len(p.hand.contents) <= 2:
                 continue
@@ -1255,7 +1267,6 @@ class psimon(card_frame.card):
                     rejected_cards.remove(result)
             cards_to_pass.append(rejected_cards)
 
-
         for i, p in enumerate(contributing_players):
             current = cards_to_pass[i - 1]
             while len(current) > 0:
@@ -1265,9 +1276,152 @@ class psimon(card_frame.card):
                 p.hand.contents.append(c)
                 contributing_players[i - 1].card_has_been_passed(c)
 
+class superboy_prime(card_frame.card):
+    name = "Superboy Prime"
+    vp = 6
+    cost = 12
+    ctype = CardType.VILLAIN
+    text = "+2 Power\nYou may swap your current Super Hero for one outside the game."
+    image = "tt/images/cards/Superboy Prime 12.jpg"
 
-# Still to add:
-# Superboy Prime
-# Terra
-# The Brain And Monsieur Mallah 10.jpg
-# Trigon
+    def play_action(self, player: model.player):
+        self._plus_power(player, 2)
+
+        result : persona_frame.persona = effects.may_choose_one_of("You may swap your persona with one outside of the game.",player,globe.boss.persona_list, hint=ai_hint.RANDOM, source=self)
+        
+        if result is None:
+            return
+
+        # This behavor intruduces a lot of bugs, since there has been no clean reset patten - personas were not built to cleanup themselevs.
+        # The change of persona mid-turn is the issue here.  Any triggers/effects may not be cleaned up. until end-of-turn.
+        
+
+        globe.boss.persona_list.remove(result)
+        result.active = player.persona.active
+        result.set_owner(player)
+        globe.boss.persona_list.append(player.persona)
+
+        return 0
+    
+    def first_apearance(self):
+        cards_to_pass = []
+        contributing_players : list[model.player] = []
+        for p in globe.boss.players:
+            if effects.attack(p, self):
+                contributing_players.append(p)
+
+        for p in contributing_players:
+            cards = p.reveal_card(True, 3)
+            instruction_text_1 = "Choose a card to pass the the discard of the player on your left."
+            instruction_text_2 = "Choose a card to destroy."
+
+            if len(cards) == 0:
+                continue
+            card_to_pass = effects.choose_one_of(instruction_text_1, p, cards,ai_hint.WORST)
+            cards.remove(card_to_pass)
+            cards_to_pass.append(card_to_pass)
+            if len(cards) == 0:
+                continue
+            to_destroy = effects.choose_one_of(instruction_text_2,p,cards,ai_hint.WORST)
+            cards.remove(to_destroy)
+            to_destroy.destroy(p)
+            if len(cards) != 1:
+                continue
+            p.discard_a_card(cards[0])
+
+        for i, p in enumerate(contributing_players):
+            c = cards_to_pass[i - 1]
+            c.pop_self()
+            c.set_owner(p)
+            p.discard.contents.append(c)
+            contributing_players[i - 1].card_has_been_passed(c)
+
+class terra(card_frame.card):
+    name = "Terra"
+    vp = 5
+    cost = 10
+    ctype = CardType.VILLAIN
+    text = "Ongoing: Once during each of your turns, you may destroy a card you played this turn."
+    image = "tt/images/cards/Terra 10.jpg"
+    ongoing = True
+
+    def special_action_click(self, player: model.player):
+        it = "You may destroy a card you played this turn"
+        if len(player.hand.contents) > 0:
+            to_destroy : card_frame.card = effects.may_choose_one_of(it, player, player.played.contents, source=self, hint=ai_hint.IFBAD)
+            if to_destroy:
+                to_destroy.destroy(player)
+                player.played.special_options.remove(self.action)
+
+    def play_action(self, player: model.player):
+        if self not in player.ongoing.contents:
+            player.ongoing.add(self.pop_self())
+        self.action = actions.special_action("Terra", self.special_action_click, self)
+        player.played.special_options.append(self.action)
+        return 0
+    
+    def first_apearance(self):
+        for p in globe.boss.players:
+            if effects.attack(p, self):
+                assemble = []
+                for c in p.ongoing.contents:
+                    assemble.append(c)
+                if len(assemble) > 0:
+                    card_to_add = effects.choose_one_of("Destroy a card you control", p, assemble, ai_hint.WORST)
+                    card_to_add.destroy(p)
+                else:
+                    p.gain_a_weakness()
+        return
+
+class the_brain_and_monsieur_mallah(card_frame.card):
+    name = "The Brian & Monsieur Mallah"
+    vp = 5
+    cost = 10
+    ctype = CardType.VILLAIN
+    defense = True
+    text = "Draw two card.  Defense: You may reveal this card from your ahnd to avoid an Attack."
+    image = "tt/images/cards/The Brain And Monsieur Mallah 10.jpg"
+
+    def play_action(self, player: model.player):
+        player.draw_card(2)
+        return 0
+
+    def defend(self, attacker: model.player = None, defender: model.player = None):
+        return
+    
+    def first_apearance(self):
+        for p in globe.boss.players:
+            if effects.attack(p, self):
+                p.persona.active = False
+        return
+
+    def buy_action(self, player, bought, defeat):
+        if defeat:
+            for p in globe.boss.players:
+                p.persona.active = True
+        return True
+    
+
+class trigon(card_frame.card):
+    name = "Trigon"
+    vp = 6
+    cost = 13
+    ctype = CardType.VILLAIN
+    text = "Stack Ongling:: At the start of each player's turn, that player gains a Weakness, and then puts a 0-cost card from their discard pile on top of their deck"
+    image = "crossover_1/images/cards/Gog 15.jpg"
+    has_stack_ongoing = True
+
+    def stack_ongoing(self, player: model.player):
+        player.gain_a_weakness()
+        assemble = []
+        for c in player.discard.contents:
+            c : card_frame.card = c
+            if c.cost == 0:
+                assemble.append(c)
+        
+        if assemble > 0:
+            result = effects.choose_one_of("Put a 0 cost card from your discard pile on top of your deck",player,assemble,ai_hint.BEST,source=self)
+            player.deck.add(result.pop_self())
+
+    def first_apearance(self):
+        return

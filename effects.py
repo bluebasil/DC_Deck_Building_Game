@@ -173,16 +173,16 @@ def may_choose_one_of(instruction_text, player, cards: Union[list[card_frame.car
         return None
     elif result[0] == option.OK:
         if not ensure_int(result[1]):
-            return may_choose_one_of(instruction_text, player, cards, hint, source=None)
+            return may_choose_one_of(instruction_text, player, cards, hint, source)
         elif result[1] < 0 or result[1] >= len(cards):
             print(f"ERR: invalid number. max:{len(cards) - 1}")
-            return may_choose_one_of(instruction_text, player, cards, hint, source=None)
+            return may_choose_one_of(instruction_text, player, cards, hint, source)
         return cards[result[1]]
     elif result[0] in cards:
         return result[0]
     else:
         print(f"ERR: invalid responce code.  Got {result[0]}, not in {cards}.")
-        return may_choose_one_of(instruction_text, player, cards, hint, source=None)
+        return may_choose_one_of(instruction_text, player, cards, hint, source)
 
 
 def ok_or_no(instruction_text, player, card=None, hint=ai_hint.IFBAD):

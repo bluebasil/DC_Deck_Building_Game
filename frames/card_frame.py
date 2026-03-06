@@ -42,7 +42,8 @@ class card:
         return [self.ctype]
 
     def ctype_eq(self, ctype:CardType) -> bool:
-        return self.ctype == ctype
+        # return self.ctype == ctype
+        return ctype in self.get_ctype()
 
     def ctype_intersect(self, c:card) -> bool:
         for type in c.get_ctype():

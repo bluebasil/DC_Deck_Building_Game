@@ -22,7 +22,7 @@ Scale was added so that i can use it on my laptop.
 Not going to lie, This is a messy implimentation of thie GUI.  For instance:
 Scale has to be added to mode points, unless they involve the constancts automatically scalled
 """
-SCREEN_SCALE = 0.5
+SCREEN_SCALE = 1
 SCREEN_WIDTH = int(3000 * SCREEN_SCALE)
 SCREEN_HEIGHT = int(2000 * SCREEN_SCALE)
 CARD_SCALE = 0.5 * SCREEN_SCALE

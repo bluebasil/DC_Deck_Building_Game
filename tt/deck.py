@@ -6,34 +6,23 @@ from frames import deck_frame
 
 def initialize_supervillains():
     assemble = []
-    assemble.append(cards.slade_wilson())
-    # assemble.append(cards.aquaman())
-    # assemble.append(cards.batman())
-    # assemble.append(cards.constantine())
-    # assemble.append(cards.cyborg())
-    # assemble.append(cards.green_arrow())
-    # assemble.append(cards.green_lantern())
-    # assemble.append(cards.martian_manhunter())
-    # assemble.append(cards.shazam())
-    # assemble.append(cards.superman())
-    # assemble.append(cards.swamp_thing())
-    # assemble.append(cards.wonder_woman())
-    # random.shuffle(assemble)
-    # #assemble.append(cards.the_joker())
-    # assemble.append(cards.the_flash())
-    return assemble
-
-
-deck = {}
-
-
-def initialize_deck():
-    assemble = []
-    for card, num in deck.items():
-        for i in range(num):
-            assemble.append(card())
+    assemble.append(cards.blackfire())
+    assemble.append(cards.brother_blood())
+    assemble.append(cards.cheshire())
+    assemble.append(cards.clock_king())
+    assemble.append(cards.dr_light())
+    assemble.append(cards.harvest())
+    assemble.append(cards.psimon())
+    assemble.append(cards.superboy_prime())
+    assemble.append(cards.terra())
+    assemble.append(cards.the_brain_and_monsieur_mallah())
     random.shuffle(assemble)
+    assemble.append(cards.slade_wilson())
+    assemble.insert(0,cards.trigon())
     return assemble
+
+
+
 
 
 deck = {cards.acrobatic_agility: 2,

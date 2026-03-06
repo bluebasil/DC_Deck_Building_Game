@@ -27,7 +27,8 @@ class beast_boy(persona_frame.persona):
                 cards = []
                 player.discard_a_card(to_discard)
                 for c in player.discard.contents:
-                    if to_discard.ctype_intersect(c) and c.ctype_eq(CardType.STARTER) and c.cost <= 6:
+                    print(f"{to_discard.ctype_intersect(c)},  {not c.ctype_eq(CardType.STARTER)}, {c.cost <= 6}")
+                    if to_discard.ctype_intersect(c) and not c.ctype_eq(CardType.STARTER) and c.cost <= 6:
                         cards.append(c)
                 if len(cards) > 0:
                     to_put_in_hand = effects.choose_one_of(

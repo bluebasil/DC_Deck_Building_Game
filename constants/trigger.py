@@ -127,9 +127,11 @@ def all(trigger_id, data, player, pay_forward=False, first_result=False, immedia
     active = False
     if player is not None:
         active = player.persona.active
+    print(immediate, flush=True)
     result = check_triggers(trigger_id, data, player, active, pay_forward, first_result, immediate=True)
-    if not immediate:
-        globe.boss.trigger_queue.append(delayed_trigger(trigger_id, data, player, pay_forward, first_result))
+    # if not immediate:
+    print("queueing non immediate trigger", flush=True)
+    globe.boss.trigger_queue.append(delayed_trigger(trigger_id, data, player, pay_forward, first_result))
     return result
 
 

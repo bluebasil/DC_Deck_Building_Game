@@ -2,7 +2,7 @@ boss = None
 view = None
 bus = None
 
-DEBUG = False
+DEBUG = True
 
 #If the cpu's should not output to the terminal, set this to True
 #False is usefull for debugging
