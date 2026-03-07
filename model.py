@@ -711,223 +711,219 @@ import deck_builder
 
 
 class model:
-    # all global piles
-    main_deck = None
-    weakness_stack = None
-    kick_stack = None
-    supervillain_stack = None
-    lineup = None
-    destroyed_stack = None
+	#all global piles
+	main_deck = None
+	weakness_stack = None
+	kick_stack = None
+	supervillain_stack = None
+	lineup = None
+	destroyed_stack = None
 
-    # This list of players in the match
-    players : list[player] = []
-    player_score = []
+	#This list of players in the match
+	players : list[player] = []
+	player_score = []
+	
+	#I do not belive this is used
+	#can set code here to be ran at the begining of each players turn
+	notify = None
+	#Check if game is still ongoing
+	game_ongoing = False
+	#Tracks whoes turn it is
+	whose_turn = 0
+	#All the avalable personas ensures that the players cannot choose duplicate
+	persona_list : list[persona_frame.persona] = []
+	#for statistics
+	turn_number = 0
+	#For error checking/debugging
+	dupe_checker = None
+	#Triggered affects will not run right away
+	trigger_queue = None
 
-    # I do not belive this is used
-    # can set code here to be ran at the begining of each players turn
-    notify = None
-    # Check if game is still ongoing
-    game_ongoing = False
-    # Tracks whoes turn it is
-    whose_turn = 0
-    # All the avalable personas ensures that the players cannot choose duplicate
-    persona_list : list[persona_frame.persona] = []
-    # for statistics
-    turn_number = 0
-    # For error checking/debugging
-    dupe_checker = None
-    # Triggered affects will not run right away
-    trigger_queue = None
+	#initialize Game
+	# player_configs: optional list of dicts like [{"type": "human_web"}, {"type": "cpu"}]
+	# If None, uses the original hardcoded 1 human_view + 3 cpu setup
+	def __init__(self,number_of_players=2, player_configs=None):
+		self.players = []
+		self.player_score = []
+		#all piles assembled and initialized with the deck_builder
+		self.main_deck = pile("Main Deck")
+		self.main_deck.contents = deck_builder.initialize_deck()
+		self.weakness_stack = pile("Weakness Stack")
+		self.weakness_stack.contents = deck_builder.initialize_weaknesses()
+		self.kick_stack = pile("Kick Stack")
+		self.kick_stack.contents = deck_builder.initialize_kicks()
+		self.supervillain_stack = supervillain_pile("SV Stack")
+		self.supervillain_stack.contents = deck_builder.initialize_supervillains()
+		self.supervillain_stack.current_sv = self.supervillain_stack.contents[-1]
 
-    # initialize Game
-    def __init__(self, number_of_players=2):
-        self.players = []
-        self.player_score = []
-        # all piles assembled and initialized with the deck_builder
-        self.main_deck = pile("Main Deck")
-        self.main_deck.contents = deck_builder.initialize_deck()
-        self.weakness_stack = pile("Weakness Stack")
-        self.weakness_stack.contents = deck_builder.initialize_weaknesses()
-        self.kick_stack = pile("Kick Stack")
-        self.kick_stack.contents = deck_builder.initialize_kicks()
-        self.supervillain_stack = supervillain_pile("SV Stack")
-        self.supervillain_stack.contents = deck_builder.initialize_supervillains()
-        self.supervillain_stack.current_sv = self.supervillain_stack.contents[-1]
+		self.lineup = pile("Linup")
+		self.destroyed_stack = pile("Destroyed")
+		self.persona_list = deck_builder.get_personas()
 
-        self.lineup = pile("Linup")
-        self.destroyed_stack = pile("Destroyed")
-        self.persona_list = deck_builder.get_personas()
+		self.trigger_queue = []
 
-        self.trigger_queue = []
+		#starts the line-up
+		for c in range(5):
+			card_to_add = self.main_deck.draw()
+			card_to_add.set_owner(owners.LINEUP)
+			self.lineup.add(card_to_add)
 
-        # starts the line-up
-        for c in range(5):
-            card_to_add = self.main_deck.draw()
-            card_to_add.set_owner(owners.LINEUP)
-            self.lineup.add(card_to_add)
+		#Now we load the players!
+		invisible = globe.CPU_TERMINAL_INVISIBLE
+		pid = 0
 
-        # Now we load the players!
-        # any amount can technically be added, but large amounts may not be graphically compatable
-        # right now this is hard coded
+		if player_configs is not None:
+			# Web/programmatic player setup
+			for config in player_configs:
+				new_player = player(pid, None)
+				ctype = config.get('type', 'cpu')
+				if ctype == 'human_web':
+					new_controler = controlers.human_web(new_player, invisible)
+				elif ctype == 'human':
+					new_controler = controlers.human(new_player)
+				elif ctype == 'cpu_greedy':
+					new_controler = controlers.cpu_greedy(new_player, invisible)
+				else:
+					new_controler = controlers.cpu(new_player, invisible)
+				new_player.controler = new_controler
+				self.players.append(new_player)
+				pid += 1
+		else:
+			#player initialization - original hardcoded setup
+			#avalable contolers are:
+			#cpu
+			#cpu_greedy (a worse cpu, buys the cheepest cards)
+			#human -the original terminal based controler
+			#human_view -Only works with window.py.  Gets input from the window.
 
-        invisible = globe.CPU_TERMINAL_INVISIBLE
-        pid = 0
+			new_player = player(pid,None)
+			new_controler = controlers.human_view(new_player,invisible)
+			new_player.controler = new_controler
+			self.players.append(new_player)
+			pid += 1
 
-        # player initialization
-        # There is a loop, where the player needs the controler and the conroler needs the player
-        # Which is why contolers are set as 'None' and then manually set
-        # increments pid
-        # avalable contolers are:
-        # cpu
-        # cpu_greedy (a worse cpu, buys the cheepest cards)
-        # human -the original terminal based controler
-        # human_view -Only works with window.py.  Gets input from the window.
+			new_player = player(pid,None)
+			new_controler = controlers.cpu(new_player,invisible)
+			new_player.controler = new_controler
+			self.players.append(new_player)
+			pid += 1
 
-        # more cpus can be added
-        # each new view should have a coresponding new controler to get input
-        # (althought the view can be made before the contoler, and the terminal
-        # controler can be used for testing, which is nice)
+			new_player = player(pid,None)
+			new_controler = controlers.cpu(new_player,invisible)
+			new_player.controler = new_controler
+			self.players.append(new_player)
+			pid += 1
 
-        new_player = player(pid)
-        new_player.deck.contents = deck_builder.get_starting_deck(new_player)
-        new_controler = controlers.human_view(new_player, invisible)
-        new_player.start(new_controler)
-        self.players.append(new_player)
-        pid += 1
+			new_player = player(pid,None)
+			new_controler = controlers.cpu(new_player,invisible)
+			new_player.controler = new_controler
+			self.players.append(new_player)
+			pid += 1
 
-        # new_player = player(pid)
-        # new_player.deck.contents = deck_builder.get_starting_deck(new_player)
-        # new_controler = controlers.cpu_chatgpt_minimal(new_player, invisible)
-        # new_player.start(new_controler)
-        # self.players.append(new_player)
-        # pid += 1
+	#asks each player what their persona shall be
+	#starting player can be set by changing whos turn
+	def choose_personas(self):
+		for i,p in enumerate(self.players):
+			p.choose_persona(self.persona_list)
+			if globe.DEBUG:
+				print(f"{i} choose {p.persona.name}")
+			if p.persona.name == "The Flash":
+				self.whose_turn = i
 
+	#This has not been fully adopted
+	def get_current_player(self):
+		if self.whose_turn == -1:
+			return None
+		else:
+			return self.players[self.whose_turn]
 
-        new_player = player(pid)
-        new_player.deck.contents = deck_builder.get_starting_deck(new_player)
-        new_controler = controlers.cpu(new_player, invisible)
-        new_player.start(new_controler)
-        self.players.append(new_player)
-        pid += 1
-        
-        new_player = player(pid)
-        new_player.deck.contents = deck_builder.get_starting_deck(new_player)
-        new_controler = controlers.cpu(new_player, invisible)
-        new_player.start(new_controler)
-        self.players.append(new_player)
-        pid += 1
-        
-        new_player = player(pid)
-        new_player.deck.contents = deck_builder.get_starting_deck(new_player)
-        new_controler = controlers.cpu_greedy(new_player, invisible)
-        new_player.start(new_controler)
-        self.players.append(new_player)
-        pid += 1
+	#starts and runs the game loop
+	def start_game(self):
+		self.dupe_checker = error_checker.dupe_checker()
+		#sets up personas in-game
+		#with certain views, this should be set beforhand
+		self.choose_personas()
 
-    # asks each player what their persona shall be
-    # starting player can be set by changing whos turn
-    def choose_personas(self):
-        for i, p in enumerate(self.players):
-            p.choose_persona(self.persona_list)
-            if globe.DEBUG:
-                print(f"{i} choose {p.persona.name}")
-            if p.persona.name == "The Flash":
-                self.whose_turn = i
+		#We are going to keep track of which end condition has been met
+		#'regular' refers to beating all of the SV's
+		end_reason = "regular"
+		check_result = None
+		try:
+			#TODO: test alternate way to end game not based on supervillain stack
+			self.game_ongoing = True
+			#The game ends when the supervaillin stack is empty
+			while self.supervillain_stack.get_count() > 0:
+			#while self.game_ongoing:
+				#if self.supervillain_stack.get_count() == 0:
+				#	self.game_ongoing = False
+				#Tracks the number of turns
+				self.turn_number += 1
+				if self.notify != None:
+					self.notify()
 
-    # This has not been fully adopted
-    def get_current_player(self):
-        if self.whose_turn == -1:
-            return None
-        else:
-            return self.players[self.whose_turn]
+				if globe.DEBUG:
+					print(f"{self.players[self.whose_turn].persona.name}'s' turn")
 
-    # starts and runs the game loop
-    def start_game(self):
-        self.dupe_checker = error_checker.dupe_checker()
-        # sets up personas in-game
-        # with certain views, this should be set beforhand
-        self.choose_personas()
+				current_turn = self.players[self.whose_turn]
 
-        # We are going to keep track of which end condition has been met
-        # 'regular' refers to beating all of the SV's
-        end_reason = "regular"
-        check_result = None
-        try:
-            # TODO: test alternate way to end game not based on supervillain stack
-            self.game_ongoing = True
-            # The game ends when the supervaillin stack is empty
-            while self.supervillain_stack.get_count() > 0:
-                # while self.game_ongoing:
-                # if self.supervillain_stack.get_count() == 0:
-                #	self.game_ongoing = False
-                # Tracks the number of turns
-                self.turn_number += 1
-                if self.notify != None:
-                    self.notify()
+				#Sets up SV's Stack ongoing
+				if len(self.supervillain_stack.contents) > 0 \
+						and self.supervillain_stack.current_sv.has_stack_ongoing:
+					self.supervillain_stack.current_sv.stack_ongoing(current_turn)
 
-                if globe.DEBUG:
-                    print(f"{self.players[self.whose_turn].persona.name}'s' turn")
+				#run the players turn
+				current_turn.turn()
 
-                current_turn = self.players[self.whose_turn]
+				save_whose_turn = self.whose_turn
+				check_result = self.dupe_checker.check()
+				if check_result[0]:
+					raise DupeFailure({"msg":check_result[1]})
+				#It's between turns for the SV attack
+				self.whose_turn = -1
 
-                # Sets up SV's Stack ongoing
-                if len(self.supervillain_stack.contents) > 0 \
-                        and self.supervillain_stack.current_sv.has_stack_ongoing:
-                    self.supervillain_stack.current_sv.stack_ongoing(current_turn)
+				#Ends the players turn.  I dont rememebr why this is done seperatly
+				current_turn.end_turn()
 
-                # run the players turn
-                current_turn.turn()
+				#refills the line-up
+				#if the main deck runs out, the game is also over
+				#unfortunatly if the main decks runs out because of a card (like pandoras box)
+				#The game dosnt end until the end of their turn, when it tried to refil, which is not acurat
+				for i in range(max(5 - self.lineup.size(),0)):
+					card_to_add = self.main_deck.draw()
+					card_to_add.set_owner(owners.LINEUP)
+					self.lineup.add(card_to_add)
 
-                save_whose_turn = self.whose_turn
-                check_result = self.dupe_checker.check()
-                if check_result[0]:
-                    raise DupeFailure({"msg": check_result[1]})
-                # It's between turns for the SV attack
-                self.whose_turn = -1
+				#If there is a new superviallin on top of it's stack, then First Apearance!
+				if self.supervillain_stack.get_count() > 0 \
+						and self.supervillain_stack.current_sv != self.supervillain_stack.contents[-1]:
+					self.supervillain_stack.current_sv = self.supervillain_stack.contents[-1]
+					#first apearance attack
+					self.supervillain_stack.current_sv.first_apearance()
+					
+				#sets who is going to play next
+				self.whose_turn = save_whose_turn + 1
+				if self.whose_turn >= len(self.players):
+					self.whose_turn = 0
+		#If the main deck has ran out, the game is over, with an alternative end condition
+		except MainDeckEmpty:
+			print("Main Deck Ran Out!",flush = True)
+			end_reason = "main_deck"
+		except DupeFailure as e:
+			print("Duplicate or unmatched found",flush = True)
+			details = e.args[0]
+			print(details["msg"],flush = True)
+			output_persona_stats(self.players,"crash",details["msg"])
+			return
 
-                # Ends the players turn.  I dont rememebr why this is done seperatly
-                current_turn.end_turn()
+		#the game has ended, calculate vp (things may have changed since they last 
+		#calulated their vp at the end of their turn)
+		for p in self.players:
+			self.player_score.append(p.calculate_vp())
 
-                # refills the line-up
-                # if the main deck runs out, the game is also over
-                # unfortunatly if the main decks runs out because of a card (like pandoras box)
-                # The game dosnt end until the end of their turn, when it tried to refil, which is not acurat
-                for i in range(max(5 - self.lineup.size(), 0)):
-                    card_to_add = self.main_deck.draw()
-                    card_to_add.set_owner(owners.LINEUP)
-                    self.lineup.add(card_to_add)
+		output_persona_stats(self.players,end_reason)
 
-                # If there is a new superviallin on top of it's stack, then First Apearance!
-                if self.supervillain_stack.get_count() > 0 \
-                        and self.supervillain_stack.current_sv != self.supervillain_stack.contents[-1]:
-                    self.supervillain_stack.current_sv = self.supervillain_stack.contents[-1]
-                    # first apearance attack
-                    self.supervillain_stack.current_sv.first_apearance()
-
-                # sets who is going to play next
-                self.whose_turn = save_whose_turn + 1
-                if self.whose_turn >= len(self.players):
-                    self.whose_turn = 0
-        # If the main deck has ran out, the game is over, with an alternative end condition
-        except MainDeckEmpty:
-            print("Main Deck Ran Out!", flush=True)
-            end_reason = "main_deck"
-        except DupeFailure as e:
-            print("Duplicate or unmatched found", flush=True)
-            details = e.args[0]
-            print(details["msg"], flush=True)
-            output_persona_stats(self.players, "crash", details["msg"])
-            return
-
-        # the game has ended, calculate vp (things may have changed since they last
-        # calulated their vp at the end of their turn)
-        for p in self.players:
-            self.player_score.append(p.calculate_vp())
-
-        output_persona_stats(self.players, end_reason)
-
-    def register(self, func):
-        self.notify = func
+	def register(self,func):
+		self.notify = func
 
     def clear_queue(self):
         if globe.DEBUG:
@@ -936,7 +932,6 @@ class model:
             self.trigger_queue.pop(0).run()
         if globe.DEBUG:
             print("end clear", flush=True)
-
 
 # just forwards with function
 def choose_sets():

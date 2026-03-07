@@ -850,6 +850,14 @@ class cpu(controler):
         return [option.NO]
 
 
+class human_web(human_view):
+	"""Controller for web-based human player.
+	Identical to human_view - reads from globe.bus event queue.
+	The web server feeds events into globe.bus via HTTP/WebSocket actions.
+	"""
+	pass
+
+
 class cpu_greedy(cpu):
 
     # Choose to end turn or play any cards

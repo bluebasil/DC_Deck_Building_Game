@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DC Deck Building Game</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Socket.IO -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <!-- GSAP for animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════ LOBBY SCREEN ═══════════════════ -->
+<div id="screen-lobby" class="screen active">
+  <div class="lobby-bg"></div>
+  <div class="lobby-content">
+    <div class="lobby-logo">
+      <div class="logo-dc">DC</div>
+      <div class="logo-title">DECK BUILDING<br/><span>GAME</span></div>
+    </div>
+
+    <div class="lobby-panel">
+      <h2 class="section-title">SELECT CARD SETS</h2>
+      <div id="set-list" class="set-grid"></div>
+
+      <h2 class="section-title" style="margin-top:28px;">AI OPPONENTS</h2>
+      <div class="ai-selector">
+        <button class="ai-btn active" data-num="1">1 AI</button>
+        <button class="ai-btn" data-num="2">2 AI</button>
+        <button class="ai-btn" data-num="3">3 AI</button>
+      </div>
+
+      <button id="btn-start-game" class="btn-primary" disabled>START GAME</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PERSONA SELECT SCREEN ═══════════════════ -->
+<div id="screen-persona" class="screen">
+  <div class="screen-header">
+    <h1 class="screen-title">CHOOSE YOUR HERO</h1>
+  </div>
+  <div id="persona-grid" class="persona-grid"></div>
+  <div id="persona-detail" class="persona-detail hidden">
+    <img id="persona-detail-img" src="" alt="" />
+    <div class="persona-detail-text">
+      <h2 id="persona-detail-name"></h2>
+      <p id="persona-detail-ability"></p>
+      <button id="btn-confirm-persona" class="btn-primary">CHOOSE THIS HERO</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ GAME SCREEN ═══════════════════ -->
+<div id="screen-game" class="screen">
+
+  <!-- Opponent strip (top) -->
+  <div id="opponents-strip" class="opponents-strip"></div>
+
+  <!-- Main board -->
+  <div id="board" class="board">
+
+    <!-- Left: SV + Lineup -->
+    <div class="board-left">
+      <div class="pile-group">
+        <div id="sv-stack" class="sv-stack" title="Supervillain Stack">
+          <div class="sv-card-wrapper">
+            <div id="sv-card" class="pile-card sv-card"></div>
+            <div id="sv-count" class="pile-count">0</div>
+          </div>
+          <div class="pile-label">SUPERVILLAIN</div>
+        </div>
+        <div class="small-piles">
+          <div class="small-pile" id="pile-kick" title="Kick Stack">
+            <div class="pile-card small"></div>
+            <div id="kick-count" class="pile-count">0</div>
+            <div class="pile-label">KICK</div>
+          </div>
+          <div class="small-pile" id="pile-weakness" title="Weakness Stack">
+            <div class="pile-card small weakness-back"></div>
+            <div id="weakness-count" class="pile-count">0</div>
+            <div class="pile-label">WEAKNESS</div>
+          </div>
+          <div class="small-pile" id="pile-main-deck" title="Main Deck">
+            <div class="pile-card small"></div>
+            <div id="main-deck-count" class="pile-count">0</div>
+            <div class="pile-label">DECK</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center: Lineup + Play area -->
+    <div class="board-center">
+      <div id="lineup" class="lineup"></div>
+      <div id="play-area" class="play-area">
+        <div id="played-cards" class="played-cards"></div>
+        <div id="special-options" class="special-options"></div>
+      </div>
+    </div>
+
+    <!-- Right: Current player's persona + ongoing -->
+    <div class="board-right">
+      <div id="my-persona-wrap" class="persona-wrap">
+        <div id="my-persona-card" class="persona-card-large"></div>
+        <div id="my-persona-name" class="persona-name-label"></div>
+      </div>
+      <div class="ongoing-label">ONGOING</div>
+      <div id="my-ongoing" class="ongoing-zone"></div>
+      <div id="my-under" class="under-zone"></div>
+    </div>
+
+  </div><!-- /board -->
+
+  <!-- Player HUD bottom -->
+  <div id="player-hud" class="player-hud">
+    <div class="hud-left">
+      <div class="hud-stat" id="hud-power">
+        <span class="hud-stat-icon">⚡</span>
+        <span id="power-value">0</span>
+        <span class="hud-stat-label">POWER</span>
+      </div>
+      <div class="hud-stat" id="hud-score">
+        <span class="hud-stat-icon">★</span>
+        <span id="score-value">0</span>
+        <span class="hud-stat-label">VP</span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-stat-icon">🂠</span>
+        <span id="deck-value">0</span>
+        <span class="hud-stat-label">DECK</span>
+      </div>
+      <div class="hud-stat" id="hud-discard" title="View discard">
+        <span class="hud-stat-icon">♻</span>
+        <span id="discard-value">0</span>
+        <span class="hud-stat-label">DISC.</span>
+      </div>
+    </div>
+    <div class="hud-center">
+      <div id="hand-zone" class="hand-zone"></div>
+    </div>
+    <div class="hud-right">
+      <button id="btn-end-turn" class="btn-end-turn" disabled>END TURN</button>
+    </div>
+  </div>
+
+</div><!-- /screen-game -->
+
+<!-- ═══════════════════ GAME OVER SCREEN ═══════════════════ -->
+<div id="screen-gameover" class="screen">
+  <div class="gameover-content">
+    <h1 class="gameover-title">GAME OVER</h1>
+    <div id="gameover-scores" class="gameover-scores"></div>
+    <button id="btn-new-game" class="btn-primary" style="margin-top:32px;">PLAY AGAIN</button>
+  </div>
+</div>
+
+<!-- ═══════════════════ QUERY MODAL ═══════════════════ -->
+<div id="query-modal" class="query-modal hidden">
+  <div class="query-backdrop"></div>
+  <div class="query-panel">
+    <div id="query-context-card" class="query-context-card"></div>
+    <p id="query-text" class="query-text"></p>
+    <div id="query-options" class="query-options"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CARD PREVIEW ═══════════════════ -->
+<div id="card-preview" class="card-preview hidden">
+  <img id="preview-img" src="" alt="" />
+  <div class="preview-info">
+    <div class="preview-name" id="preview-name"></div>
+    <div class="preview-text" id="preview-text"></div>
+    <div class="preview-stats">
+      <span id="preview-cost" class="stat-badge cost"></span>
+      <span id="preview-vp" class="stat-badge vp"></span>
+      <span id="preview-type" class="stat-badge type"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TURN INDICATOR ═══════════════════ -->
+<div id="turn-banner" class="turn-banner hidden"></div>
+
+<!-- ═══════════════════ CONNECTION STATUS ═══════════════════ -->
+<div id="connection-status" class="conn-status disconnected">Connecting…</div>
+
+<script src="game.js"></script>
+</body>
+</html>
