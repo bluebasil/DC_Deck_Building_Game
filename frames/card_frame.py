@@ -1,8 +1,14 @@
+import uuid
 import globe
 from constants import cardtype
 from constants import owners
 from constants import trigger
-import arcade
+
+try:
+	import arcade
+	_ARCADE_AVAILABLE = True
+except ImportError:
+	_ARCADE_AVAILABLE = False
 
 class card:
 	name = ""
@@ -23,16 +29,17 @@ class card:
 	has_stack_ongoing = False
 	rotation = 0
 
-
 	#stats
 	times_played = 0
 	bought = False
 
 	def __init__(self,owner = None):
+		self.card_id = str(uuid.uuid4())
 		self.owner = owner
 		if owner != None:
 			self.owner_type = owners.PLAYER
-		self.texture = arcade.load_texture(self.image)
+		if _ARCADE_AVAILABLE:
+			self.texture = arcade.load_texture(self.image)
 		self.frozen = []
 
 	def get_ctype(self):

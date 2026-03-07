@@ -700,7 +700,9 @@ class model:
 	trigger_queue = None
 
 	#initialize Game
-	def __init__(self,number_of_players=2):
+	# player_configs: optional list of dicts like [{"type": "human_web"}, {"type": "cpu"}]
+	# If None, uses the original hardcoded 1 human_view + 3 cpu setup
+	def __init__(self,number_of_players=2, player_configs=None):
 		self.players = []
 		self.player_score = []
 		#all piles assembled and initialized with the deck_builder
@@ -727,51 +729,56 @@ class model:
 			self.lineup.add(card_to_add)
 
 		#Now we load the players!
-		#any amount can technically be added, but large amounts may not be graphically compatable
-		#right now this is hard coded
-
-		
 		invisible = globe.CPU_TERMINAL_INVISIBLE
 		pid = 0
 
-		#player initialization
-		#There is a loop, where the player needs the controler and the conroler needs the player
-		#Which is why contolers are set as 'None' and then manually set
-		#increments pid
-		#avalable contolers are:
-		#cpu
-		#cpu_greedy (a worse cpu, buys the cheepest cards)
-		#human -the original terminal based controler
-		#human_view -Only works with window.py.  Gets input from the window.
+		if player_configs is not None:
+			# Web/programmatic player setup
+			for config in player_configs:
+				new_player = player(pid, None)
+				ctype = config.get('type', 'cpu')
+				if ctype == 'human_web':
+					new_controler = controlers.human_web(new_player, invisible)
+				elif ctype == 'human':
+					new_controler = controlers.human(new_player)
+				elif ctype == 'cpu_greedy':
+					new_controler = controlers.cpu_greedy(new_player, invisible)
+				else:
+					new_controler = controlers.cpu(new_player, invisible)
+				new_player.controler = new_controler
+				self.players.append(new_player)
+				pid += 1
+		else:
+			#player initialization - original hardcoded setup
+			#avalable contolers are:
+			#cpu
+			#cpu_greedy (a worse cpu, buys the cheepest cards)
+			#human -the original terminal based controler
+			#human_view -Only works with window.py.  Gets input from the window.
 
-		#more cpus can be added
-		#each new view should have a coresponding new controler to get input
-		#(althought the view can be made before the contoler, and the terminal
-		#controler can be used for testing, which is nice)
+			new_player = player(pid,None)
+			new_controler = controlers.human_view(new_player,invisible)
+			new_player.controler = new_controler
+			self.players.append(new_player)
+			pid += 1
 
-		new_player = player(pid,None)
-		new_controler = controlers.human_view(new_player,invisible)
-		new_player.controler = new_controler
-		self.players.append(new_player)
-		pid += 1
+			new_player = player(pid,None)
+			new_controler = controlers.cpu(new_player,invisible)
+			new_player.controler = new_controler
+			self.players.append(new_player)
+			pid += 1
 
-		new_player = player(pid,None)
-		new_controler = controlers.cpu(new_player,invisible)
-		new_player.controler = new_controler
-		self.players.append(new_player)
-		pid += 1
+			new_player = player(pid,None)
+			new_controler = controlers.cpu(new_player,invisible)
+			new_player.controler = new_controler
+			self.players.append(new_player)
+			pid += 1
 
-		new_player = player(pid,None)
-		new_controler = controlers.cpu(new_player,invisible)
-		new_player.controler = new_controler
-		self.players.append(new_player)
-		pid += 1
-
-		new_player = player(pid,None)
-		new_controler = controlers.cpu(new_player,invisible)
-		new_player.controler = new_controler
-		self.players.append(new_player)
-		pid += 1
+			new_player = player(pid,None)
+			new_controler = controlers.cpu(new_player,invisible)
+			new_player.controler = new_controler
+			self.players.append(new_player)
+			pid += 1
 
 	#asks each player what their persona shall be
 	#starting player can be set by changing whos turn

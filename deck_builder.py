@@ -11,14 +11,36 @@ from base import cards as custom
 # I have just implimented the personas of HU for now.  They can be accessed if any_pick == True
 # from hu import persona as hu_personas
 from frames import card_frame
-import arcade
 import globe
+
+# All available sets (never mutated - used as source of truth)
+_all_sets = None
+def _get_all_sets():
+	global _all_sets
+	if _all_sets is None:
+		_all_sets = [base_deck.this_set, fe_deck.this_set, hu_deck.this_set, c1_deck.this_set, c2_deck.this_set]
+	return _all_sets
 
 # As sets are chosen, they are moved from decks to choosen_sets
 decks = [base_deck.this_set,fe_deck.this_set,hu_deck.this_set,c1_deck.this_set,c2_deck.this_set]
 choosen_sets = []
 #Specifies weather small set personas muct be picked when playing with small sets
 any_pick = False
+
+# Returns the list of all available sets with metadata (for web UI)
+def get_available_sets():
+	return [{"id": i, "name": s.name, "large": s.large_set} for i, s in enumerate(_get_all_sets())]
+
+# Programmatic set selection for web API - accepts list of set indices
+def choose_sets_programmatic(set_indices):
+	global decks, choosen_sets
+	all_s = _get_all_sets()
+	decks[:] = list(all_s)
+	choosen_sets.clear()
+	for idx in set_indices:
+		if 0 <= idx < len(all_s):
+			if all_s[idx] not in choosen_sets:
+				choosen_sets.append(all_s[idx])
 
 # This is a terminal interface to choose which sets we are playing with.
 # Right now, it must be called before everything else
