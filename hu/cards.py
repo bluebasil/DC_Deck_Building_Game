@@ -1,10 +1,14 @@
+import random
+
 import effects
 import globe
 from constants import ai_hint
-from constants import cardtype
+from constants2 import CardType
 from constants import owners
 from constants import trigger
 from frames import card_frame
+from frames import actions
+# import model
 
 image_path = "hu/images/cards/"
 
@@ -14,12 +18,12 @@ class batarang(card_frame.card):
     name = "Batarang"
     vp = 1
     cost = 2
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = "+2 power"
     image = image_path + "Batarang.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(2)
+        self._plus_power(player, 2)
         return 0
 
 
@@ -27,7 +31,7 @@ class blue_lantern_power_ring(card_frame.card):
     name = "Blue Lantern Power Ring"
     vp = 0
     cost = 5
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = (
         "+1 Power and an additional +1 Power for each Hero in your discard "
         "pile and that you play or have played this turn. At end of game, "
@@ -38,20 +42,20 @@ class blue_lantern_power_ring(card_frame.card):
         if globe.DEBUG:
             print("test", self.name, flush=True)
         if trigger.test(not immediate, trigger.PLAY, self.trigger, player,
-                        ttype) and data[0].ctype_eq(cardtype.HERO):
+                        ttype) and data[0].ctype_eq(CardType.HERO):
             if globe.DEBUG:
                 print("active", self.name, flush=True)
-            player.played.plus_power(1)
+            self._plus_power(player, 1)
 
     def play_action(self, player):
         power = 1
         for discarded_card in player.discard.contents:
-            if discarded_card.ctype_eq(cardtype.HERO):
+            if discarded_card.ctype_eq(CardType.HERO):
                 power += 1
-        for played_card in player.played.contents:
-            if played_card.ctype_eq(cardtype.HERO):
+        for played_card in player.played.played_this_turn:
+            if played_card.ctype_eq(CardType.HERO):
                 power += 1
-        player.played.plus_power(power)
+        self._plus_power(player, power)
         player.triggers.append(self.trigger)
         return 0
 
@@ -59,7 +63,7 @@ class blue_lantern_power_ring(card_frame.card):
         count = 0
         for card in all_cards:
             if card.ctype_eq(
-                    cardtype.EQUIPMENT) and "power ring" in card.name.lower():
+                    CardType.EQUIPMENT) and "power ring" in card.name.lower():
                 count += 1
         return count
 
@@ -68,7 +72,7 @@ class green_lantern_power_ring(card_frame.card):
     name = "Green Lantern Power Ring"
     vp = 0
     cost = 5
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     defense = True
     text = ("+2 Power. Defense: You may discard this card to avoid an Attack. "
             "If you do, draw two cards. At end of game, "
@@ -76,7 +80,7 @@ class green_lantern_power_ring(card_frame.card):
     image = image_path + "Green Lantern Power Ring.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(2)
+        self._plus_power(player, 2)
         return 0
 
     def defend(self, attacker=None, defender=None):
@@ -88,7 +92,7 @@ class green_lantern_power_ring(card_frame.card):
         count = 0
         for card in all_cards:
             if card.ctype_eq(
-                    cardtype.EQUIPMENT) and "power ring" in card.name.lower():
+                    CardType.EQUIPMENT) and "power ring" in card.name.lower():
                 count += 1
         return count
 
@@ -97,7 +101,7 @@ class helmet_of_fate(card_frame.card):
     name = "Helmet of Fate"
     vp = 1
     cost = 3
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     defense = True
     text = ("+2 Power Defense: You may discard this card and any number of "
             "other cards to avoid an Attack. If you do, draw cards equal to "
@@ -105,28 +109,30 @@ class helmet_of_fate(card_frame.card):
     image = image_path + "Helmet of Fate.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(2)
+        self._plus_power(player, 2)
         return 0
 
     def defend(self, attacker=None, defender=None):
         instruction_text = ("You may discard this card and any number of "
                             "other cards to avoid an Attack. If you do, draw cards equal to "
                             "the number of other cards discarded")
-        assemble = player.hand.contents.copy()
-        self.owner.discard_a_card(self)
+        assemble = defender.hand.contents.copy()
+        defender.discard_a_card(self)
         # cards_to_discard = effects.may_choose_one_of(
         #     instruction_text, player, collection, ai_hint.IFBAD
         # )
+        assemble.remove(self)
         result = effects.choose_however_many(
-            "Choose any number to discard", player, assemble,
+            "Choose any number to discard", defender, assemble,
             ai_hint.IFBAD)
+        if result is None:
+            result = []
         for c in result:
-            player.deck.contents.append(c)
-            player.discard_a_card(c)
+            defender.discard_a_card(c)
 
         redraw = len(result)
 
-        self.owner.draw_card(redraw)
+        defender.draw_card(redraw)
         return
 
 
@@ -134,7 +140,7 @@ class indigo_tribe_power_ring(card_frame.card):
     name = "Indigo Tribe Power Ring"
     vp = 0
     cost = 5
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = ("+Power equal to the Power of a card you already played this "
             "turn. At end of game, this card is worth 1 VP for each Power "
             "Ring in your deck.")
@@ -144,20 +150,17 @@ class indigo_tribe_power_ring(card_frame.card):
         instruction_text = ("Power equal to the Power of a card you already "
                             "played this turn")
         assemble = []
-        for c in player.played.contents:
-            if c.name != self.name and c != player.played.played_this_turn[-1]:
-                assemble.append(c)
-        if len(assemble) > 0:
-            choosen = effects.choose_one_of(instruction_text, player, assemble,
-                                            ai_hint.BEST)
-            player.played.plus_power(choosen.power)
+        if len(player.played.played_this_turn) > 0:
+            choosen = effects.choose_one_of(instruction_text, player, player.played.played_this_turn,
+                                            source=self, hint=ai_hint.BEST)
+            self._plus_power(player, choosen.power)
         return 0
 
     def calculate_vp(self, all_cards):
         count = 0
         for card in all_cards:
             if card.ctype_eq(
-                    cardtype.EQUIPMENT) and "power ring" in card.name.lower():
+                    CardType.EQUIPMENT) and "power ring" in card.name.lower():
                 count += 1
         return count
 
@@ -166,7 +169,7 @@ class legion_flight_ring(card_frame.card):
     name = "Legion Flight Ring"
     vp = 1
     cost = 2
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = "Draw a Card"
     image = image_path + "Legion Flight Ring.jpg"
 
@@ -181,44 +184,66 @@ class mind_control_hat(card_frame.card):
     cost = 7
     attack = True
     attack_text = "Each foe discards a random card."
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = ("Draw two cards. Attack: Each foe discards a random card. "
             "If you play or have played Jervis Tetch this turn, you may play "
             "each Hero and Villain in the Line-Up, then return them to the "
             "Line-Up.")
     image = image_path + "Mind Control Hat.jpg"
 
+    def jervis_played(self, player):
+        assemble = []
+        for c in globe.boss.lineup.contents:
+            if c.ctype_eq(CardType.HERO) or c.ctype_eq(CardType.VILLAIN):
+                assemble.append(c)
+        played = []
+        while len(assemble) > 0:
+            to_play = effects.may_choose_one_of("Would you like to play each Hero and Villain in the Line-Up",
+                                                player, assemble, source=self, hint=ai_hint.RANDOM)
+            if to_play is None:
+                break
+            played.append(to_play)
+            assemble.remove(to_play)
+            to_play.pop_self()
+            player.played.play(to_play)
+
+        for c in played:
+            globe.boss.lineup.add(c.pop_self())
+
+    def trigger(self, ttype, data, player, active, immediate):
+        if globe.DEBUG:
+            print("test", self.name, flush=True)
+        if trigger.test(not immediate,
+                        trigger.PLAY,
+                        self.trigger,
+                        player, ttype) and (data[0].name == "Jervis Tetch"):
+            if globe.DEBUG:
+                print("Jervis Tetch played, triggering effect", self.name, flush=True)
+            player.triggers.remove(self.trigger)
+            self.jervis_played(player)
+
     def play_action(self, player):
-        self.attack_action(player)
         player.draw_card(2)
+        self.attack_action(player)
         jervis_played = False
         instruction_text = ("If you play or have played Jervis Tetch "
                             "this turn, you may play "
                             "each Hero and Villain in the Line-Up, "
                             "then return them to the Line-Up.")
         assemble = []
-        for card in player.played.contents:
+        for card in player.played.played_this_turn:
             if card.name == "Jervis Tetch":
                 jervis_played = True
-        if jervis_played:
-            for c in globe.boss.lineup.contents:
-                if c.ctype_eq(cardtype.HERO) or c.ctype_eq(cardtype.VILLAIN):
-                    assemble.append(c)
-            for ac in assemble:
-                self.played_card = ac
-                assemble.pop_self(ac)
-                player.played.play(ac)
+                self.jervis_played(player)
+                return 0
+        player.triggers.append(self.trigger)
         return 0
 
     def attack_action(self, by_player):
         instruction_text = "Each foe discards a random card."
         for p in globe.boss.players:
-            if p != by_player:
-                choosen = effects.may_choose_one_of(instruction_text, p,
-                                                    p.hand.contents,
-                                                    hint=ai_hint.IFBAD)
-                if choosen:
-                    p.discard_a_card(choosen)
+            if p != by_player and effects.attack(p, self, by_player) and len(p.hand.contents) > 0:
+                p.discard_a_card(random.choice(p.hand.contents))
         return
 
 
@@ -226,7 +251,7 @@ class orange_lantern_power_ring(card_frame.card):
     name = "Orange Lantern Power Ring"
     vp = 0
     cost = 5
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = ("You may gain an Equipment with cost 5 or less from the Line-Up "
             "and put it into your hand. If you choose not to, +2 Power. At end "
             "of game, this card is worth 1 VP for each Power Ring in your deck.")
@@ -236,24 +261,24 @@ class orange_lantern_power_ring(card_frame.card):
         instruction_text = "Choose a one of these to gain from the Line-Up"
         assemble = []
         for c in globe.boss.lineup.contents:
-            if c.cost <= 5 and len(c.frozen) == 0:
+            if c.cost <= 5 and len(c.frozen) == 0 and c.ctype_eq(CardType.EQUIPMENT):
                 assemble.append(c)
         if len(assemble) > 0:
             choosen = effects.may_choose_one_of(instruction_text, player,
                                                 assemble,
-                                                ai_hint.BEST)
-            if choosen != None:
-                choosen.set_owner(player)
+                                                source=self, hint=ai_hint.BEST)
+            if choosen is not None:
+                player.gain(choosen)
                 player.hand.contents.append(choosen.pop_self())
-            else:
-                player.played.plus_power(2)
+                return 0
+        self._plus_power(player, 2)
         return 0
 
     def calculate_vp(self, all_cards):
         count = 0
         for card in all_cards:
             if card.ctype_eq(
-                    cardtype.EQUIPMENT) and "power ring" in card.name.lower():
+                    CardType.EQUIPMENT) and "power ring" in card.name.lower():
                 count += 1
         return count
 
@@ -262,7 +287,7 @@ class red_lantern_power_ring(card_frame.card):
     name = "Red Lantern Power Ring"
     vp = 0
     cost = 5
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = ("Look at the top two cards of your deck. Leave one on top and "
             "destroy the other one. +Power equal to the destroyed card's cost. "
             "At end of game, this card is worth 1 VP for each Power Ring in "
@@ -272,31 +297,30 @@ class red_lantern_power_ring(card_frame.card):
     def play_action(self, player):
         assemble = []
         for i in range(2):
-            to_add = player.reveal_card(public=False)
-            if to_add != None:
+            to_add = player.reveal_card(public=False, number=1)
+            if to_add is not None:
                 assemble.append(to_add)
-                player.deck.contents.pop()
+                to_add.pop_self()
+                # player.deck.contents.pop()
         if len(assemble) > 0:
             result = effects.choose_one_of(
-                "Choose any number to discard", player, assemble,
-                ai_hint.IFBAD)
-            if result != None:
-                player.deck.contents.append(result)
-                result.destroy(player)
-                assemble.remove(result)
-
-        total_times = len(assemble)
-        while len(assemble) > 0:
-            result = assemble[0]
-            assemble.remove(result)
+                "Choose one to destroy", player, assemble,
+                source=self, hint=ai_hint.IFBAD)
+            # if result is not None:
+            self._plus_power(player, result.cost)
             player.deck.contents.append(result)
+            result.destroy(player)
+            assemble.remove(result)
+
+        while len(assemble) > 0:
+            player.deck.contents.append(assemble.pop())
         return 0
 
     def calculate_vp(self, all_cards):
         count = 0
         for card in all_cards:
             if card.ctype_eq(
-                    cardtype.EQUIPMENT) and "power ring" in card.name.lower():
+                    CardType.EQUIPMENT) and "power ring" in card.name.lower():
                 count += 1
         return count
 
@@ -305,18 +329,18 @@ class sciencell(card_frame.card):
     name = "Sciencell"
     vp = 0
     cost = 6
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = ("+2 Power. At end of game, this card is worth 1 VP for each "
             "different Villain in your deck.")
     image = image_path + "Sciencell.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(2)
+        self._plus_power(player, 2)
 
     def calculate_vp(self, all_cards):
         villians = set()
         for card in all_cards:
-            if card.ctype_eq(cardtype.VILLAIN):
+            if card.ctype_eq(CardType.VILLAIN):
                 villians.add(card.name)
         return len(villians)
 
@@ -325,7 +349,7 @@ class skeets(card_frame.card):
     name = "Skeets"
     vp = 1
     cost = 4
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     defense = True
     text = ("You may put a Hero from your discard pile on top of your deck. "
             "If you choose not to, draw a card. Defense: You may discard this "
@@ -334,35 +358,38 @@ class skeets(card_frame.card):
     image = image_path + "Skeets.jpg"
 
     def play_action(self, player):
-        instruction_text = "Choose a Hero from your discard pile to put onto your deck"
+        instruction_text = "Choose a Hero from your discard pile to put onto your deck, if not draw a card."
         assemble = []
         for c in player.discard.contents:
-            if c.ctype_eq(cardtype.HERO):
+            if c.ctype_eq(CardType.HERO):
                 assemble.append(c)
         if len(assemble) > 0:
             choosen = effects.may_choose_one_of(instruction_text, player,
                                                 assemble,
-                                                ai_hint.BEST)
+                                                source=self, hint=ai_hint.BEST)
             if choosen:
-                player.deck.contents.append(choosen)
-            else:
-                player.draw_card(1)
+                player.deck.add(choosen.pop_self())
+                return 0
+        player.draw_card(1)
         return 0
 
     def defend(self, attacker=None, defender=None):
+        instruction_text = "You may put a Hero from your discard pile into your hand, if you choose not to, you may draw a card."
         self.owner.discard_a_card(self)
         assemble = []
-        for c in player.discard.contents:
-            if c.ctype_eq(cardtype.HERO):
+        for c in defender.discard.contents:
+            if c.ctype_eq(CardType.HERO):
                 assemble.append(c)
         if len(assemble) > 0:
-            choosen = effects.may_choose_one_of(instruction_text, player,
+            choosen = effects.may_choose_one_of(instruction_text, defender,
                                                 assemble,
-                                                ai_hint.BEST)
+                                                source=self, hint=ai_hint.BEST)
             if choosen:
-                player.hand.contents.append(choosen)
+                defender.hand.contents.append(choosen)
             else:
-                self.owner.draw_card(1)
+                answer = effects.ok_or_no("Would you like to draw a card?", defender, self, ai_hint.ALWAYS)
+                if answer:
+                    defender.draw_card(1)
         return
 
 
@@ -370,18 +397,19 @@ class soultaker_sword(card_frame.card):
     name = "Soultaker Sword"
     vp = 1
     cost = 4
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = ("+2 Power. You may destroy a card in your hand.")
     image = image_path + "Soultaker Sword 4.jpg"
 
     def play_action(self, player):
         instruction_text = "You may destroy a card in your hand."
-        player.played.plus_power(2)
-        card_to_destroy = effects.may_choose_one_of(instruction_text, player,
-                                                    player.hand.contents,
-                                                    ai_hint.IFBAD)
-        if card_to_destroy:
-            card_to_destroy.destroy(player)
+        self._plus_power(player, 2)
+        if len(player.hand.contents) > 0:
+            card_to_destroy = effects.may_choose_one_of(instruction_text, player,
+                                                        player.hand.contents,
+                                                        source=self, hint=ai_hint.IFBAD)
+            if card_to_destroy:
+                card_to_destroy.destroy(player)
         return 0
 
 
@@ -389,7 +417,7 @@ class star_sapphire_power_ring(card_frame.card):
     name = "Star Sapphire Power Ring"
     vp = 0
     cost = 5
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = ("Reveal the top two cards of your deck. If they share a card "
             "type, put them back in any order. If not, draw them. At end of "
             "game, this card is worth 1 VP for each Power Ring in your deck.")
@@ -406,12 +434,14 @@ class star_sapphire_power_ring(card_frame.card):
             while len(assemble) > 0:
                 result = effects.choose_one_of(
                     f"Place card back on top of your deck.",
-                    player, assemble, ai_hint.WORST)
+                    player, assemble, source=self, hint=ai_hint.WORST)
                 assemble.remove(result)
                 player.deck.contents.append(result)
         else:
-            for card in assemble:
-                player.hand.contents.append(card)
+            num_to_draw = len(assemble)
+            player.hand.contents.extend(assemble)
+            player.draw_card(num_to_draw)
+
         return 0
 
 
@@ -419,24 +449,25 @@ class white_lantern_power_battery(card_frame.card):
     name = "White Lantern Power Battery"
     vp = 2
     cost = 7
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = ("Gain all Power Rings in the Line-Up and put them into your hand. "
             "Then gain any card from the Line-Up and put it on top of your deck.")
     image = image_path + "White Lantern Power Battery.jpg"
 
     def play_action(self, player):
         assemble = []
-        for card in globe.boss.lineup.contents:
+        for card in globe.boss.lineup.contents.copy():
             if "power ring" in card.name.lower():
-                card.set_owner(player)
-                player.hand.contents.append(card)
-                globe.boss.lineup.contents.pop(card)
-            assemble.append(card)
+                player.gain(card, None, False)
+                player.hand.contents.append(card.pop_self())
+            else:
+                assemble.append(card)
 
+        instruction_text = "Gain any card from the Line-Up and put it on top of your deck."
         if len(assemble) > 0:
             choosen = effects.choose_one_of(instruction_text, player, assemble,
-                                            ai_hint.BEST)
-            choosen.set_owner(player)
+                                            source=self, hint=ai_hint.BEST)
+            player.gain(choosen)
             player.deck.contents.append(choosen.pop_self())
 
         return 0
@@ -448,32 +479,31 @@ class yellow_lantern_power_ring(card_frame.card):
     cost = 5
     attack = True
     attack_text = " Each foe discards a card."
-    ctype = cardtype.EQUIPMENT
+    ctype = CardType.EQUIPMENT
     text = ("+2 Power. Attack: Each foe discards a card. At end of game, "
             "this card is worth 1 VP for each Power Ring in your deck.")
     image = image_path + "Yellow Lantern Corps Power Ring.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(2)
+        self._plus_power(player, 2)
         self.attack_action(player)
         return 0
 
     def attack_action(self, by_player):
-        instruction_text = "Each foe discards a random card."
+        instruction_text = "Each foe discards a card."
         for p in globe.boss.players:
-            if p != by_player:
-                choosen = effects.may_choose_one_of(instruction_text, p,
-                                                    p.hand.contents,
-                                                    hint=ai_hint.IFBAD)
-                if choosen:
-                    p.discard_a_card(choosen)
+            if p != by_player and effects.attack(p, self, by_player) and len(p.hand.contents) > 0:
+                choosen = effects.choose_one_of(instruction_text, p,
+                                                p.hand.contents,
+                                                source=self, hint=ai_hint.WORST)
+                p.discard_a_card(choosen)
         return
 
     def calculate_vp(self, all_cards):
         count = 0
         for card in all_cards:
             if card.ctype_eq(
-                    cardtype.EQUIPMENT) and "power ring" in card.name.lower():
+                    CardType.EQUIPMENT) and "power ring" in card.name.lower():
                 count += 1
         return count
 
@@ -483,19 +513,19 @@ class crimson_whirlwind(card_frame.card):
     name = "Crimson Whirlwind"
     vp = 1
     cost = 5
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("+2 Power. You may put your deck into your discard pile.")
     image = image_path + "Crimson Whirlwind.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(2)
-        cards = player.deck.contents
+        self._plus_power(player, 2)
         choice = effects.ok_or_no(f"Would you like to put your deck into your"
-                                  f"discard pile?", player, cards,
+                                  f"discard pile?", player, self,
                                   ai_hint.ALWAYS)
         if choice:
-            for card in cards:
-                player.discard_a_card(card)
+            # I don't think this should count as discarding cards
+            for card in player.deck.contents.copy():
+                player.discard.contents.append(card.pop_self())
         return 0
 
 
@@ -503,33 +533,30 @@ class daughter_of_gotham_city(card_frame.card):
     name = "Daughter of Gotham City"
     vp = 1
     cost = 3
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("+1 Power. You may put up to two Punch cards from your discard "
             "pile into your hand.")
     image = image_path + "Daughter of Gotham City.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(1)
-        instruction_text = "Select up to two Punch cards to put into your hand."
+        self._plus_power(player, 1)
+
         punches = []
         if len(player.discard.contents) > 0:
             for card in player.discard.contents:
                 if card.name == "Punch":
                     punches.append(card)
-            if len(punches) > 0:
-                choosen = effects.may_choose_one_of(instruction_text, player,
-                                                    punches, ai_hint.ALWAYS)
-                if choosen:
-                    player.hand.add(choosen.pop_self())
-                    punches.remove(choosen)
-                    if len(punches) > 0:
-                        choosen = effects.may_choose_one_of(instruction_text,
-                                                            player,
-                                                            punches,
-                                                            ai_hint.ALWAYS)
-                        if choosen:
-                            player.hand.add(choosen.pop_self())
-
+        received = 0
+        while len(punches) > 0 and received < 2:
+            instruction_text = f"Select up to two Punch cards to put into your hand. ({received + 1}/2)"
+            choosen = effects.may_choose_one_of(instruction_text, player,
+                                                punches, source=self, hint=ai_hint.ALWAYS)
+            if choosen:
+                player.hand.add(choosen.pop_self())
+                punches.remove(choosen)
+                received += 1
+            else:
+                break
         return 0
 
 
@@ -537,37 +564,34 @@ class deadman(card_frame.card):
     name = "Deadman"
     vp = 1
     cost = 4
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("+2 Power. When you buy or gain this card, you may destroy up to "
             "two cards in our hand and/or discard pile.")
     image = image_path + "Deadman.jpg"
 
     def trigger(self, ttype, data, player, active, immediate):
-        if globe.DEBUG:
-            print("test", self.name, flush=True)
         if trigger.test(not immediate, trigger.GAIN_CARD, self.trigger, player,
-                        ttype):
+                        ttype) and data[1] == self:
             if globe.DEBUG:
                 print("active", self.name, flush=True)
             collection = player.hand.contents.copy()
             collection.extend(player.discard.contents)
-            instruction_text = f"You may destroy a card in your hand or discard pile (1/2)"
-            card_to_destroy = effects.may_choose_one_of(instruction_text,
-                                                        player, collection,
-                                                        ai_hint.IFBAD)
-            if card_to_destroy != None:
-                card_to_destroy.destroy(player)
-                collection = player.hand.contents.copy()
-                collection.extend(player.discard.contents)
-                instruction_text = f"You may destroy a card in your hand or discard pile (2/2)"
+
+            destroyed = 0
+            while len(collection) > 0 and destroyed < 2:
+                instruction_text = f"You may destroy a card in your hand or discard pile ({destroyed + 1}/2)"
                 card_to_destroy = effects.may_choose_one_of(instruction_text,
                                                             player, collection,
-                                                            ai_hint.IFBAD)
-                if card_to_destroy != None:
+                                                            source=self, hint=ai_hint.IFBAD)
+                if card_to_destroy is not None:
+                    collection.remove(card_to_destroy)
                     card_to_destroy.destroy(player)
+                    destroyed += 1
+                else:
+                    break
 
     def play_action(self, player):
-        player.played.plus_power(2)
+        self._plus_power(player, 2)
         return 0
 
     def buy_action(self, player, bought, defeat):
@@ -581,7 +605,7 @@ class hawkgirl(card_frame.card):
     name = "Hawkgirl"
     vp = 1
     cost = 2
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("+1 Power and an additional +1 Power for each Hero in your "
             "discard pile.")
     image = image_path + "Hawkgirl.jpg"
@@ -589,9 +613,9 @@ class hawkgirl(card_frame.card):
     def play_action(self, player):
         count = 1
         for card in player.discard.contents:
-            if card.ctype_eq(cardtype.HERO):
+            if card.ctype_eq(CardType.HERO):
                 count += 1
-        player.played.plus_power(count)
+        self._plus_power(player, count)
         return 0
 
 
@@ -599,26 +623,24 @@ class hero_of_the_future(card_frame.card):
     name = "Hero of the Future"
     vp = 1
     cost = 4
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("+2 Power and an additional +2 Power for each Defense card you "
             "play or have played this turn.")
     image = image_path + "Hero of the Future.jpg"
 
     def trigger(self, ttype, data, player, active, immediate):
-        if globe.DEBUG:
-            print("test", self.name, flush=True)
         if trigger.test(not immediate, trigger.PLAY, self.trigger, player,
                         ttype) and data[0].defense:
             if globe.DEBUG:
                 print("active", self.name, flush=True)
-            player.played.plus_power(2)
+            self._plus_power(player, 2)
 
     def play_action(self, player):
-        player.played.plus_power(2)
+        self._plus_power(player, 2)
         player.triggers.append(self.trigger)
-        for card in player.played.contents:
+        for card in player.played.played_this_turn:
             if card.defense:
-                player.played.plus_power(2)
+                self._plus_power(player, 2)
         return 0
 
 
@@ -626,20 +648,21 @@ class jason_blood(card_frame.card):
     name = "Jason Blood"
     vp = 2
     cost = 7
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("+3 Power. You may put a Villain from your discard pile on top of "
             "your deck.")
     image = image_path + "Jason Blood.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(3)
+        instruction_text = "You may put a Villain from your discard pile on top of your deck."
+        self._plus_power(player, 3)
         villians = []
         for card in player.discard.contents:
-            if card.ctype_eq(cardtype.VILLAIN):
+            if card.ctype_eq(CardType.VILLAIN):
                 villians.append(card)
-        if len(villians):
+        if len(villians) > 0:
             choosen = effects.may_choose_one_of(instruction_text, player,
-                                                villians, ai_hint.BEST)
+                                                villians, source=self, hint=ai_hint.BEST)
             if choosen:
                 player.deck.add(choosen.pop_self())
         return 0
@@ -649,14 +672,14 @@ class katana(card_frame.card):
     name = "Katana"
     vp = 1
     cost = 2
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     defense = True
     text = ("+1 Power. Defense: You may discard this card to avoid an Attack. "
             "If you do, draw a card.")
     image = image_path + "Katana.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(1)
+        self._plus_power(player, 1)
         return 0
 
     def defend(self, attacker=None, defender=None):
@@ -669,7 +692,7 @@ class kyle_rayner(card_frame.card):
     name = "Kyle Rayner"
     vp = 2
     cost = 7
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("+3 Power. For each Power Ring in your discard pile or that you "
             "play or have played this turn, +2 Power. If you play or have "
             "played three Power Rings this turn, you win the game.")
@@ -679,23 +702,23 @@ class kyle_rayner(card_frame.card):
         if globe.DEBUG:
             print("test", self.name, flush=True)
         if trigger.test(not immediate, trigger.PLAY, self.trigger, player,
-                        ttype) and data[0].defense:
+                        ttype) and "power ring" in data[0].name.lower():
             if globe.DEBUG:
                 print("active", self.name, flush=True)
-            player.played.plus_power(2)
+            self._plus_power(player, 2)
             count = 0
             for card in player.played.played_this_turn:
                 if "power ring" in card.name.lower():
                     count += 1
             if count >= 3:
                 print("Game ended due to power rings")
-                self.vp = 100
+                player.vp += 1000
                 # TODO: Find a better way to end the game.
                 while len(globe.boss.supervillain_stack.contents) > 0:
                     globe.boss.supervillain_stack.contents.pop()
 
     def play_action(self, player):
-        player.played.plus_power(3)
+        self._plus_power(player, 3)
         player.triggers.append(self.trigger)
         rings = []
         count = 0
@@ -706,7 +729,7 @@ class kyle_rayner(card_frame.card):
             if "power ring" in card.name.lower():
                 rings.append(card)
                 count += 1
-        player.played.plus_power(len(rings))
+        self._plus_power(player, len(rings)*2)
         if count >= 3:
             # TODO: Find a better way to end the game.
             while len(globe.boss.supervillain_stack.contents) > 0:
@@ -715,60 +738,71 @@ class kyle_rayner(card_frame.card):
 
 
 class plastic_man(card_frame.card):
+    # Ruling on plastic man: https://boardgamegeek.com/thread/1331763/plastic-man-errata-card
+    # He only gains the game text, not the name or type
     name = "Plastic Man"
     vp = 1
     cost = 3
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("Choose an Equipment in your discard pile or that you played this "
-            "turn. Plastic Man becomes a copy of that card (and is now also an "
-            "Equipment).")
+            "turn. Plastic Man gains the game text of that card this turn.")
     image = image_path + "Plastic Man.jpg"
     copy_of = None
+
     def play_action(self, player):
         equipments = []
         for card in player.discard.contents:
-            if card.ctype_eq(cardtype.EQUIPMENT):
+            if card.ctype_eq(CardType.EQUIPMENT):
                 equipments.append(card)
         for card in player.played.played_this_turn:
-            if card.ctype_eq(cardtype.EQUIPMENT):
+            if card.ctype_eq(CardType.EQUIPMENT):
                 equipments.append(card)
         if len(equipments) > 0:
             choosen = effects.choose_one_of(self.text, player, equipments,
-                                            ai_hint.BEST)
-            # sets the card name to the Equipment name
-            self.name = choosen.name
+                                            source=self, hint=ai_hint.BEST)
 
-            # sets the ctype to the Equipment ctype
-            self.ctype = choosen.ctype
-
-            # Making a backup reference of the
-            # Card image to revert for end turn
-            self.copy_of = self.texture
-
-            # setting the Card image as the Equipment card image
-            self.texture = choosen.texture
-
+            # There are edge cases where this wont work as expected.  For example, If the Indigo Tribe Power Ring is used on Plastic Man, he will always give 0 power.
             choosen.play_action(player)
+
+            # self.backup_play_action = self.play_action
+            # self.play_action = choosen.play_action
+
+        # BEST            # sets the card name to the Equipment name
+        #             self.name = choosen.name
+        #
+        #             # sets the ctype to the Equipment ctype
+        #             self.ctype = choosen.ctype
+        #
+        #             # Making a backup reference of the
+        #             # Card image to revert for end turn
+        #             self.copy_of = self.texture
+
+        # # setting the Card image as the Equipment card image
+        # self.texture = choosen.texture
+
         return 0
 
-    def end_of_turn(self):
+    # def end_of_turn(self):
+    #     pass
         # reverting the card back to the original
         # might be a better way to do so
-        if self.copy_of:
-            self.name = "Plastic Man"
-            self.ctype = cardtype.HERO
-            self.texture = self.copy_of
+        # if self.copy_of:
+        #     self.name = "Plastic Man"
+        #     self.ctype = CardType.HERO
+        #     self.texture = self.copy_of
+        # self.play_action = self.backup_play_action
+
 
 class raven(card_frame.card):
     name = "Raven"
     vp = 1
     cost = 3
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("+1 Power and draw a card.")
     image = image_path + "Raven.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(1)
+        self._plus_power(player, 1)
         player.draw_card(1)
         return 0
 
@@ -777,7 +811,7 @@ class saint_walker(card_frame.card):
     name = "Saint Walker"
     vp = 0
     cost = 5
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("Draw a card. At end of game, this card is worth 1 VP for each "
             "different Hero in your deck.")
     image = image_path + "Saint Walker.jpg"
@@ -789,7 +823,7 @@ class saint_walker(card_frame.card):
     def calculate_vp(self, all_cards):
         heroes = set()
         for card in all_cards:
-            if card.ctype_eq(cardtype.HERO):
+            if card.ctype_eq(CardType.HERO):
                 heroes.add(card.name)
         return len(heroes)
 
@@ -798,18 +832,22 @@ class sonic_siren(card_frame.card):
     name = "Sonic Siren"
     vp = 1
     cost = 4
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("+2 Power. You may destroy a card in the Line-Up and replace it.")
     image = image_path + "Sonic Siren 4.jpg"
 
     def play_action(self, player):
+        self._plus_power(player, 2)
         if len(globe.boss.lineup.contents) > 0:
             instruction_text = "You may destroy a card in the Line-up."
             result = effects.may_choose_one_of(instruction_text, player,
                                                globe.boss.lineup.contents,
-                                               ai_hint.RANDOM)
+                                               source=self, hint=ai_hint.RANDOM)
             if result != None:
                 result.destroy(player)
+                card_to_add = globe.boss.main_deck.draw()
+                if card_to_add != None:
+                    globe.boss.lineup.add(card_to_add)
         return 0
 
 
@@ -817,21 +855,21 @@ class superboy(card_frame.card):
     name = "Superboy"
     vp = 1
     cost = 5
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = (
         "+1 Power. Put a Super Power from your discard pile into your hand.")
     image = image_path + "Superboy.jpg"
 
     def play_action(self, player):
         instruction_text = "Put a Super Power from your discard pile into your hand"
-        player.played.plus_power(1)
+        self._plus_power(player, 1)
         superpowers = []
         for card in player.discard.contents:
-            if card.ctype_eq(cardtype.SUPERPOWER):
+            if card.ctype_eq(CardType.SUPERPOWER):
                 superpowers.append(card)
         if len(superpowers) > 0:
             choosen = effects.choose_one_of(instruction_text, player, superpowers,
-                                            ai_hint.BEST)
+                                            source=self, hint=ai_hint.BEST)
             if choosen:
                 player.hand.add(choosen.pop_self())
         return 0
@@ -841,37 +879,40 @@ class warrior_princess(card_frame.card):
     name = "Warrior Princess"
     vp = 2
     cost = 6
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("+3 Power. If you play or have played one or more Starbolt cards "
             "this turn, gain a card from the Line-Up and put it into your hand.")
     image = image_path + "Warrior Princess.jpg"
 
     def trigger(self, ttype, data, player, active, immediate):
         instruction_text = "gain a card from the Line-Up and put it into your hand."
-        if globe.DEBUG:
-            print("test", self.name, flush=True)
         if trigger.test(not immediate, trigger.PLAY, self.trigger, player,
                         ttype) and data[0].name == "Starbolt":
             if globe.DEBUG:
                 print("active", self.name, flush=True)
-            choosen = effects.choose_one_of(instruction_text, player,
-                                            globe.boss.lineup.contents,
-                                            ai_hint.BEST)
-            if choosen:
-                player.hand.add(choosen.pop_self())
+            if len(globe.boss.lineup.content) > 0:
+                choosen = effects.choose_one_of(instruction_text, player,
+                                                globe.boss.lineup.contents,
+                                                source=self, hint=ai_hint.BEST)
+                if choosen:
+                    player.gain(choosen)
+                    player.hand.add(choosen.pop_self())
+            player.triggers.remove(self.trigger)
+
 
     def play_action(self, player):
         instruction_text = "gain a card from the Line-Up and put it into your hand"
-        player.played.plus_power(3)
-        player.triggers.append(self.trigger)
+        self._plus_power(player, 3)
         for card in player.played.played_this_turn:
             if card.name == "Starbolt":
-                choosen = effects.choose_one_of(instruction_text, player,
-                                                globe.boss.lineup.contents,
-                                                ai_hint.BEST)
-                if choosen:
+                if len(globe.boss.lineup.contents) > 0:
+                    choosen = effects.choose_one_of(instruction_text, player,
+                                                    globe.boss.lineup.contents,
+                                                    source=self, hint=ai_hint.BEST)
+                    player.gain(choosen, None, False)
                     player.hand.add(choosen.pop_self())
-
+                return 0
+        player.triggers.append(self.trigger)
         return 0
 
 
@@ -879,24 +920,27 @@ class winged_warrior(card_frame.card):
     name = "Winged Warrior"
     vp = 2
     cost = 6
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("+2 Power. If you play or have played another Hero this turn, "
             "additional +3 Power.")
     image = image_path + "Winged Warrior.jpg"
 
     def trigger(self, ttype, data, player, active, immediate):
         if trigger.test(not immediate, trigger.PLAY, self.trigger, player,
-                        ttype) and data[0].ctype_eq(cardtype.HERO):
+                        ttype) and data[0].ctype_eq(CardType.HERO):
             if globe.DEBUG:
                 print("active", self.name, flush=True)
-            player.played.plus_power(3)
+            self._plus_power(player, 3)
+            player.triggers.remove(self.trigger)
 
     def play_action(self, player):
-        player.played.plus_power(2)
-        player.triggers.append(self.trigger)
+        self._plus_power(player, 2)
+        played_hero = False
         for card in player.played.played_this_turn:
-            if card.ctype_eq(cardtype.HERO):
-                player.played.plus_power(3)
+            if card.ctype_eq(CardType.HERO):
+                self._plus_power(player, 3)
+                return 0
+        player.triggers.append(self.trigger)
         return 0
 
 
@@ -904,7 +948,7 @@ class wonder_of_the_knight(card_frame.card):
     name = "Wonder of the Knight"
     vp = 1
     cost = 5
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = (
         "Put an Equipment from your discard pile into your hand. Draw a card.")
     image = image_path + "Wonder of the Knight.jpg"
@@ -912,13 +956,12 @@ class wonder_of_the_knight(card_frame.card):
     def play_action(self, player):
         equipment = []
         for card in player.discard.contents:
-            if card.ctype_eq(cardtype.EQUIPMENT):
+            if card.ctype_eq(CardType.EQUIPMENT):
                 equipment.append(card)
         if len(equipment) > 0:
             choosen = effects.choose_one_of(self.text, player, equipment,
-                                            ai_hint.RANDOM)
-            if choosen:
-                player.hand.add(choosen.pop_self())
+                                            source=self, hint=ai_hint.BEST)
+            player.hand.add(choosen.pop_self())
         player.draw_card(1)
         return 0
 
@@ -927,35 +970,38 @@ class worlds_mightiest_mortal(card_frame.card):
     name = "World's Mightiest Mortal"
     vp = 3
     cost = 8
-    ctype = cardtype.HERO
+    ctype = CardType.HERO
     text = ("+5 Power. Reveal the top two cards of the main deck. Put any "
             "number of them into the Line-Up and the rest back on top in any order.")
     image = image_path + "Worlds Mightiest Mortal.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(5)
+        self._plus_power(player, 5)
         top_cards = []
-        total_times = len(top_cards)
         for i in range(2):
             next_card = globe.boss.main_deck.contents[-1]
-            if next_card != None:
+            if next_card is not None:
                 next_card.pop_self()
                 top_cards.append(next_card)
+        effects.reveal("These two cards were on top of the main deck.", player, top_cards)
         while len(top_cards) > 0:
             result = effects.may_choose_one_of(
-                f"Place card into the lineup ",
-                player, top_cards, ai_hint.RANDOM)
+                f"You may put a card in the lineup.",
+                player, top_cards, source=self, hint=ai_hint.RANDOM)
             if result:
                 result.set_owner(owners.LINEUP)
                 top_cards.remove(result)
-                globe.boss.lineup.contents.append(result)
+                globe.boss.lineup.add(result)
             else:
-                result = effects.may_choose_one_of(
-                    f"Place card back on top of the main deck ",
-                    player, top_cards, ai_hint.RANDOM)
-                top_cards.remove(result)
-                result.set_owner(owners.MAINDECK)
-                globe.boss.main_deck.contents.append(result)
+                break
+
+        while len(top_cards) > 0:
+            result = effects.choose_one_of(
+                f"Place card(s) back on top of the main deck.",
+                player, top_cards, source=self, hint=ai_hint.RANDOM)
+            top_cards.remove(result)
+            result.set_owner(owners.MAINDECK)
+            globe.boss.main_deck.add(result)
         return 0
 
 
@@ -964,31 +1010,29 @@ class apokolips(card_frame.card):
     name = "Apokolips"
     vp = 1
     cost = 5
-    ctype = cardtype.LOCATION
+    ctype = CardType.LOCATION
     text = ("Ongoing: Once during each of your turns, reveal the top card of "
             "your deck. If it's a Villain, draw it. If not, you may discard it.")
     image = image_path + "Apokolips.jpg"
     ongoing = True
 
-    def trigger(self, ttype, data, player, active, immediate):
+    def special_action_click(self, player):
         on_top = player.reveal_card()
         it = "Do you want to discard the card?"
         if on_top != None:
-            if on_top.ctype_eq(cardtype.VILLAIN):
+            if on_top.ctype_eq(CardType.VILLAIN):
                 player.draw_card()
             else:
                 choosen = effects.ok_or_no(it, player, on_top, ai_hint.IFBAD)
                 if choosen:
-                    if effects.ok_or_no("discard?", player, on_top,
-                                        ai_hint.IFBAD):
-                        player.discard.contents.append(on_top.pop_self())
-        player.triggers.remove(self.trigger)
+                    player.discard_a_card(on_top)
+        player.played.special_options.remove(self.action)
 
     def play_action(self, player):
-        if self in player.ongoing.contents:
-            player.triggers.append(self.trigger)
-        else:
+        if self not in player.ongoing.contents:
             player.ongoing.add(self.pop_self())
+        self.action = actions.special_action("Apokolips", self.special_action_click,self)
+        player.played.special_options.append(self.action)
         return 0
 
 
@@ -996,32 +1040,30 @@ class gotham_city(card_frame.card):
     name = "Gotham City"
     vp = 1
     cost = 5
-    ctype = cardtype.LOCATION
+    ctype = CardType.LOCATION
     text = ("Ongoing: Once during each of your turns, reveal the top card of "
             "your deck. If it's an Equipment, draw it. If not, you may discard "
             "it.")
     image = image_path + "Gotham City.jpg"
     ongoing = True
 
-    def trigger(self, ttype, data, player, active, immediate):
+    def special_action_click(self, player):
         on_top = player.reveal_card()
         it = "Do you want to discard the card?"
         if on_top != None:
-            if on_top.ctype_eq(cardtype.EQUIPMENT):
+            if on_top.ctype_eq(CardType.EQUIPMENT):
                 player.draw_card()
             else:
-                choosen = effects.ok_or_no(it,player,on_top,ai_hint.IFBAD)
+                choosen = effects.ok_or_no(it, player, on_top, ai_hint.IFBAD)
                 if choosen:
-                    if effects.ok_or_no("discard?", player, on_top,
-                                        ai_hint.IFBAD):
-                        player.discard.contents.append(on_top.pop_self())
-        player.triggers.remove(self.trigger)
+                    player.discard_a_card(on_top)
+        player.played.special_options.remove(self.action)
 
     def play_action(self, player):
-        if self in player.ongoing.contents:
-            player.triggers.append(self.trigger)
-        else:
+        if self not in player.ongoing.contents:
             player.ongoing.add(self.pop_self())
+        self.action = actions.special_action("Gotham City", self.special_action_click,self)
+        player.played.special_options.append(self.action)
         return 0
 
 
@@ -1029,31 +1071,30 @@ class metropolis(card_frame.card):
     name = "Metropolis"
     vp = 1
     cost = 5
-    ctype = cardtype.LOCATION
+    ctype = CardType.LOCATION
     text = ("Ongoing: Once during each of your turns, reveal the top card of "
             "your deck. If it's a Super Power, draw it. If not, you may "
             "discard it.")
     image = image_path + "Metropolis Fixed.jpg"
     ongoing = True
 
-    def trigger(self, ttype, data, player, active, immediate):
+    def special_action_click(self, player):
         on_top = player.reveal_card()
         it = "Do you want to discard the card?"
         if on_top != None:
-            if on_top.ctype_eq(cardtype.SUPERPOWER):
+            if on_top.ctype_eq(CardType.SUPERPOWER):
                 player.draw_card()
             else:
                 choosen = effects.ok_or_no(it, player, on_top, ai_hint.IFBAD)
                 if choosen:
-                    if effects.ok_or_no("discard?",player,on_top,ai_hint.IFBAD):
-                        player.discard.contents.append(on_top.pop_self())
-        player.triggers.remove(self.trigger)
+                    player.discard_a_card(on_top)
+        player.played.special_options.remove(self.action)
 
     def play_action(self, player):
-        if self in player.ongoing.contents:
-            player.triggers.append(self.trigger)
-        else:
+        if self not in player.ongoing.contents:
             player.ongoing.add(self.pop_self())
+        self.action = actions.special_action("Metropolis", self.special_action_click, self)
+        player.played.special_options.append(self.action)
         return 0
 
 
@@ -1061,56 +1102,48 @@ class new_genesis(card_frame.card):
     name = "New Genesis"
     vp = 1
     cost = 5
-    ctype = cardtype.LOCATION
+    ctype = CardType.LOCATION
     text = ("Ongoing: Once during each of your turns, reveal the top card of "
             "your deck. If it's a Hero, draw it. If not, you may discard it.")
     image = image_path + "New Genesis.jpg"
     ongoing = True
 
-    def trigger(self, ttype, data, player, active, immediate):
+    def special_action_click(self, player):
         on_top = player.reveal_card()
         it = "Do you want to discard the card?"
         if on_top != None:
-            if on_top.ctype_eq(cardtype.HERO):
+            if on_top.ctype_eq(CardType.HERO):
                 player.draw_card()
             else:
                 choosen = effects.ok_or_no(it, player, on_top, ai_hint.IFBAD)
                 if choosen:
-                    if effects.ok_or_no("discard?", player, on_top,
-                                        ai_hint.IFBAD):
-                        player.discard.contents.append(on_top.pop_self())
-        player.triggers.remove(self.trigger)
+                    player.discard_a_card(on_top)
+        player.played.special_options.remove(self.action)
 
     def play_action(self, player):
-        if self in player.ongoing.contents:
-            player.triggers.append(self.trigger)
-        else:
+        if self not in player.ongoing.contents:
             player.ongoing.add(self.pop_self())
+        self.action = actions.special_action("New Genesis", self.special_action_click, self)
+        player.played.special_options.append(self.action)
         return 0
 
 
 class oa(card_frame.card):
-
     name = "OA"
     vp = 1
     cost = 5
-    ctype = cardtype.LOCATION
+    ctype = CardType.LOCATION
     text = ("Ongoing: At the start of your turn, if the top card of the "
             "Super-Villain stack has cost 10 or greater, draw a card.")
     image = image_path + "OA.jpg"
     ongoing = True
 
-    def trigger(self, ttype, data, player, active, immediate):
-        if globe.boss.supervillain_stack.contents[-1].cost >= 10:
-            player.draw_card()
-
-    def play_action(self,player):
+    def play_action(self, player):
         if self in player.ongoing.contents:
-            player.triggers.append(self.trigger)
+            if globe.boss.supervillain_stack.contents[-1].cost >= 10:
+                player.draw_card()
         else:
             player.ongoing.add(self.pop_self())
-        return 0
-
         return 0
 
 
@@ -1119,7 +1152,7 @@ class canary_cry(card_frame.card):
     name = "Canary Cry"
     vp = 1
     cost = 4
-    ctype = cardtype.SUPERPOWER
+    ctype = CardType.SUPERPOWER
     defense = True
     text = (
         "You may put a Villain from your discard pile on top of your deck. "
@@ -1135,11 +1168,11 @@ class canary_cry(card_frame.card):
         villians = []
         choosen = None
         for card in player.discard.contents:
-            if card.ctype_eq(cardtype.VILLAIN):
+            if card.ctype_eq(CardType.VILLAIN):
                 villians.append(card)
         if len(villians) > 0:
             choosen = effects.may_choose_one_of(instruction_text, player, villians,
-                                                ai_hint.BEST)
+                                                source=self, hint=ai_hint.BEST)
         if choosen:
             player.deck.add(choosen.pop_self())
         else:
@@ -1153,14 +1186,14 @@ class canary_cry(card_frame.card):
                             "card.")
         self.owner.discard_a_card(self)
         villians = []
-        for card in player.discard.contents:
-            if card.ctype_eq(cardtype.VILLAIN) and card.cost <= 7:
+        for card in defender.discard.contents:
+            if card.ctype_eq(CardType.VILLAIN) and card.cost <= 7:
                 villians.append(card)
         if len(villians) > 0:
-            choosen = effects.may_choose_one_of(instruction_text, player, villians,
-                                                ai_hint.BEST)
+            choosen = effects.may_choose_one_of(instruction_text, defender, villians,
+                                                source=self, hint=ai_hint.BEST)
             if choosen:
-                player.hand.add(choosen.pop_self())
+                defender.hand.add(choosen.pop_self())
             else:
                 self.owner.draw_card()
         return
@@ -1170,7 +1203,7 @@ class force_field(card_frame.card):
     name = "Force Field"
     vp = 1
     cost = 3
-    ctype = cardtype.SUPERPOWER
+    ctype = CardType.SUPERPOWER
     defense = True
     text = ("Draw a card. Ongoing: Do not discard this card at the end of "
             "your turn. Defense: While this card is in play, you may put it "
@@ -1183,15 +1216,13 @@ class force_field(card_frame.card):
     #     player.trigger.remove(self.trigger)
 
     def play_action(self, player):
-
-        if self in player.ongoing.contents:
+        if self not in player.ongoing.contents:
             player.draw_card()
-        else:
             player.ongoing.add(self.pop_self())
         return 0
 
     def defend(self, attacker=None, defender=None):
-        self.owner.discard_a_card(self)
+        defender.discard_a_card(self)
         return
 
 
@@ -1199,7 +1230,7 @@ class power_of_the_green(card_frame.card):
     name = "Power Of The Green"
     vp = 1
     cost = 3
-    ctype = cardtype.SUPERPOWER
+    ctype = CardType.SUPERPOWER
     text = ("Put a Location from your discard pile into play. If you control "
             "a Location, +3 Power. Otherwise, +2 Power.")
     image = image_path + "Power of the Green.jpg"
@@ -1209,16 +1240,16 @@ class power_of_the_green(card_frame.card):
         locations = []
         power = 2
         for card in player.discard.contents:
-            if card.ctype_eq(cardtype.LOCATION):
+            if card.ctype_eq(CardType.LOCATION):
                 locations.append(card)
         if len(locations) > 0:
             choosen = effects.choose_one_of(instruction_text, player, locations,
-                                            ai_hint.RANDOM)
-            if choosen:
-                player.played.add(choosen)
+                                            source=self, hint=ai_hint.RANDOM)
+            choosen.pop_self()
+            player.played.play(choosen)
         if len(player.ongoing.contents) > 0:
             power = 3
-        player.played.plus_power(power)
+        self._plus_power(player, power)
         return 0
 
 
@@ -1226,31 +1257,29 @@ class shazam(card_frame.card):
     name = "Shazam!"
     vp = 1
     cost = 7
-    ctype = cardtype.SUPERPOWER
+    ctype = CardType.SUPERPOWER
     text = ("+2 Power. Reveal and play the top card of the main deck, then "
             "return it to the top of the main deck.")
     image = image_path + "Shazam 7.jpg"
     top_card = None
 
     def play_action(self, player):
-        player.played.plus_power(2)
+        self._plus_power(player, 2)
         instruction_text = (
             "Reveal and play the top card of the main deck, then "
             "return it to the top of the main deck.")
-        self.top_card = globe.boss.main_deck.draw()
-        player.played.add(self.top_card)
-        return 0
 
-    def end_of_turn(self):
-        self.top_card.pop_self()
-        return
+        top_card = globe.boss.main_deck.draw()
+        effects.reveal("This was on top of the main deck.", player, top_card)
+        player.play_and_return(top_card, globe.boss.main_deck)
+        return 0
 
 
 class starbolt(card_frame.card):
     name = "Starbolt"
     vp = 1
     cost = 5
-    ctype = cardtype.SUPERPOWER
+    ctype = CardType.SUPERPOWER
     text = ("+2 Power and an additional +1 Power for each Super Power in your "
             "discard pile.")
     image = image_path + "Starbolt.jpg"
@@ -1258,9 +1287,9 @@ class starbolt(card_frame.card):
     def play_action(self, player):
         power = 2
         for card in player.discard.contents:
-            if card.ctype_eq(cardtype.SUPERPOWER):
+            if card.ctype_eq(CardType.SUPERPOWER):
                 power += 1
-        player.played.plus_power(power)
+        self._plus_power(player, power)
         return 0
 
 
@@ -1268,12 +1297,13 @@ class teleportation(card_frame.card):
     name = "Teleportation"
     vp = 1
     cost = 7
-    ctype = cardtype.SUPERPOWER
+    ctype = CardType.SUPERPOWER
     text = ("Gain the top card of the Main Deck and put it into your hand.")
     image = image_path + "Teleportation.jpg"
 
     def play_action(self, player):
         top_card = globe.boss.main_deck.draw()
+        player.gain(top_card)
         player.hand.add(top_card.pop_self())
         return 0
 
@@ -1282,20 +1312,18 @@ class whirlwind(card_frame.card):
     name = "Whirlwind"
     vp = 1
     cost = 2
-    ctype = cardtype.SUPERPOWER
+    ctype = CardType.SUPERPOWER
     text = ("+1 Power. If this is the first card you have played this turn, "
             "you may discard your hand and draw four cards.")
     image = image_path + "Whirlwind.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(1)
+        self._plus_power(player, 1)
         if len(player.played.contents) <= 1:
-            for card in player.played.contents:
-                if card.name == self.name:
-                    if effects.ok_or_no("Would you like to discard your hand?",
-                                        player, None, ai_hint.RANDOM):
-                        player.discard_hand()
-                        player.draw_card(4)
+            if effects.ok_or_no("Would you like to discard your hand and draw four cards?",
+                                player, None, ai_hint.RANDOM):
+                player.discard_hand()
+                player.draw_card(4)
         return 0
 
 
@@ -1304,7 +1332,7 @@ class amazo(card_frame.card):
     name = "Amazo"
     vp = 5
     cost = 10
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = ("You may choose another Villain and/or Hero you played this turn. "
             "Play them again this turn. If you choose not to, +3 Power. "
@@ -1315,63 +1343,93 @@ class amazo(card_frame.card):
                    "left and one card to the right. Put cards passed to you into "
                    "your hand.")
     image = image_path + "Amazo 10.jpg"
-    card_1 = None
-    card_2 = None
+    action = None
+
+    def special_action_click(self, player):
+        # if len(self.discarded_cards) > 0:
+        result = False
+        while result is not None and len(self.cards_to_play) > 0:
+            result = effects.may_choose_one_of("Choose a card to play", player, self.cards_to_play, source=self, hint=ai_hint.BEST)
+            if result is not None:
+                player.play_and_return(result)
+
+                self.cards_to_play.remove(result)
+        if len(self.cards_to_play) == 0:
+            player.played.special_options.remove(self.action)
 
     def play_action(self, player):
         cards = []
+        self.cards_to_play = []
         instruction_text = ("You may choose another Villain and/or Hero you "
                             "played this turn. Play them again this turn. "
                             "If you choose not to, +3 Power. ")
-        for card in player.played.contents:
-            if card.ctype_eq(cardtype.HERO) or card.ctype_eq(cardtype.VILLAIN):
+        for card in player.played.played_this_turn:
+            if card.ctype_eq(CardType.HERO):
                 cards.append(card)
         if len(cards) > 0:
-            self.card_1 = effects.may_choose_one_of(instruction_text, player,
-                                                cards, ai_hint.BEST)
-        power = 3
-        if self.card_1:
-            cards.index(self.card_1).pop()
-            self.card_2 = effects.may_choose_one_of(instruction_text, player,
-                                                    cards, ai_hint.BEST)
-            player.played.add(self.card_1)
-            if self.card_2:
-                player.played.add(self.card_2)
+            choice = effects.may_choose_one_of(instruction_text + "(1/2: Heros)", player,
+                                               cards, source=self, hint=ai_hint.BEST)
+            if choice is not None:
+                self.cards_to_play.append(choice)
+        cards = []
+        for card in player.played.played_this_turn:
+            if card.ctype_eq(CardType.VILLAIN):
+                cards.append(card)
+        if len(cards) > 0:
+            choice = effects.may_choose_one_of(instruction_text + "(2/2: Villains)", player,
+                                               cards, source=self, hint=ai_hint.BEST)
+            if choice is not None:
+                self.cards_to_play.append(choice)
+        if len(self.cards_to_play) == 0:
+            self._plus_power(player, 3)
         else:
-            player.played.plus_power(power)
-        return 0
+            self.action = actions.special_action("Amazo", self.special_action_click, self)
+            player.played.special_options.append(self.action)
 
     def first_apearance(self):
         instruction_text = "Select a card to pass to the right."
         cards_to_pass = []
         instruction_text = "Choose a card to pass to the hand of the player to your left."
+        contributing_players = []
         for p in globe.boss.players:
-            if len(p.hand.contents) > 0:
-                cards_to_pass.append(
-                    effects.choose_one_of(instruction_text, p,
-                                          p.hand.contents, ai_hint.WORST))
-                # Alerts any relevant persona powers (harly quin)
-                p.persona.card_pass_power()
-            else:
-                cards_to_pass.append(None)
-        for i, p in enumerate(globe.boss.players):
-            current = cards_to_pass[i - 1]
-            if current:
-                current.pop_self()
-                current.set_owner(p)
-                p.hand.contents.append(current)
+            if effects.attack(p, self):
+                contributing_players.append(p)
 
-    def end_of_turn(self):
-        self.card_1.pop_self()
-        self.card_2.pop_self()
-        return
+        for p in contributing_players:
+            card_set_to_pass = []
+            if len(p.hand.contents) > 0:
+                card_set_to_pass.append(
+                    effects.choose_one_of("Choose a card to pass to the hand of the player to your left.", p,
+                                          p.hand.contents, source=self, hint=ai_hint.WORST).pop_self())
+            else:
+                card_set_to_pass.append(None)
+            if len(p.hand.contents) > 0:
+                card_set_to_pass.append(
+                    effects.choose_one_of("Choose a card to pass to the hand of the player to your right.", p,
+                                          p.hand.contents, source=self, hint=ai_hint.WORST).pop_self())
+            else:
+                card_set_to_pass.append(None)
+            cards_to_pass.append(card_set_to_pass)
+        for i, p in enumerate(contributing_players):
+            to_get = []
+            to_get.append(cards_to_pass[i - 1][0])
+            right_index = (i + 1)
+            if right_index == len(contributing_players):
+                right_index = 0
+            to_get.append(cards_to_pass[right_index][1])
+            for c in to_get:
+                if c is not None:
+                    c.pop_self()
+                    c.set_owner(p)
+                    p.hand.contents.append(c)
+                    p.card_has_been_passed(c)
 
 
 class arkillo(card_frame.card):
     name = "Arkillo"
     vp = 1
     cost = 10
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = ("+2 Power and put all Equipment from your discard pile into your "
             "hand. FIRST APPEARANCE -- ATTACK: Each player totals the cost of "
@@ -1384,9 +1442,9 @@ class arkillo(card_frame.card):
     image = image_path + "Arkillo 10.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(2)
+        self._plus_power(player, 2)
         for card in player.discard.contents:
-            if card.ctype_eq(cardtype.EQUIPMENT):
+            if card.ctype_eq(CardType.EQUIPMENT):
                 player.hand.add(card.pop_self())
         return 0
 
@@ -1394,19 +1452,21 @@ class arkillo(card_frame.card):
         players = []
         for p in globe.boss.players:
             card_total = 0
-            for card in p.hand.contents:
-                card_total += card.cost
-            players.append([p, card_total])
-        players.sort(reverse=True,key=lambda x: x[1])
-        highest = players[0][1]
-        p_gained = []
-        for total in players:
-            if total[1] == highest:
-                p_gained.append(total[0])
-        for p in p_gained:
-            p.gain_a_weakness()
-            p.gain_a_weakness()
-            p.gain_a_weakness()
+            if effects.attack(p, self):
+                for card in p.hand.contents:
+                    card_total += card.cost
+                players.append([p, card_total])
+        players.sort(reverse=True, key=lambda x: x[1])
+        if len(players) > 0:
+            highest = players[0][1]
+            p_gained = []
+            for total in players:
+                if total[1] == highest:
+                    p_gained.append(total[0])
+            for p in p_gained:
+                p.gain_a_weakness()
+                p.gain_a_weakness()
+                p.gain_a_weakness()
         return
 
 
@@ -1414,7 +1474,7 @@ class black_adam(card_frame.card):
     name = "Black Adam"
     vp = 6
     cost = 11
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = ("+2 Power for each different card type you play or have played "
             "this turn. FIRST APPEARANCE -- ATTACK: Each player destroys a "
@@ -1422,40 +1482,42 @@ class black_adam(card_frame.card):
     attack_text = ("FIRST APPEARANCE -- ATTACK: Each player destroys a "
                    "Hero in his hand or discard pile.")
     image = image_path + "Black Adam 11.jpg"
-    cards_played = set()
 
+    # This was designed to be stateless, so that this can be played twice (like with plastic-man)
     def trigger(self, ttype, data, player, active, immediate):
-        cards = set()
-        for card in player.played.contents:
-            self.cards.add(card.ctype)
-        power = len(cards) - len(self.cards_played)
-        for card in cards:
-            self.cards_played.add(card)
-        player.played.plus_power(power * 2)
-        return
+        if trigger.test(not immediate, trigger.PLAY, self.trigger, player,
+                        ttype):
+            if data[0].ctype != CardType.WEAKNESS:
+                cards_played = set()
+                for i in range(len(player.played.played_this_turn)-1):
+                    cards_played.add(player.played.played_this_turn[i].ctype)
+                if data[0].ctype not in cards_played:
+                    self._plus_power(player, 2)
 
     def play_action(self, player):
+        cards_played = set()
         for card in player.played.contents:
-            self.cards_played.add(card.ctype)
-        player.played.plus_power(len(self.cards_played) * 2)
+            if card.ctype != CardType.WEAKNESS:
+                cards_played.add(card.ctype)
+        self._plus_power(player, len(cards_played) * 2)
         player.triggers.append(self.trigger)
         return 0
 
     def first_apearance(self):
         instruction_text = "Choose a hero to destroy."
         for p in globe.boss.players:
-            cards = []
-            for card in p.hand.contents:
-                if card.ctype_eq(cardtype.HERO):
-                    cards.append(card)
-            for card in p.discard.contents:
-                if card.ctype_eq(cardtype.HERO):
-                    cards.append(card)
-            if len(cards) > 0:
-                card_to_destroy = effects.choose_one_of(instruction_text, p, cards,
-                                                    ai_hint.WORST)
-                if card_to_destroy:
-                    card_to_destroy.destroy(player)
+            if effects.attack(p, self):
+                cards = []
+                for card in p.hand.contents:
+                    if card.ctype_eq(CardType.HERO):
+                        cards.append(card)
+                for card in p.discard.contents:
+                    if card.ctype_eq(CardType.HERO):
+                        cards.append(card)
+                if len(cards) > 0:
+                    card_to_destroy = effects.choose_one_of(instruction_text, p, cards,
+                                                            source=self, hint=ai_hint.WORST)
+                    card_to_destroy.destroy(p)
         return
 
 
@@ -1463,7 +1525,7 @@ class graves(card_frame.card):
     name = "Graves"
     vp = 5
     cost = 9
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = ("+4 Power and you may put a card from your discard pile on top of "
             "your deck. FIRST APPEARANCE -- ATTACK: Each player puts a card "
@@ -1477,12 +1539,12 @@ class graves(card_frame.card):
     image = image_path + "Graves 9.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(4)
+        self._plus_power(player, 4)
         instruction_text = "Select a card to put on the top of your deck"
         if len(player.discard.contents) > 0:
             choosen = effects.may_choose_one_of(instruction_text, player,
-                                            player.discard.contents,
-                                            ai_hint.RANDOM)
+                                                player.discard.contents,
+                                                source=self, hint=ai_hint.RANDOM)
             if choosen:
                 player.deck.add(choosen.pop_self())
         return 0
@@ -1491,18 +1553,20 @@ class graves(card_frame.card):
         pcards = []
         it = "Select a card to be destroyed"
         for p in globe.boss.players:
-            choosen = effects.choose_one_of(it, p, p.hand.contents,
-                                            ai_hint.RANDOM)
-            pcards.append([p, choosen.cost])
-            choosen.destroy(p)
-        pcards.sort(reverse=True,key=lambda x: x[1])
-        highest = pcards[0][1]
-        count = 0
-        for x in pcards:
-            if x[1] == highest:
-                count += 1
-        if count == 1:
-            pcards[0][0].draw_card(2)
+            if effects.attack(p, self) and len(p.hand.contents) > 0:
+                choosen = effects.choose_one_of(it, p, p.hand.contents,
+                                                source=self, hint=ai_hint.WORST)
+                pcards.append([p, choosen.cost])
+                choosen.destroy(p)
+        if len(pcards) > 0:
+            pcards.sort(reverse=True, key=lambda x: x[1])
+            highest = pcards[0][1]
+            count = 0
+            for x in pcards:
+                if x[1] == highest:
+                    count += 1
+            if count == 1:
+                pcards[0][0].draw_card(2)
         return
 
 
@@ -1510,7 +1574,7 @@ class hel(card_frame.card):
     name = "H'el"
     vp = 5
     cost = 9
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = ("Reveal and draw cards from the top of your deck until you have "
             "drawn 7 or greater cost worth of cards.  "
@@ -1526,28 +1590,39 @@ class hel(card_frame.card):
     def play_action(self, player):
         card_costs = 0
         while card_costs < 7:
-            card = player.reveal_card()
-            player.draw_card()
-            card_costs += card.cost
+            # card = player.reveal_card()
+            drawn_card = player.draw_card()[0]
+            effects.reveal(f"{player.persona.name} is drawing {drawn_card.name}",player,drawn_card)
+            card_costs += drawn_card.cost
         return 0
 
     def first_apearance(self):
-        instruction_text = ("hoose one of them with cost 1 or greater, "
-                            "then destroy it")
+        instruction_text = ("choose one of them with cost 1 or greater, "
+                            "then destroy it.")
         for p in globe.boss.players:
-            cards = []
-            while len(cards) < 3:
-                cards.append(p.reveal_card())
-            for card in cards:
-                if card.cost < 1:
+            if effects.attack(p, self):
+                top_cards = []
+                for i in range(3):
+                    to_add = p.reveal_card()
+                    if to_add is not None:
+                        top_cards.append(to_add)
+                        to_add.pop_self()
+                    else:
+                        break
+
+                effects.reveal(f"There cards were on top of {p.persona.name}'s deck.",p,top_cards)
+
+                to_maybe_destroy = []
+                for card in top_cards:
+                    if card.cost >= 1:
+                        to_maybe_destroy.append(card)
+
+                if len(to_maybe_destroy) > 0:
+                    choosen = effects.choose_one_of(instruction_text, p, to_maybe_destroy, source=self, hint=ai_hint.WORST)
+                    choosen.destroy(p)
+                    top_cards.remove(choosen)
+                for card in top_cards:
                     p.discard_a_card(card)
-                    cards.pop(card)
-            choosen = effects.choose_one_of(instruction_text, p, cards,
-                                            ai_hint.WORST)
-            choosen.destroy()
-            cards.pop(choosen)
-            for card in cards:
-                p.discard_a_card(card)
         return
 
 
@@ -1555,7 +1630,7 @@ class hector_hammond(card_frame.card):
     name = "Hector Hammond"
     vp = 6
     cost = 11
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = ("You may put up to two cards from your discard pile into your "
             "hand. If you choose not to, +3 Power. "
@@ -1572,29 +1647,30 @@ class hector_hammond(card_frame.card):
         instruction_text = ("You may put up to two cards from your discard "
                             "pile into your hand. If you choose not to, +3 "
                             "Power.")
-        choosen = None
-        if len(player.discard.contents) > 0:
-            choosen = effects.may_choose_one_of(instruction_text, player,
-                                                player.discard.contents,
-                                                ai_hint.BEST)
-        if choosen:
-            player.hand.add(choosen.pop_self())
-            choosen = effects.may_choose_one_of(instruction_text, player,
-                                                player.discard.contents,
-                                                ai_hint.BEST)
-            if choosen:
-                player.hand.add(choosen.pop_self())
-        else:
-            player.played.plus_power(3)
+        added = []
+        for i in range(2):
+            if len(player.discard.contents) > 0:
+                choosen = effects.may_choose_one_of(instruction_text, player,
+                                                    player.discard.contents,
+                                                    source=self, hint=ai_hint.BEST)
+                if choosen is not None:
+                    player.hand.add(choosen.pop_self())
+                    added.append(choosen)
+                else:
+                    break
+
+        if len(added) == 0:
+            self._plus_power(player, 3)
         return 0
 
     def first_apearance(self):
         for p in globe.boss.players:
-            card = globe.boss.main_deck.contents[-1]
-            p.gain(card)
-            if card.cost >= 4:
-                p.gain_a_weakness()
-                p.gain_a_weakness()
+            if effects.attack(p, self):
+                card = globe.boss.main_deck.draw()
+                p.gain(card)
+                if card.cost >= 4:
+                    p.gain_a_weakness()
+                    p.gain_a_weakness()
         return
 
 
@@ -1602,7 +1678,7 @@ class helspont(card_frame.card):
     name = "Helspont"
     vp = 5
     cost = 10
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = ("You may put any number of cards of one card type and with cost 3 "
             "or less from your discard pile into your hand. If you choose not "
@@ -1619,42 +1695,37 @@ class helspont(card_frame.card):
         choosen = None
         for card in player.discard.contents:
             if card.cost <= 3:
-                cards.append(cards)
-        if len(cards) > 0:
-            choosen = effects.may_choose_one_of(it, player, cards, ai_hint.BEST)
-        if choosen:
+                cards.append(card)
+        card_taken = False
+        while len(cards) > 0:
+            choosen = effects.may_choose_one_of(it, player, cards, source=self, hint=ai_hint.BEST)
+            if choosen is None:
+                break
+            card_taken = True
             player.hand.add(choosen.pop_self())
-            for card_index in range(len(cards) - 1, -1, -1):
-                if cards[card_index].ctype != choosen.ctype:
-                    cards.pop(card_index)
-            while len(cards) > 0:
-                choosen = effects.may_choose_one_of(it, player, cards,
-                                                    ai_hint.BEST)
-                if choosen:
-                    player.hand.add(choosen.pop_self)
-                    cards.pop(choosen)
-        else:
-            player.played.plus_power(3)
+            cards.remove(choosen)
+        if not card_taken:
+            self._plus_power(player, 3)
         return 0
 
     def first_apearance(self):
         it = "Discard a location you control"
         for p in globe.boss.players:
-            locations = []
-            for card in p.ongoing.contents:
-                if card.ctype_eq(cardtype.LOCATION):
-                    locations.append(card)
-            if len(locations) != 0:
-                result = effects.choose_one_of(it, p, locations,
-                                               ai_hint.WORST)
-                p.discard_a_card(result)
-            else:
-                p.discard_a_card(
-                    effects.choose_one_of("Discard a Card", p, p.hand.contents,
-                                          ai_hint.WORST))
-                p.discard_a_card(
-                    effects.choose_one_of("Discard a Card", p, p.hand.contents,
-                                          ai_hint.WORST))
+            if effects.attack(p, self):
+                locations = []
+                for card in p.ongoing.contents:
+                    if card.ctype_eq(CardType.LOCATION):
+                        locations.append(card)
+                if len(locations) > 0:
+                    result = effects.choose_one_of(it, p, locations,
+                                                   source=self, hint=ai_hint.WORST)
+                    p.discard_a_card(result)
+                else:
+                    for i in range(2):
+                        if len(p.hand.contents) > 0:
+                            p.discard_a_card(
+                                effects.choose_one_of(f"Discard a Card {i}/2", p, p.hand.contents,
+                                                      source=self, hint=ai_hint.WORST))
         return
 
 
@@ -1662,7 +1733,7 @@ class mongul(card_frame.card):
     name = "Mongul"
     vp = 6
     cost = 11
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = ("+2 Power and draw two cards. Then destroy a card in your hand. "
             "FIRST APPEARANCE -- ATTACK: Each player discards a Power Ring or "
@@ -1670,44 +1741,42 @@ class mongul(card_frame.card):
     image = image_path + "Mongul 11.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(2)
+        self._plus_power(player, 2)
         player.draw_card(2)
         it = "Choose a card to destroy from your hand"
-        choosen = effects.choose_one_of(it, player, player.hand.contents,
-                                        ai_hint.WORST)
-        if choosen:
-            choosen.destroy()
+        if len(player.hand.contents) > 0:
+            choosen = effects.choose_one_of(it, player, player.hand.contents,
+                                            source=self, hint=ai_hint.WORST)
+            choosen.destroy(player)
         return 0
 
     def first_apearance(self):
         for p in globe.boss.players:
-            cards = []
-            it_ring = "Select a ring to discard"
-            it = "Select a random card to discard."
-            has_ring = False
-            for card in p.hand.contents:
-                if "power ring" in card.name.lower():
-                    cards.append(card)
-                    hans_ring = True
-                else:
-                    card.image = "images/back.png"
-                    cards.append(card)
-            if has_ring and len(cards) > 1:
-                choosen = effects.choose_one_of(it_ring, p, cards,
-                                                ai_hint.WORST)
-                p.discard_a_card(choosen)
-            else:
-                for i in range(2):
-                    choosen = effects.choose_one_of(it, p, cards,
-                                                    ai_hint.RANDOM)
-                    p.discard_a_card(choosen)
+            if effects.attack(p, self):
+                cards = []
+                it_ring = "You may discard a power right, if not, discard two random cards."
+                it = "Select a random card to discard."
+                has_ring = False
+                for card in p.hand.contents:
+                    if "power ring" in card.name.lower():
+                        cards.append(card)
+
+                if len(cards) > 0:
+                    choosen = effects.may_choose_one_of(it_ring, p, cards,
+                                                        source=self, hint=ai_hint.WORST)
+                    if choosen is not None:
+                        p.discard_a_card(choosen)
+                        return
+                for _ in range(2):
+                    p.discard_a_card(random.choice(p.hand.contents))
+        return
 
 
 class mr_freeze(card_frame.card):
     name = "Mr. Freeze"
     vp = 5
     cost = 9
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = ("You may gain all Equipment from the Line-Up and put them into "
             "your hand. If you choose not to, +3 Power. "
@@ -1718,38 +1787,41 @@ class mr_freeze(card_frame.card):
 
     def play_action(self, player):
         it = ("You may gain all Equipment from the Line-Up and put them into "
-              "your hand")
+              "your hand, (otherwise, +3 power)")
         cards = []
         choice = None
         for card in globe.boss.lineup.contents:
-            if card.ctype_eq(cardtype.EQUIPMENT):
+            if card.ctype_eq(CardType.EQUIPMENT):
                 cards.append(card)
         if len(cards) > 0:
-            choice = effects.ok_or_no(it, player, cards, ai_hint.IFBAD)
-        if choice:
-            for card in cards:
-                card.set_owner(player)
-                player.hand.contents.append(card.pop_self())
-        else:
-            player.played.plus_power(3)
+            choice = effects.ok_or_no(it, player, None, ai_hint.ALWAYS)
+            if choice:
+                for card in cards:
+                    player.gain(card)
+                    player.hand.contents.append(card.pop_self())
+                return 0
+        self._plus_power(player, 3)
         return 0
 
     def first_apearance(self):
         it = "Choose a card to put into the lineup."
         for card in globe.boss.lineup.contents:
-            if card.ctype_eq(cardtype.EQUIPMENT):
-                card.destroy(player)
+            if card.ctype_eq(CardType.EQUIPMENT):
+                card.destroy(None)
 
         for p in globe.boss.players:
-            cards = []
-            for card in p.hand.contents:
-                if card.ctype_eq(cardtype.EQUIPMENT):
-                    cards.append(card)
-            for card in p.discard.contents:
-                if card.ctype_eq(cardtype.EQUIPMENT):
-                    cards.append(card)
-            choosen = effects.choose_one_of(it, p, cards, ai_hint.WORST)
-            globe.boss.lineup.add(choosen.pop_self())
+            if effects.attack(p, self):
+                cards = []
+                for card in p.hand.contents:
+                    if card.ctype_eq(CardType.EQUIPMENT):
+                        cards.append(card)
+                for card in p.discard.contents:
+                    if card.ctype_eq(CardType.EQUIPMENT):
+                        cards.append(card)
+                if len(cards) > 0:
+                    choosen = effects.choose_one_of(it, p, cards, source=self, hint=ai_hint.WORST)
+                    choosen.set_owner(owners.LINEUP)
+                    globe.boss.lineup.add(choosen.pop_self())
         return
 
 
@@ -1757,7 +1829,7 @@ class nekron(card_frame.card):
     name = "Nekron"
     vp = 6
     cost = 12
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = ("Destroy up to three cards in your hand and/or discard pile. "
             "For each you destroy, draw a card. "
@@ -1768,51 +1840,45 @@ class nekron(card_frame.card):
     image = image_path + "Nekron 12.jpg"
 
     def play_action(self, player):
-        cards = []
+
         it = ("Destroy up to three cards in your hand and/or discard pile. "
               "For each you destroy, draw a card.")
-        for card in player.hand.contents:
-            cards.append(card)
-        for card in player.discard.contents:
-            cards.append(card)
+        cards = player.hand.contents.copy()
+        cards.extend(player.discard.contents)
+
         destroyed_total = 0
         for i in range(3):
-            choosen = effects.may_choose_one_of(it, player, cards,
-                                                ai_hint.WORST)
-            if choosen:
-                choosen.destory(player)
-                destroyed_total += 1
+            if len(cards) > 0:
+                choosen = effects.may_choose_one_of(it, player, cards,
+                                                    source=self, hint=ai_hint.WORST)
+                if choosen:
+                    cards.remove(choosen)
+                    choosen.destroy(player)
+                    destroyed_total += 1
+                else:
+                    break
         if destroyed_total > 0:
             player.draw_card(destroyed_total)
         return 0
 
     def first_apearance(self):
         player_totals = []
-        it_destroy = "Choose a random card to destroy"
         it = "Choose a card to discard"
         for p in globe.boss.players:
-            total_cost = 0
-            for card in p.hand.contents:
-                total_cost += card.cost
-            player_totals.append([p, total_cost])
-        player_totals.sort(reverse=True,key=lambda x: x[1])
-        highest = []
-        for p in player_totals:
-            if p[1] == player_totals[0][1]:
-                highest.append(p[0])
-        for p in highest:
-            cards = []
-            for card in p.hand.contents:
-                card.image = "images/back.png"
-                cards.append(card)
-            choosen = effects.choose_one_of(it_destroy, p, cards,
-                                            ai_hint.RANDOM)
-            choosen.destroy(p)
-        for p in globe.boss.players:
-            if p not in highest:
-                choosen = effects.choose_one_of(it, p, p.hand.contents,
-                                                ai_hint.WORST)
-                p.discard_a_card(choosen)
+            if effects.attack(p, self):
+                total_cost = 0
+                for card in p.hand.contents:
+                    total_cost += card.cost
+                player_totals.append([p, total_cost])
+        if len(player_totals) > 0:
+            player_totals.sort(reverse=True, key=lambda x: x[1])
+            for p in player_totals:
+                if p[1] == player_totals[0][1]:
+                    random.choice(p[0].hand.contents).destroy(p[0])
+                elif len(p[0].hand.contents) > 0:
+                    choosen = effects.choose_one_of(it, p[0], p[0].hand.contents,
+                                                    source=self, hint=ai_hint.WORST)
+                    p[0].discard_a_card(choosen)
         return
 
 
@@ -1820,7 +1886,7 @@ class trigon(card_frame.card):
     name = "Trigon"
     vp = 6
     cost = 12
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = ("Look at the top two cards of the main deck. Put one into your "
             "hand and the other on the bottom of the main deck. "
@@ -1829,32 +1895,34 @@ class trigon(card_frame.card):
     image = image_path + "Trigon 12.jpg"
 
     def play_action(self, player):
-        it = (
-            "Choose a card to put into your hand and the other on the bottom "
-            "of the main deck")
+        it = "Choose a card to put into your hand, the other will be put on the bottom of the main text."
         top_cards = []
         for i in range(2):
-            next_card = globe.boss.main_deck.reveal_card(public=False)
-            if next_card != None:
+            next_card = globe.boss.main_deck.contents[-1]
+            if next_card is not None:
                 next_card.pop_self()
                 top_cards.append(next_card)
-        choosen = effects.choose_one_of(it, player, top_cards, ai_hint.BEST)
-        if choosen:
+        if len(top_cards) > 0:
+            choosen = effects.choose_one_of(it, player, top_cards, source=self, hint=ai_hint.BEST)
+            player.gain(choosen)
             player.hand.add(choosen.pop_self())
-            top_cards.pop(choosen)
-            globe.boss.main_deck.contents.append(top_cards[0])
+            top_cards.remove(choosen)
+        while len(top_cards) > 0:
+            to_return = top_cards.pop()
+            globe.boss.main_deck.add_bottom(to_return.pop_self())
         return 0
 
     def first_apearance(self):
         it = "Destroy a card with a cost of 1 or greater from your hand"
         for p in globe.boss.players:
-            cards = []
-            for card in p.hand.contents:
-                if card.cost >= 1:
-                    cards.append(card)
-            choosen = effects.choose_one_of(it, p, cards, ai_hint.WORST)
-            if choosen:
-                choosen.destroy(p)
+            if effects.attack(p, self):
+                cards = []
+                for card in p.hand.contents:
+                    if card.cost >= 1:
+                        cards.append(card)
+                if len(cards) > 0:
+                    choosen = effects.choose_one_of(it, p, cards, source=self, hint=ai_hint.WORST)
+                    choosen.destroy(p)
         return
 
 
@@ -1862,26 +1930,17 @@ class vandal_savage(card_frame.card):
     name = "Vandal Savage"
     vp = 4
     cost = 8
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     owner_type = owners.VILLAINDECK
     text = ("When you play this card, leave it in front of you for the rest "
             "of the game. Ongoing: +1 Power.")
     image = image_path + "Vandal Savage 8.jpg"
     ongoing = True
 
-    def trigger(self, ttype, data, player, active, immediate):
-        if globe.DEBUG:
-            print("test", self.name, flush=True)
-        if trigger.test(not immediate, trigger.PLAY, self.trigger, player,
-                        ttype) and len(player.played.contents) == 1:
-            if globe.DEBUG:
-                print("active", self.name, flush=True)
-            player.played.plus_power(1)
-
     def play_action(self, player):
         if self not in player.ongoing.contents:
             player.ongoing.add(self.pop_self())
-        player.triggers.append(self.trigger)
+        self._plus_power(player, 1)
         return 0
 
 
@@ -1890,7 +1949,7 @@ class black_lantern_corps(card_frame.card):
     name = "Black Lantern Corps"
     vp = 2
     cost = 6
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     attack = True
     attack_text = "Each foe gains a Weakness"
     text = ("+2 Power. Attack: Each foe gains a Weakness. If one or more foes "
@@ -1898,19 +1957,17 @@ class black_lantern_corps(card_frame.card):
     image = image_path + "Black Lantern Corps.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(2)
+        self._plus_power(player, 2)
         self.attack_action(player)
         return 0
 
     def attack_action(self, by_player):
-        no_weakness = 0
+        gained_a_weekness = 0
         for p in globe.boss.players:
-            if p != by_player:
+            if p != by_player and effects.attack(p, self, by_player):
                 if p.gain_a_weakness():
-                    continue
-                else:
-                    no_weakness += 1
-        if no_weakness > 0:
+                    gained_a_weekness += 1
+        if gained_a_weekness != len(globe.boss.players) - 1:
             by_player.draw_card()
         return
 
@@ -1919,12 +1976,12 @@ class brother_blood(card_frame.card):
     name = "Brother Blood"
     vp = 2
     cost = 6
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = ("+4 Power")
     image = image_path + "Brother Blood.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(4)
+        self._plus_power(player, 4)
         return 0
 
 
@@ -1932,7 +1989,7 @@ class deadshot(card_frame.card):
     name = "Deadshot"
     vp = 1
     cost = 2
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     attack = True
     attack_text = ("Reveal the top card of your deck. If it costs more than "
                    "1 discard it.")
@@ -1941,15 +1998,15 @@ class deadshot(card_frame.card):
     image = image_path + "Deadshot 2.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(1)
+        self._plus_power(player, 1)
         self.attack_action(player)
         return 0
 
     def attack_action(self, by_player):
         for p in globe.boss.players:
-            if p != by_player:
-                top_card = p.reveal_card()
-                if top_card != None and top_card.cost >= 1:
+            if p != by_player and effects.attack(p, self, by_player):
+                top_card = p.reveal_card(public=True)
+                if top_card is not None and top_card.cost >= 1:
                     p.discard_a_card(top_card)
         return
 
@@ -1958,20 +2015,20 @@ class dr_sivana(card_frame.card):
     name = "Dr. Sivana"
     vp = 1
     cost = 4
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = ("+2 Power. You may put a Super Power from your discard pile on "
             "top of your deck.")
     image = image_path + "Dr Sivana.jpg"
 
     def play_action(self, player):
         it = ("You may pick a Super Power to put on top of your deck")
-        player.played.plus_power(2)
+        self._plus_power(player, 2)
         cards = []
         for card in player.discard.contents:
-            if card.ctype_eq(cardtype.SUPERPOWER):
+            if card.ctype_eq(CardType.SUPERPOWER):
                 cards.append(card)
         if len(cards) > 0:
-            choosen = effects.may_choose_one_of(it, player, cards, ai_hint.BEST)
+            choosen = effects.may_choose_one_of(it, player, cards, source=self, hint=ai_hint.BEST)
             if choosen:
                 player.deck.add(choosen.pop_self())
         return 0
@@ -1981,7 +2038,7 @@ class granny_goodness(card_frame.card):
     name = "Granny Goodness"
     vp = 1
     cost = 5
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = ("Remove a Hero or Villain from the Line-Up. Play it, then return "
             "it to the Line-Up at the end of your turn.")
     image = image_path + "Granny Goodness.jpg"
@@ -1991,14 +2048,12 @@ class granny_goodness(card_frame.card):
                             "then return it at the end of the turn")
         assemble = []
         for c in globe.boss.lineup.contents:
-            if c.ctype_eq(cardtype.VILLAIN) or c.ctype_eq(cardtype.HERO):
+            if c.ctype_eq(CardType.VILLAIN) or c.ctype_eq(CardType.HERO):
                 assemble.append(c)
         if len(assemble) > 0:
-            choosen = effects.choose_one_of(instruction_text, player, assemble,
-                                            ai_hint.BEST)
-            self.played_card = choosen
-            choosen.pop_self()
-            player.played.play(choosen)
+            choosen = effects.choose_one_of(instruction_text, player, assemble, source=self,
+                                            hint=ai_hint.BEST)
+            player.play_and_return(choosen, globe.boss.lineup)
         return 0
 
 
@@ -2006,13 +2061,13 @@ class jervis_tetch(card_frame.card):
     name = "Jervis Tetch"
     vp = 1
     cost = 3
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = ("+1 Power. Look at the top card of your deck. Destroy it or "
             "discard it.")
     image = image_path + "Jervis Tetch.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(1)
+        self._plus_power(player, 1)
         it = "Would you like to destroy this card? If not this card will be discarded"
         top_card = player.reveal_card()
         if effects.ok_or_no(it, player, top_card, ai_hint.IFBAD):
@@ -2026,39 +2081,30 @@ class killer_croc(card_frame.card):
     name = "Killer Croc"
     vp = 1
     cost = 4
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = ("If you play or have played another Villain this turn, +3 Power. "
             "Otherwise, +2 Power.")
     image = image_path + "Killer Croc.jpg"
     power = 2
 
     def trigger(self, ttype, data, player, active, immediate):
-        if globe.DEBUG:
-            print("test", self.name, flush=True)
-        if trigger.test(not immediate, \
-                        trigger.PLAY, \
-                        self.trigger, \
-                        player, ttype) \
-                and data[0].ctype_eq(cardtype.VILLAIN):
+        if trigger.test(not immediate,
+                        trigger.PLAY,
+                        self.trigger,
+                        player, ttype) and data[0].ctype_eq(CardType.VILLAIN) and data[0] != self:
             if globe.DEBUG:
                 print("active", self.name, flush=True)
-            if self.power == 2:
-                self.power = 3
-                player.played.plus_power(1)
-                player.triggers.remove(self.trigger)
-            else:
-                player.triggers.remove(self.trigger)
-            return True
+            self._plus_power(player, 1)
+            player.triggers.remove(self.trigger)
 
     def play_action(self, player):
         found = False
-        for card in player.played.contents:
-            if card.ctype_eq(cardtype.VILLAIN) and card.name != self.name:
-                found = True
-                self.power = 3
-        player.played.plus_power(self.power)
-        if not found:
-            player.triggers.append(self.trigger)
+        for card in player.played.played_this_turn:
+            if card.ctype_eq(CardType.VILLAIN) and card.name != self.name:
+                self._plus_power(player, 3)
+                return 0
+        self._plus_power(player, 2)
+        player.triggers.append(self.trigger)
         return 0
 
 
@@ -2066,7 +2112,7 @@ class larfleeze(card_frame.card):
     name = "Larfleeze"
     vp = 0
     cost = 7
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = (
         "You may gain up to 5 cost worth of cards from the Line-Up and put "
         "them into your hand. If you choose not to, +3 Power. "
@@ -2086,50 +2132,41 @@ class larfleeze(card_frame.card):
             "You may gain up to 5 cost worth of cards from the Line-Up and put "
             "them into your hand, if not +3 power")
         total_cost = 5
-        cards = self.get_cards(total_cost,globe.boss.lineup.contents)
-        choosen = effects.may_choose_one_of(it, player, cards, ai_hint.IFGOOD)
-        if choosen:
-            total_cost -= choosen.cost
-            player.hand.add(choosen.pop_self())
-            if total_cost != 0:
-                cards = self.get_cards(total_cost,globe.boss.lineup.contents)
-                choosen = effects.may_choose_one_of(it, player, cards,
-                                                    ai_hint.IFGOOD)
-                if choosen:
-                    choosen.set_owner(player)
-                    player.hand.add(choosen.pop_self())
-        else:
-            player.played.plus_power(3)
+        cards = self.get_cards(total_cost, globe.boss.lineup.contents)
+        gained_card = False
+        while len(cards) > 0:
+            choosen = effects.may_choose_one_of(it, player, cards, source=self, hint=ai_hint.BEST)
+            if choosen:
+                total_cost -= choosen.cost
+                player.gain(choosen)
+                player.hand.add(choosen.pop_self())
+                gained_card = True
+            else:
+                break
+            cards = self.get_cards(total_cost, globe.boss.lineup.contents)
+        if not gained_card:
+            self._plus_power(player, 3)
         return 0
 
     def calculate_vp(self, all_cards):
-        vp_total = 0
-        count = 0
-        for card in all_cards:
-            if count != 7:
-                count += 1
-            else:
-                count = 0
-                vp_total += 1
-        return vp_total
+        return int(len(all_cards) / 7)
 
 
 class manhunter(card_frame.card):
     name = "Manhunter"
     vp = 1
     cost = 3
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = ("+1 Power and an additional +2 Power for each Manhunter in your "
             "discard pile.")
     image = image_path + "Manhunter.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(1)
-        power_total = 0
+        power_total = 1
         for card in player.discard.contents:
             if card.name == self.name:
                 power_total += 2
-        player.played.plus_power(power_total)
+        self._plus_power(player, power_total)
         return 0
 
 
@@ -2137,26 +2174,24 @@ class mr_zsasz(card_frame.card):
     name = "Mr. Zsasz"
     vp = 1
     cost = 3
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     attack = True
     attack_text = ("Each foe reveals the top card of his deck. "
                    "If its cost is odd, that player gains a Weakness.")
-    text = ("+1 Power. Attack: Each foe reveals the top card of his deck. "
+    text = ("+2 Power. Attack: Each foe reveals the top card of his deck. "
             "If its cost is odd, that player gains a Weakness.")
     image = image_path + "Mr Zsasz.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(1)
+        self._plus_power(player, 2)
         self.attack_action(player)
         return 0
 
     def attack_action(self, by_player):
         for p in globe.boss.players:
-            if p != by_player:
-                top_card = p.reveal_card()
-                if top_card.cost % 2 == 0:
-                    pass
-                else:
+            if p != by_player and effects.attack(p, self, by_player):
+                top_card = p.reveal_card(public=True)
+                if top_card.cost % 2 == 1:
                     p.gain_a_weakness()
         return
 
@@ -2165,59 +2200,51 @@ class ocean_master(card_frame.card):
     name = "Ocean Master"
     vp = 1
     cost = 2
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = ("If you play or have played another Villain this turn, you may "
             "destroy a card in your hand or discard pile.")
     image = image_path + "Ocean Master.jpg"
 
-    def trigger(self, ttype, data, player, active, immediate):
+    def destroy_a_card_in_hand_or_discard(self, player):
         it = "You may destroy a card in your hand or discard pile."
         cards = []
-        for card in player.discard.contents:
-            cards.append(card)
-        for card in player.hand.contents:
-            cards.append(card)
-        if globe.DEBUG:
-            print("test", self.name, flush=True)
-        if trigger.test(not immediate, \
-                        trigger.PLAY, \
-                        self.trigger, \
-                        player, ttype) \
-                and data[0].ctype_eq(cardtype.VILLAIN):
-            if globe.DEBUG:
-                print("active", self.name, flush=True)
+        cards.extend(player.discard.contents)
+        cards.extend(player.hand.contents)
+        if len(cards) > 0:
             choosen = effects.may_choose_one_of(it, player, cards,
-                                                ai_hint.WORST)
+                                                source=self, hint=ai_hint.WORST)
             if choosen:
                 choosen.destroy(player)
+                return True
+        return False
+
+    def trigger(self, ttype, data, player, active, immediate):
+        if trigger.test(not immediate,
+                        trigger.PLAY,
+                        self.trigger,
+                        player, ttype) and data[0].ctype_eq(CardType.VILLAIN):
+            if globe.DEBUG:
+                print("active", self.name, flush=True)
+            if self.destroy_a_card_in_hand_or_discard(player):
                 player.triggers.remove(self.trigger)
-            return True
 
     def play_action(self, player):
         found = False
-        it = "You may destroy a card in your hand or discard pile."
-        cards = []
-        for card in player.discard.contents:
-            cards.append(card)
-        for card in player.hand.contents:
-            cards.append(card)
-        for card in player.played.contents:
-            if card.ctype_eq(cardtype.VILLAIN) and not found:
+        for card in player.played.played_this_turn:
+            if card.ctype_eq(CardType.VILLAIN) and not found:
                 found = True
-                choosen = effects.may_choose_one_of(it, player, cards,
-                                                    ai_hint.WORST)
-                if choosen:
-                    choosen.destroy(player)
+                self.destroy_a_card_in_hand_or_discard(player)
         if not found:
             player.triggers.append(self.trigger)
         return 0
 
 
+# EDITED UP TO HERE
 class parasite(card_frame.card):
     name = "Parasite"
     vp = 1
     cost = 4
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     attack = True
     attack_text = ("Each foe reveals his hand and discards a card "
                    "with cost 3 or greater. Each who does may put a Punch card from "
@@ -2228,29 +2255,27 @@ class parasite(card_frame.card):
     image = image_path + "Parasite.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(2)
+        self._plus_power(player, 2)
         self.attack_action(player)
         return 0
 
     def attack_action(self, by_player):
-        it = "Choose a card to from your hand to discard with a cost of 3 or greater"
+        it = "Choose a card from your hand to discard with a cost of 3 or greater"
         for p in globe.boss.players:
-            discarded = False
-            if p != by_player:
+            if p != by_player and effects.attack(p, self, by_player):
+                effects.reveal(f"This was {p.persona.name}'s hand", p, p.hand.contents)
+                discarded = False
                 cards = []
                 for card in p.hand.contents:
                     if card.cost >= 3:
                         cards.append(card)
                 if len(cards) > 0:
-                    choosen = effects.choose_one_of(it, p, cards, ai_hint.WORST)
-                    if choosen:
-                        p.discard_a_card(choosen)
-                        discarded = True
-                if discarded and len(p.discard.contents) > 0:
+                    choosen = effects.choose_one_of(it, p, cards, source=self, hint=ai_hint.WORST)
+                    p.discard_a_card(choosen)
                     for card in p.discard.contents:
                         if card.name == "Punch":
-                            it_ok = "Would you like to put a punch into your hand?"
-                            if effects.ok_or_no(it_ok, p, card,
+                            it_ok = "Would you like to put a punch from your discard pile into your hand?"
+                            if effects.ok_or_no(it_ok, p, self,
                                                 ai_hint.ALWAYS):
                                 p.hand.add(card.pop_self())
                             break
@@ -2261,7 +2286,7 @@ class red_lantern_corps(card_frame.card):
     name = "Red Lantern Corps"
     vp = 1
     cost = 5
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = (
         "You may destroy a card in your hand. If you do, +3 Power. Otherwise, +1 Power.")
     image = image_path + "Red Lantern Corps.jpg"
@@ -2271,12 +2296,12 @@ class red_lantern_corps(card_frame.card):
         choosen = None
         if len(player.hand.contents) > 0:
             choosen = effects.may_choose_one_of(it, player, player.hand.contents,
-                                                ai_hint.WORST)
+                                                source=self, hint=ai_hint.WORST)
         if choosen:
             choosen.destroy(player)
-            player.played.plus_power(3)
+            self._plus_power(player, 3)
         else:
-            player.played.plus_power(1)
+            self._plus_power(player, 1)
         return 0
 
 
@@ -2284,30 +2309,26 @@ class talon(card_frame.card):
     name = "Talon"
     vp = 1
     cost = 1
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = (
         "+2 Power if you play or have played a Starter card this turn. Otherwise, no power.")
     image = image_path + "Talon.jpg"
 
     def trigger(self, ttype, data, player, active, immediate):
-        if globe.DEBUG:
-            print("test", self.name, flush=True)
-        if trigger.test(not immediate, \
-                        trigger.PLAY, \
-                        self.trigger, \
-                        player, ttype) \
-                and data[0].ctype_eq(cardtype.STARTER):
+        if trigger.test(not immediate,
+                        trigger.PLAY,
+                        self.trigger,
+                        player, ttype) and data[0].ctype_eq(CardType.STARTER):
             if globe.DEBUG:
                 print("active", self.name, flush=True)
-            player.played.plus_power(2)
+            self._plus_power(player, 2)
             player.triggers.remove(self.trigger)
-            return True
 
     def play_action(self, player):
         found = False
-        for card in player.played.contents:
-            if card.ctype_eq(cardtype.STARTER):
-                player.played.plus_power(2)
+        for card in player.played.played_this_turn:
+            if card.ctype_eq(CardType.STARTER):
+                self._plus_power(player, 2)
                 found = True
                 break
         if not found:
@@ -2319,20 +2340,20 @@ class the_demon_etrigan(card_frame.card):
     name = "The Demon Etrigan"
     vp = 2
     cost = 7
-    ctype = cardtype.VILLAIN
+    ctype = CardType.VILLAIN
     text = (
         "+4 Power. You may put a Hero from your discard pile on top of your deck.")
     image = image_path + "The Demon Etrigan.jpg"
 
     def play_action(self, player):
-        player.played.plus_power(4)
+        self._plus_power(player, 4)
         it = "You may put a Hero from your discard pile on top of your deck."
         cards = []
         for card in player.discard.contents:
-            if card.ctype_eq(cardtype.HERO):
+            if card.ctype_eq(CardType.HERO):
                 cards.append(card)
         if len(cards) > 0:
-            choosen = effects.may_choose_one_of(it, player, card, ai_hint.BEST)
+            choosen = effects.may_choose_one_of(it, player, cards, source=self, hint=ai_hint.BEST)
             if choosen:
                 player.deck.add(choosen.pop_self())
         return 0

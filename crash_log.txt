@@ -2021,7 +2021,8 @@ Traceback (most recent call last):
     globe.boss.players[0].controler = controlers.human(globe.boss.players[0],False)
 NameError: name 'controlers' is not defined
 
-
+-----
+Aug 10, 2022
 
 
 

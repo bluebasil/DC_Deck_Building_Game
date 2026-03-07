@@ -1,22 +1,24 @@
 import threading
 
-class coach:
-	header = ""
-	content = None
 
-	def __init__(self,header,content):
-		self.header = header
-		self.content = content
+class coach:
+    header = ""
+    content = None
+
+    def __init__(self, header, content):
+        self.header = header
+        self.content = content
+
 
 class question:
-	text = ""
-	card = None
-	options = []
+    text = ""
+    card = None
+    options = []
 
-	def __init__(self,text,card,options):
-		self.text = text
-		self.card = card
-		self.options = options
+    def __init__(self, text, card, options):
+        self.text = text
+        self.card = card
+        self.options = options
 
 
 class event_bus:

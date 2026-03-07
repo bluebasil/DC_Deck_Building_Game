@@ -22,16 +22,6 @@ def initialize_supervillains():
 	assemble.append(cards.the_flash())
 	return assemble
 
-deck = {}
-
-def initialize_deck():
-	assemble = []
-	for card,num in deck.items():
-		for i in range(num):
-			assemble.append(card())
-	random.shuffle(assemble)
-	return assemble
-
 deck = {cards.amanda_waller: 2, \
 		cards.atomica: 2, \
 		cards.bizarro_power: 2, \
