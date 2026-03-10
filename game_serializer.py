@@ -2,21 +2,22 @@
 Serialize game state to JSON-compatible dicts for the web frontend.
 """
 import globe
-from constants import cardtype, owners, option
+from constants import owners, option
+from constants2 import CardType
 from frames.card_frame import card as CardBase
 from frames.persona_frame import persona as PersonaBase
 from frames.actions import special_action
 
 CARDTYPE_NAMES = {
-    cardtype.ANY: "any",
-    cardtype.STARTER: "starter",
-    cardtype.WEAKNESS: "weakness",
-    cardtype.HERO: "hero",
-    cardtype.VILLAIN: "villain",
-    cardtype.SUPERPOWER: "superpower",
-    cardtype.EQUIPMENT: "equipment",
-    cardtype.LOCATION: "location",
-    cardtype.SPECIALSV: "special_sv",
+    CardType.ANY: "any",
+    CardType.STARTER: "starter",
+    CardType.WEAKNESS: "weakness",
+    CardType.HERO: "hero",
+    CardType.VILLAIN: "villain",
+    CardType.SUPERPOWER: "superpower",
+    CardType.EQUIPMENT: "equipment",
+    CardType.LOCATION: "location",
+    CardType.SPECIALSV: "special_sv",
 }
 
 OPTION_LABELS = {
@@ -129,6 +130,8 @@ def serialize_player(p, human_pid=None):
         # Show full hand only for human player; AI hand shows count only
         "hand": [serialize_card(c) for c in p.hand.contents] if is_human else [],
         "hand_size": p.hand.size(),
+        # Full discard list for human player (used by discard popup)
+        "discard_cards": [serialize_card(c) for c in p.discard.contents] if is_human else [],
         "played": [serialize_card(c) for c in p.played.contents],
         "played_this_turn": [serialize_card(c) for c in p.played.played_this_turn],
         "ongoing": [serialize_card(c) for c in p.ongoing.contents],

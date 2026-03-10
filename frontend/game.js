@@ -23,6 +23,13 @@ let availableSets    = [];
 // Card position registry: card_id → DOM element  (for animation source tracking)
 const cardRegistry = {};
 
+// Drag-to-play state
+let draggedCard = null;
+let draggedEl   = null;
+
+// Action log - list of {playerName, cardName, verb}
+const actionLog = [];
+
 // ── DOM refs ────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 const screens = {
@@ -83,7 +90,6 @@ function handleStateUpdate(newState) {
     return;
   }
   if (newState.phase === 'starting') {
-    // Loading - keep lobby screen but show indicator
     return;
   }
   if (newState.phase === 'choosing_persona') {
@@ -100,9 +106,17 @@ function handleStateUpdate(newState) {
   // Playing phase
   showScreen('game');
   determineMyPid();
-  renderGameBoard(old, newState);
+  updateActionLog(newState);
+
+  // Calculate card movement animations BEFORE re-rendering (needs old cardRegistry positions)
+  const pendingAnims = calcAnimations(newState.events || [], old);
+
+  renderGameBoard(old);
   renderQuery();
   renderTurnIndicator(old, newState);
+
+  // Play animations as overlays after board is updated
+  playAnimations(pendingAnims);
 }
 
 function determineMyPid() {
@@ -165,6 +179,9 @@ $('btn-new-game').addEventListener('click', () => {
   $('btn-start-game').textContent = 'START GAME';
   myPid = null;
   state = null;
+  // Clear action log on new game
+  actionLog.length = 0;
+  renderActionLog();
   showScreen('lobby');
 });
 
@@ -209,7 +226,7 @@ $('btn-confirm-persona').addEventListener('click', () => {
 });
 
 // ── Game Board ──────────────────────────────────────────────────────────────
-function renderGameBoard(old, newState) {
+function renderGameBoard(old) {
   renderOpponents();
   renderSVStack();
   renderLineup(old);
@@ -219,7 +236,7 @@ function renderGameBoard(old, newState) {
 
 function renderOpponents() {
   if (!state) return;
-  const strip = $('opponents-strip');
+  const strip = $('opponents-panels');
   strip.innerHTML = '';
   state.players.forEach(p => {
     if (p.is_human) return;
@@ -276,13 +293,11 @@ function renderSVStack() {
     img.onerror = () => img.style.display = 'none';
     svCard.appendChild(img);
 
-    // Cost badge
     const badge = document.createElement('div');
     badge.className = 'card-cost-badge';
     badge.textContent = sv.top.cost;
     svCard.appendChild(badge);
 
-    // Make buyable if human can afford
     const me = getMyPlayer();
     if (me && isMyTurn() && me.power >= sv.top.cost) {
       svCard.classList.add('buyable');
@@ -306,7 +321,6 @@ function renderLineup(old) {
   const container = $('lineup');
   const me = getMyPlayer();
 
-  // Detect newly added lineup cards for slide-in animation
   const oldIds = old && old.lineup ? new Set(old.lineup.map(c => c.id)) : new Set();
 
   container.innerHTML = '';
@@ -314,7 +328,6 @@ function renderLineup(old) {
     const el = buildGameCard(card, 'lineup');
     const isNew = !oldIds.has(card.id);
 
-    // Check if affordable
     if (me && isMyTurn() && me.power >= card.cost) {
       el.classList.add('buyable');
     }
@@ -325,7 +338,6 @@ function renderLineup(old) {
     cardRegistry[card.id] = el;
 
     if (isNew && old) {
-      // Slide in from deck position
       gsap.from(el, { y: -30, opacity: 0, duration: 0.4, ease: 'back.out(1.4)' });
     }
   });
@@ -348,12 +360,21 @@ function renderPlayArea() {
   // Played cards
   const playedContainer = $('played-cards');
   playedContainer.innerHTML = '';
+
   (me.played || []).forEach(card => {
     const el = buildGameCard(card, 'played');
     addHover(el, card);
     playedContainer.appendChild(el);
     cardRegistry[card.id] = el;
   });
+
+  // Drop hint when play area is empty
+  if ((me.played || []).length === 0) {
+    const hint = document.createElement('div');
+    hint.className = 'drop-hint';
+    hint.textContent = isMyTurn() ? 'Drag or click cards from hand to play' : '—';
+    playedContainer.appendChild(hint);
+  }
 
   // Special options (buttons)
   const specialContainer = $('special-options');
@@ -378,6 +399,8 @@ function renderPlayArea() {
     img.onerror = () => img.style.display = 'none';
     personaWrap.appendChild(img);
     $('my-persona-name').textContent = me.persona.name;
+    // Persona hover shows ability text
+    addPersonaHover(personaWrap, me.persona);
   }
 
   const ongoingZone = $('my-ongoing');
@@ -407,9 +430,16 @@ function renderPlayerHUD() {
   $('deck-value').textContent    = me.deck_size;
   $('discard-value').textContent = me.discard_size;
 
+  // Power bar near lineup
+  const powerBar = $('power-bar');
+  const myTurn = isMyTurn();
+  $('lineup-power-value').textContent = me.power;
+  $('lineup-turn-num').textContent    = state.turn_number || 1;
+  $('power-bar-status').textContent   = myTurn ? 'YOUR TURN' : 'WAITING';
+  powerBar.classList.toggle('my-turn', myTurn);
+
   // End turn button
   const btnEnd = $('btn-end-turn');
-  const myTurn = isMyTurn();
   btnEnd.disabled = !myTurn;
   btnEnd.classList.toggle('my-turn', myTurn);
 
@@ -423,8 +453,8 @@ function renderHand(me) {
   const cards = me.hand || [];
   const count = cards.length;
   const maxW  = zone.offsetWidth || 600;
-  const cardW = 88;
-  const spread = Math.min((maxW - cardW) / Math.max(count - 1, 1), 80);
+  const cardW = 120;  // matches --hand-card-w
+  const spread = Math.min((maxW - cardW) / Math.max(count - 1, 1), 88);
   const maxRot = Math.min(3 * count, 18);
   const totalW = (count - 1) * spread + cardW;
   const startX = (maxW - totalW) / 2;
@@ -432,13 +462,12 @@ function renderHand(me) {
   cards.forEach((card, i) => {
     const fraction = count > 1 ? (i / (count - 1)) - 0.5 : 0;
     const rot   = fraction * maxRot * 2;
-    const yOff  = Math.abs(fraction) * 12;
+    const yOff  = Math.abs(fraction) * 14;
     const xPos  = startX + i * spread;
 
     const el = buildGameCard(card, 'hand');
     el.classList.add('hand-card');
 
-    // Is it playable on my turn?
     if (isMyTurn()) {
       el.classList.add('playable');
       el.onclick = () => playCard(card, el);
@@ -450,9 +479,55 @@ function renderHand(me) {
     el.style.transform       = `rotate(${rot}deg)`;
     el.style.transformOrigin = 'center bottom';
 
+    // Drag to play
+    if (isMyTurn()) {
+      el.draggable = true;
+      el.addEventListener('dragstart', e => {
+        draggedCard = card;
+        draggedEl   = el;
+        el.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', card.id);
+      });
+      el.addEventListener('dragend', () => {
+        draggedCard = null;
+        draggedEl   = null;
+        el.classList.remove('dragging');
+        $('played-cards').classList.remove('drop-active');
+      });
+    }
+
     addHover(el, card);
     zone.appendChild(el);
     cardRegistry[card.id] = el;
+  });
+}
+
+// ── Drop zone ───────────────────────────────────────────────────────────────
+function initDropZone() {
+  const zone = $('played-cards');
+  zone.addEventListener('dragover', e => {
+    if (!isMyTurn() || !draggedCard) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    zone.classList.add('drop-active');
+  });
+  zone.addEventListener('dragleave', e => {
+    // Only remove class if actually leaving the zone (not entering a child)
+    if (!zone.contains(e.relatedTarget)) {
+      zone.classList.remove('drop-active');
+    }
+  });
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drop-active');
+    if (draggedCard && isMyTurn()) {
+      const card = draggedCard;
+      const el   = draggedEl;
+      draggedCard = null;
+      draggedEl   = null;
+      playCard(card, el);
+    }
   });
 }
 
@@ -517,8 +592,12 @@ function sendSpecialAction(specialId) {
 }
 
 function playCard(card, el) {
+  if (!el) {
+    sendCardAction(card.id);
+    return;
+  }
   // Animate card from hand to play area, then send action
-  const playArea = $('played-cards');
+  const playArea  = $('played-cards');
   const targetRect = playArea.getBoundingClientRect();
   const sourceRect = el.getBoundingClientRect();
 
@@ -563,7 +642,6 @@ function renderQuery() {
 
   $('query-text').textContent = q.text;
 
-  // Context card
   const ctxEl = $('query-context-card');
   ctxEl.innerHTML = '';
   if (q.context_card) {
@@ -574,7 +652,6 @@ function renderQuery() {
     ctxEl.appendChild(img);
   }
 
-  // Options
   const optContainer = $('query-options');
   optContainer.innerHTML = '';
 
@@ -606,8 +683,8 @@ function renderQuery() {
     } else if (opt.opt_type === 'button') {
       const btn = document.createElement('button');
       btn.className = 'query-btn';
-      if (opt.action === 2) btn.classList.add('ok'); // OK
-      if (opt.action === 1) btn.classList.add('no'); // NO
+      if (opt.action === 2) btn.classList.add('ok');
+      if (opt.action === 1) btn.classList.add('no');
       btn.textContent = opt.label;
       btn.onclick = () => {
         modal.classList.add('hidden');
@@ -635,7 +712,7 @@ function renderTurnIndicator(old, newState) {
     {
       scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2)',
       onComplete: () => {
-        gsap.to(banner, { opacity: 0, delay: 1.5, duration: 0.4, onComplete: () => banner.classList.add('hidden') });
+        gsap.to(banner, { opacity: 0, delay: 2.5, duration: 0.4, onComplete: () => banner.classList.add('hidden') });
       }
     }
   );
@@ -647,7 +724,6 @@ function renderGameOver() {
   const scoresEl = $('gameover-scores');
   scoresEl.innerHTML = '';
 
-  // Build sorted scores
   const players = state.players.slice();
   const scores  = state.player_scores || [];
   const ranked  = players.map((p, i) => ({
@@ -669,6 +745,80 @@ function renderGameOver() {
   });
 }
 
+// ── Action log ───────────────────────────────────────────────────────────────
+// Uses the events array from the server (populated by globe.add_event()) rather
+// than comparing played_this_turn, so CPU actions are always captured.
+function updateActionLog(newState) {
+  if (!newState) return;
+  const events = newState.events || [];
+  events.forEach(event => {
+    const player = newState.players && newState.players.find(p => p.pid === event.pid);
+    if (!player || player.is_human) return;
+    const name = player.persona ? player.persona.name : `P${event.pid}`;
+    if (event.type === 'play') addLogEntry(name, event.card_name, 'played');
+    if (event.type === 'gain') addLogEntry(name, event.card_name, 'bought');
+  });
+}
+
+function addLogEntry(playerName, cardName, verb) {
+  actionLog.unshift({ playerName, cardName, verb: verb || 'played' });
+  if (actionLog.length > 10) actionLog.pop();
+  renderActionLog();
+}
+
+function renderActionLog() {
+  const container = $('action-log-entries');
+  if (!container) return;
+  container.innerHTML = '';
+  if (actionLog.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'log-entry';
+    empty.style.opacity = '0.35';
+    empty.textContent = 'No moves yet';
+    container.appendChild(empty);
+    return;
+  }
+  actionLog.forEach(entry => {
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    const verbClass = entry.verb === 'bought' ? 'log-verb-buy' : 'log-verb-play';
+    div.innerHTML = `<span class="log-player">${entry.playerName}</span> <span class="${verbClass}">${entry.verb}</span> <span class="log-card">${entry.cardName}</span>`;
+    container.appendChild(div);
+  });
+}
+
+// ── Discard pile popup ────────────────────────────────────────────────────────
+function openDiscardModal() {
+  const me = getMyPlayer();
+  if (!me) return;
+
+  const grid = $('discard-cards-grid');
+  grid.innerHTML = '';
+
+  const cards = me.discard_cards || [];
+  if (cards.length === 0) {
+    grid.innerHTML = '<div class="discard-empty">Discard pile is empty</div>';
+  } else {
+    // Show most recent first (reverse order)
+    [...cards].reverse().forEach(card => {
+      const el = buildGameCard(card, 'discard');
+      addHover(el, card);
+      grid.appendChild(el);
+    });
+  }
+
+  $('discard-modal').classList.remove('hidden');
+}
+
+function closeDiscardModal() {
+  $('discard-modal').classList.add('hidden');
+  hidePreview();
+}
+
+$('hud-discard').addEventListener('click', openDiscardModal);
+$('btn-close-discard').addEventListener('click', closeDiscardModal);
+$('discard-backdrop').addEventListener('click', closeDiscardModal);
+
 // ── Card preview tooltip ─────────────────────────────────────────────────────
 const preview = $('card-preview');
 let previewTimeout = null;
@@ -685,13 +835,27 @@ function addHover(el, card) {
   });
 }
 
+// Persona hover using the same tooltip mechanism
+function addPersonaHover(el, persona) {
+  const fakeCard = {
+    image: persona.image,
+    name:  persona.name,
+    text:  persona.text || '',
+    attack_text: '',
+    cost: '—',
+    vp:   '—',
+    type: 'persona',
+  };
+  addHover(el, fakeCard);
+}
+
 function showPreview(e, card) {
   $('preview-img').src  = imgUrl(card.image);
   $('preview-img').alt  = card.name;
   $('preview-name').textContent = card.name;
   $('preview-text').textContent = card.text || card.attack_text || '';
-  $('preview-cost').textContent = `⚡${card.cost}`;
-  $('preview-vp').textContent   = `★${card.vp}`;
+  $('preview-cost').textContent = `⚡ ${card.cost}`;
+  $('preview-vp').textContent   = `★ ${card.vp}`;
   $('preview-type').textContent = (card.type || '').toUpperCase();
   preview.classList.remove('hidden');
   movePreview(e);
@@ -699,10 +863,10 @@ function showPreview(e, card) {
 
 function movePreview(e) {
   if (preview.classList.contains('hidden')) return;
-  const pw = 240, ph = 320;
-  let x = e.clientX + 16;
-  let y = e.clientY - 80;
-  if (x + pw > window.innerWidth  - 8) x = e.clientX - pw - 16;
+  const pw = 340, ph = 420;
+  let x = e.clientX + 18;
+  let y = e.clientY - 100;
+  if (x + pw > window.innerWidth  - 8) x = e.clientX - pw - 18;
   if (y + ph > window.innerHeight - 8) y = window.innerHeight - ph - 8;
   if (y < 8) y = 8;
   preview.style.left = x + 'px';
@@ -711,6 +875,109 @@ function movePreview(e) {
 
 function hidePreview() {
   preview.classList.add('hidden');
+}
+
+// ── Card movement animations ─────────────────────────────────────────────────
+// Called BEFORE renderGameBoard so old cardRegistry positions are still valid.
+// Returns an array of animation descriptors to be played after re-render.
+function calcAnimations(events, oldState) {
+  const anims = [];
+
+  // ── State-diff: new cards in human hand → draw animation (deck → hand) ──
+  if (myPid !== null && oldState) {
+    const newPlayer = state.players && state.players.find(p => p.pid === myPid);
+    const oldPlayer = oldState.players && oldState.players.find(p => p.pid === myPid);
+    const newHand   = (newPlayer && newPlayer.hand) || [];
+    const oldHand   = (oldPlayer && oldPlayer.hand) || [];
+    const oldHandIds = new Set(oldHand.map(c => c.id));
+    const deckEl = $('pile-main-deck');
+    if (deckEl) {
+      newHand.forEach(c => {
+        if (!oldHandIds.has(c.id)) {
+          anims.push({ card: c, fromRect: deckEl.getBoundingClientRect(), toId: 'hand-zone' });
+        }
+      });
+    }
+  }
+
+  // ── State-diff: cards removed from lineup → gain animation (lineup → discard) ──
+  if (oldState) {
+    const newLineupIds = new Set((state.lineup || []).map(c => c.id));
+    (oldState.lineup || []).forEach(c => {
+      if (!newLineupIds.has(c.id)) {
+        const cardEl = cardRegistry[c.id];
+        if (cardEl) {
+          anims.push({ card: c, fromRect: cardEl.getBoundingClientRect(), toId: 'hud-discard' });
+        }
+      }
+    });
+  }
+
+  // ── Events: gain redirected to deck (not in lineup diff) ──
+  (events || []).forEach(event => {
+    if (event.type === 'gain' && event.pid === myPid && event.to === 'deck') {
+      const cardEl = cardRegistry[event.card_id];
+      if (cardEl && !anims.find(a => a.card.id === event.card_id)) {
+        anims.push({
+          card: { image: event.card_image, name: event.card_name, id: event.card_id, type: 'unknown' },
+          fromRect: cardEl.getBoundingClientRect(),
+          toId: 'pile-main-deck',
+        });
+      }
+    }
+  });
+
+  return anims;
+}
+
+function playAnimations(anims) {
+  anims.forEach((anim, i) => {
+    flyCardOverlay(anim.card, anim.fromRect, anim.toId, i * 0.08);
+  });
+}
+
+function flyCardOverlay(cardData, fromRect, toId, delay) {
+  const toEl = $(toId);
+  if (!toEl || !fromRect) return;
+  const toRect = toEl.getBoundingClientRect();
+
+  const w = fromRect.width  || 88;
+  const h = fromRect.height || 124;
+
+  // Build a card clone as overlay
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position:fixed; left:${fromRect.left}px; top:${fromRect.top}px;
+    width:${w}px; height:${h}px; z-index:9999; pointer-events:none;
+    border-radius:8px; overflow:hidden; border:2px solid rgba(201,162,39,.9);
+    box-shadow:0 0 20px rgba(201,162,39,.6);
+  `;
+  if (cardData && cardData.image) {
+    const img = document.createElement('img');
+    img.src = imgUrl(cardData.image);
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+    img.draggable = false;
+    el.appendChild(img);
+  } else {
+    el.style.background = '#1a2030';
+  }
+  document.body.appendChild(el);
+
+  const destX = toRect.left + toRect.width  / 2 - w / 2;
+  const destY = toRect.top  + toRect.height / 2 - h / 2;
+
+  // Phase 1: fly to destination at full opacity
+  gsap.to(el, {
+    left: destX, top: destY,
+    delay, duration: 0.4, ease: 'power2.out',
+    onComplete: () => {
+      // Phase 2: quick fade out at destination
+      gsap.to(el, {
+        opacity: 0, scale: 0.6, duration: 0.25, ease: 'power2.in',
+        onComplete: () => el.remove(),
+      });
+    },
+  });
 }
 
 // ── Kick/Weakness pile clicks ─────────────────────────────────────────────────
@@ -727,6 +994,11 @@ $('pile-weakness').addEventListener('click', () => { /* weakness cannot be bough
   socket.emit('get_sets');
   showScreen('lobby');
 
-  // Restore "start game" button state
   $('btn-start-game').disabled = true;
+
+  // Set up drag-and-drop drop zone (once, on the static played-cards element)
+  initDropZone();
+
+  // Initial empty action log
+  renderActionLog();
 })();

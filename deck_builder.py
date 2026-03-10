@@ -119,11 +119,11 @@ def get_starting_deck(player):
     #
     # assemble.append(custom.jervis_tetch(player))
     # assemble.append(custom.mind_control_hat(player))
-    assemble.append(tt_deck.cards.jaime_reyes(player))
-    assemble.append(tt_deck.cards.hawk_and_dove(player))
-    assemble.append(tt_deck.cards.azarath(player))
-    assemble.append(tt_deck.cards.garfield_logan(player))
-    assemble.append(tt_deck.cards.gizmo(player))
+    # assemble.append(tt_deck.cards.jaime_reyes(player))
+    # assemble.append(tt_deck.cards.hawk_and_dove(player))
+    # assemble.append(tt_deck.cards.azarath(player))
+    # assemble.append(tt_deck.cards.garfield_logan(player))
+    # assemble.append(tt_deck.cards.gizmo(player))
     # assemble.append(tt_deck.cards.flight_wings(player))
 
     return assemble

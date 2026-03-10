@@ -66,6 +66,9 @@ def _run_game(set_indices, player_configs):
     """Game loop executed in a background thread."""
     global _game_active
     try:
+        # Web mode: CPUs must not try to print to a view that doesn't exist
+        globe.CPU_TERMINAL_INVISIBLE = True
+
         # Reset and configure deck sets
         deck_builder.choose_sets_programmatic(set_indices)
 

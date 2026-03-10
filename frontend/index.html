@@ -56,13 +56,19 @@
 <!-- ═══════════════════ GAME SCREEN ═══════════════════ -->
 <div id="screen-game" class="screen">
 
-  <!-- Opponent strip (top) -->
-  <div id="opponents-strip" class="opponents-strip"></div>
+  <!-- Opponent strip + action log -->
+  <div id="opponents-strip" class="opponents-strip">
+    <div id="opponents-panels" class="opponents-panels"></div>
+    <div class="action-log">
+      <div class="action-log-title">RECENT PLAYS</div>
+      <div id="action-log-entries" class="action-log-entries"></div>
+    </div>
+  </div>
 
   <!-- Main board -->
   <div id="board" class="board">
 
-    <!-- Left: SV + Lineup -->
+    <!-- Left: SV + small piles -->
     <div class="board-left">
       <div class="pile-group">
         <div id="sv-stack" class="sv-stack" title="Supervillain Stack">
@@ -92,8 +98,17 @@
       </div>
     </div>
 
-    <!-- Center: Lineup + Play area -->
+    <!-- Center: Power bar + Lineup + Play area -->
     <div class="board-center">
+      <div id="power-bar" class="power-bar">
+        <span class="power-bar-label">POWER</span>
+        <span id="lineup-power-value" class="power-bar-value">0</span>
+        <span class="power-bar-sep"></span>
+        <span id="power-bar-status" class="power-bar-status">WAITING</span>
+        <span class="power-bar-sep"></span>
+        <span class="power-bar-label">TURN</span>
+        <span id="lineup-turn-num" class="power-bar-turn-num">1</span>
+      </div>
       <div id="lineup" class="lineup"></div>
       <div id="play-area" class="play-area">
         <div id="played-cards" class="played-cards"></div>
@@ -101,7 +116,7 @@
       </div>
     </div>
 
-    <!-- Right: Current player's persona + ongoing -->
+    <!-- Right: persona + ongoing -->
     <div class="board-right">
       <div id="my-persona-wrap" class="persona-wrap">
         <div id="my-persona-card" class="persona-card-large"></div>
@@ -132,7 +147,7 @@
         <span id="deck-value">0</span>
         <span class="hud-stat-label">DECK</span>
       </div>
-      <div class="hud-stat" id="hud-discard" title="View discard">
+      <div class="hud-stat" id="hud-discard" title="Click to view discard pile">
         <span class="hud-stat-icon">♻</span>
         <span id="discard-value">0</span>
         <span class="hud-stat-label">DISC.</span>
@@ -164,6 +179,18 @@
     <div id="query-context-card" class="query-context-card"></div>
     <p id="query-text" class="query-text"></p>
     <div id="query-options" class="query-options"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ DISCARD MODAL ═══════════════════ -->
+<div id="discard-modal" class="discard-modal hidden">
+  <div id="discard-backdrop" class="discard-backdrop"></div>
+  <div class="discard-panel">
+    <div class="discard-panel-header">
+      <span class="discard-panel-title">DISCARD PILE</span>
+      <button id="btn-close-discard" class="btn-close-modal">✕</button>
+    </div>
+    <div id="discard-cards-grid" class="discard-cards-grid"></div>
   </div>
 </div>
 

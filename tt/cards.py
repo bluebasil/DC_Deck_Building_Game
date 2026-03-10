@@ -5,7 +5,6 @@ from constants import option
 import globe
 from constants import ai_hint
 import random
-import arcade
 from frames import actions
 from frames import card_frame
 from frames import persona_frame

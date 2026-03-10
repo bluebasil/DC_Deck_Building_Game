@@ -1,56 +1,56 @@
-import uuid
 from __future__ import annotations
+import uuid
 import globe
 from constants import owners
 from constants import trigger
 
 
 try:
-	import arcade
-	_ARCADE_AVAILABLE = True
+    import arcade
+    _ARCADE_AVAILABLE = True
 except ImportError:
-	_ARCADE_AVAILABLE = False
+    _ARCADE_AVAILABLE = False
 from constants2 import CardType
 
 
 class card:
-	name = ""
-	vp = 0
-	cost = 0
-	ctype = cardtype.ANY
-	#All cards must manually set these
-	defense = False
-	attack = False
+    name = ""
+    vp = 0
+    cost = 0
+    ctype = CardType.ANY
+    #All cards must manually set these
+    defense = False
+    attack = False
     ongoing = False
-	owner = None
-	owner_type = owners.MAINDECK
-	text = ""
-	attack_text = ""
-	image = "base/images/cards/back.jpeg"
-	texture = None
-	#List of pid's of who has a frozen token on this card
-	frozen = []
-	has_stack_ongoing = False
-	rotation = 0
+    owner = None
+    owner_type = owners.MAINDECK
+    text = ""
+    attack_text = ""
+    image = "base/images/cards/back.jpeg"
+    texture = None
+    #List of pid's of who has a frozen token on this card
+    frozen = []
+    has_stack_ongoing = False
+    rotation = 0
     power = 0
 
-	#stats
-	times_played = 0
-	bought = False
+    #stats
+    times_played = 0
+    bought = False
 
-	def __init__(self,owner = None):
-		self.card_id = str(uuid.uuid4())
-		self.owner = owner
-		if owner is not None:
-			self.owner_type = owners.PLAYER
-		if _ARCADE_AVAILABLE:
-			self.texture = arcade.load_texture(self.image)
-		self.frozen = []
+    def __init__(self,owner = None):
+        self.card_id = str(uuid.uuid4())
+        self.owner = owner
+        if owner is not None:
+            self.owner_type = owners.PLAYER
+        if _ARCADE_AVAILABLE:
+            self.texture = arcade.load_texture(self.image)
+        self.frozen = []
 
-	def get_ctype(self) -> list[CardType]:
+    def get_ctype(self) -> list[CardType]:
         return [self.ctype]
 
-	def ctype_eq(self, ctype:CardType) -> bool:
+    def ctype_eq(self, ctype:CardType) -> bool:
         # return self.ctype == ctype
         return ctype in self.get_ctype()
 
@@ -63,51 +63,51 @@ class card:
     def play_action(self, player):
         return 0
 
-	#def later_play(self,player,on_card):
-	#	return 0
+    #def later_play(self,player,on_card):
+    #    return 0
 
-	def set_owner(self,player=None):
-		if player == owners.WEAKNESS \
-				or player == owners.MAINDECK \
-				or player == owners.KICK \
-				or player == owners.DESTROYED \
-				or player == owners.VILLAINDECK \
-				or player == owners.LINEUP:
-			self.owner = None
-			self.owner_type = player
-		else:
-			self.owner = player
-			self.owner_type = owners.PLAYER
+    def set_owner(self,player=None):
+        if player == owners.WEAKNESS \
+                or player == owners.MAINDECK \
+                or player == owners.KICK \
+                or player == owners.DESTROYED \
+                or player == owners.VILLAINDECK \
+                or player == owners.LINEUP:
+            self.owner = None
+            self.owner_type = player
+        else:
+            self.owner = player
+            self.owner_type = owners.PLAYER
 
-	def calculate_vp(self,all_cards) -> int:
-		return self.vp
+    def calculate_vp(self,all_cards) -> int:
+        return self.vp
 
-	def end_of_turn(self):
-		return
+    def end_of_turn(self):
+        return
 
-	def next_turn(self):
-		return
+    def next_turn(self):
+        return
 
-	def buy_action(self,player,bought,defeat):
-		#Assume that card can be bought
-		return True
+    def buy_action(self,player,bought,defeat):
+        #Assume that card can be bought
+        return True
 
-	#defense = True must be set or this will not be an option
-	#pop_self will come in handy
-	def defend(self,attacker = None,defender = None):
-		return
+    #defense = True must be set or this will not be an option
+    #pop_self will come in handy
+    def defend(self,attacker = None,defender = None):
+        return
 
-	#Only used for cards in the supervilalin stack
-	def first_apearance(self):
-		return
+    #Only used for cards in the supervilalin stack
+    def first_apearance(self):
+        return
 
-	def stack_ongoing(self,player):
-		return
+    def stack_ongoing(self,player):
+        return
 
-	def attack_action(self,by_player):
-		return
+    def attack_action(self,by_player):
+        return
 
-	def destroy(self, player_responsible):
+    def destroy(self, player_responsible):
         stop = None
         if player_responsible is not None:
             stop = trigger.all(trigger.DESTROY, [self], player_responsible, first_result=True)

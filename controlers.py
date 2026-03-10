@@ -298,7 +298,10 @@ class human_view(controler):
     # No responce needed
     def reveal(self, instruction_text, player, cards):
         options = [option.DONE]
-        options.extend(cards)
+        try:
+            options.extend(cards)
+        except:
+            options.append(cards)
         globe.bus.clear()
         text = instruction_text
         # try:
@@ -757,6 +760,14 @@ class cpu(controler):
             self.display_thought(
                 f"AI {self.player.pid}-{self.player.persona.name} bought a kick ({self.player.played.power} power left)",
                 True, quick=False)
+
+        # Emit state snapshot before turn_end() clears played_this_turn, so the
+        # frontend can see what the AI played and bought this turn.
+        if globe.bus and getattr(globe.bus, 'on_state_change', None):
+            try:
+                globe.bus.on_state_change()
+            except Exception:
+                pass
 
         return
 
