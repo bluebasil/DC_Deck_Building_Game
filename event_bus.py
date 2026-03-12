@@ -1,39 +1,50 @@
 import threading
 
-class coach:
-	header = ""
-	content = None
 
-	def __init__(self,header,content):
-		self.header = header
-		self.content = content
+class coach:
+    header = ""
+    content = None
+
+    def __init__(self, header, content):
+        self.header = header
+        self.content = content
+
 
 class question:
-	text = ""
-	card = None
-	options = []
+    text = ""
+    card = None
+    options = []
 
-	def __init__(self,text,card,options):
-		self.text = text
-		self.card = card
-		self.options = options
+    def __init__(self, text, card, options):
+        self.text = text
+        self.card = card
+        self.options = options
 
 
 class event_bus:
 	on_bus = []
 	display = None
+	# Optional callback fired whenever the display (query) changes.
+	# The web server sets this to emit state updates to connected clients.
+	on_state_change = None
 
 	def __init__(self):
 		self.lock = threading.Lock()
 		self.on_bus = []
+		self.on_state_change = None
 
 	def query(self,text,card,options):
 		new_question = question(text,card,options)
 		self.display = new_question
+		if self.on_state_change:
+			try:
+				self.on_state_change()
+			except Exception:
+				pass
 
 	def satisfy_query(self):
 		self.display = None
-		
+
 
 	def card_clicked(self,c):
 		self.lock.acquire()
@@ -42,8 +53,6 @@ class event_bus:
 		finally:
 			self.lock.release()
 
-		#print("CLICK HEARD:",c.name,len(self.on_bus),flush = True)
-
 	def button_clicked(self,button_action):
 		self.lock.acquire()
 		try:
@@ -51,11 +60,8 @@ class event_bus:
 		finally:
 			self.lock.release()
 
-		#print("CLICK HEARD:",button_action,len(self.on_bus),flush = True)
-		
 
 	def clear(self):
-		#print("(clearing)",flush = True)
 		self.lock.acquire()
 		try:
 			self.on_bus = []
@@ -71,4 +77,3 @@ class event_bus:
 		finally:
 			self.lock.release()
 		return to_return
-

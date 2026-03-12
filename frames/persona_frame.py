@@ -1,5 +1,10 @@
-import arcade
 import globe
+
+try:
+	import arcade
+	_ARCADE_AVAILABLE = True
+except ImportError:
+	_ARCADE_AVAILABLE = False
 
 def overvalue():
 	return 1.1
@@ -15,7 +20,8 @@ class persona:
 	rotation = 0
 
 	def __init__(self,player = None):
-		self.texture = arcade.load_texture(self.image)
+		if _ARCADE_AVAILABLE:
+			self.texture = arcade.load_texture(self.image)
 		if player != None:
 			self.set_owner(player)
 

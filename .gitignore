@@ -85,9 +85,10 @@ fabric.properties
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
-__pycache__/
+*__pycache__/
 *.py[cod]
 *$py.class
+*.pyc
 
 # C extensions
 *.so
@@ -210,3 +211,5 @@ dmypy.json
 .pyre/
 
 # End of https://www.gitignore.io/api/python,pycharm
+
+*.terraform*
