@@ -66,6 +66,17 @@ resource "google_cloud_run_v2_service" "game" {
   client = "terraform"
 }
 
+# ── Grant Cloud Run SA permission to pull from Artifact Registry ──────────────
+data "google_project" "project" {}
+
+resource "google_artifact_registry_repository_iam_member" "cloud_run_reader" {
+  project    = var.project_id
+  location   = var.region
+  repository = google_artifact_registry_repository.repo.repository_id
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+}
+
 # ── Allow unauthenticated public access ──────────────────────────────────────
 resource "google_cloud_run_v2_service_iam_member" "public" {
   project  = var.project_id
