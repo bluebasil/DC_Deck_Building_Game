@@ -20,11 +20,11 @@
   /* Card type glows */
   --glow-hero:      #1e88e5;
   --glow-villain:   #c62828;
-  --glow-super:     #7b1fa2;
-  --glow-equip:     #2e7d32;
-  --glow-location:  #e65100;
-  --glow-starter:   #546e7a;
-  --glow-weakness:  #4a148c;
+  --glow-super:     #ffae33;
+  --glow-equip:     #747574;
+  --glow-location:  #a35ec4;
+  --glow-starter:   #fae588;
+  --glow-weakness:  #1ba022;
   --glow-sv:        #b71c1c;
 
   /* Card sizes */

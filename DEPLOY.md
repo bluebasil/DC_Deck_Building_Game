@@ -24,7 +24,7 @@
 4. **gcloud CLI** authenticated: `gcloud auth login`
 5. Configure Docker for Artifact Registry:
    ```
-   gcloud auth configure-docker REGION-docker.pkg.dev
+   gcloud auth configure-docker us-central1-docker.pkg.dev
    ```
 
 ---
@@ -36,7 +36,7 @@ cd terraform
 
 # Create terraform.tfvars
 cat > terraform.tfvars <<EOF
-project_id = "your-gcp-project-id"
+project_id = "website-489802"
 region     = "us-central1"
 EOF
 
@@ -57,7 +57,7 @@ Run from the project root each time you want to update:
 
 ```bash
 # Set your values
-PROJECT_ID="your-gcp-project-id"
+PROJECT_ID="website-489802"
 REGION="us-central1"
 SERVICE="dc-deck-builder"
 IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${SERVICE}/${SERVICE}"
@@ -84,7 +84,7 @@ gcloud run deploy ${SERVICE} \
 The `frontend/` folder is served directly by the Flask backend. For the **standalone S3 website** you already have, update `game.js` line 7:
 
 ```javascript
-const SERVER_URL = 'https://YOUR-CLOUD-RUN-URL.run.app';
+const SERVER_URL = 'https://dc-deck-builder-35l4saorlq-uc.a.run.app"';
 ```
 
 Then copy the frontend files to S3:

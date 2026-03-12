@@ -5,7 +5,8 @@
 'use strict';
 
 // ── Config ─────────────────────────────────────────────────────────────────
-const SERVER_URL = window.location.origin;   // same origin as Flask
+// const SERVER_URL = window.location.origin;   // same origin as Flask
+const SERVER_URL = 'https://dc-deck-builder-35l4saorlq-uc.a.run.app"';
 const IMG_ROOT   = '/card-images/';
 
 // ── Socket.IO ───────────────────────────────────────────────────────────────

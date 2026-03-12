@@ -39,10 +39,10 @@ resource "google_cloud_run_v2_service" "game" {
         container_port = 8080
       }
 
-      env {
-        name  = "PORT"
-        value = "8080"
-      }
+      #env {
+      #  name  = "PORT"
+      #  value = "8080"
+      #}
       env {
         name  = "USE_GEVENT"
         value = "1"
@@ -58,8 +58,8 @@ resource "google_cloud_run_v2_service" "game" {
       }
     }
 
-    # Allow long-lived WebSocket connections (30 min timeout)
-    timeout = "1800s"
+    # Allow long-lived WebSocket connections (60 min timeout)
+    timeout = "3600s"
   }
 
   # Required for WebSockets on Cloud Run
