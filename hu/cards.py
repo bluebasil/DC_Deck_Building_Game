@@ -1319,7 +1319,7 @@ class whirlwind(card_frame.card):
 
     def play_action(self, player):
         self._plus_power(player, 1)
-        if len(player.played.contents) <= 1:
+        if len(player.played.played_this_turn) == 0:
             if effects.ok_or_no("Would you like to discard your hand and draw four cards?",
                                 player, None, ai_hint.RANDOM):
                 player.discard_hand()

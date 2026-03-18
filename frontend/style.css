@@ -30,6 +30,9 @@
   /* Card sizes */
   --card-w: 88px;
   --card-h: 124px;
+  /* Small pile card size */
+  --small-pile-w: 60px;
+  --small-pile-h: 84px;
   /* Lineup cards are larger for better readability */
   --lineup-card-w: 110px;
   --lineup-card-h: 154px;
@@ -50,13 +53,28 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 .screen.active { display: flex; }
 
 /* ── Connection status ────────────────────────────────────────── */
+#conn-wrapper {
+  position: fixed; bottom: 8px; right: 12px; z-index: 9999;
+  display: flex; flex-direction: column; align-items: flex-end;
+}
 .conn-status {
-  position: fixed; bottom: 8px; right: 12px;
-  font-size: 11px; padding: 3px 10px; border-radius: 20px; z-index: 9999;
+  font-size: 11px; padding: 3px 10px; border-radius: 20px;
   transition: background .3s;
 }
-.conn-status.connected    { background: #1b5e2040; color: #66bb6a; border: 1px solid #66bb6a40; }
+.conn-status.connected    { background: #1b5e2040; color: #66bb6a; border: 1px solid #66bb6a40; cursor: pointer; }
 .conn-status.disconnected { background: #b71c1c40; color: #ef9a9a; border: 1px solid #ef9a9a40; }
+.conn-dropdown {
+  margin-top: 4px; background: #12151f; border: 1px solid #2a2e3e;
+  border-radius: 8px; overflow: hidden; min-width: 130px;
+  box-shadow: 0 4px 16px #00000060;
+}
+.conn-dropdown.hidden { display: none; }
+.conn-dropdown-item {
+  display: block; width: 100%; padding: 8px 14px; background: none;
+  border: none; color: #ccc; font-size: 12px; text-align: left; cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.conn-dropdown-item:hover { background: #b71c1c30; color: #ef9a9a; }
 
 /* ════════════════════════════════════════════════════════════════
    LOBBY
@@ -220,7 +238,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 
 /* ── Action log ───────────────────────────────────────────────── */
 .action-log {
-  width: 200px; flex-shrink: 0;
+  width: 200px; flex-shrink: 0; max-height: 120px;
   border-left: 1px solid var(--border);
   background: rgba(0,0,0,.3);
   display: flex; flex-direction: column;
@@ -236,6 +254,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   flex: 1; overflow-y: auto;
   display: flex; flex-direction: column; gap: 2px;
 }
+.log-entry-human .log-player { color: #42a5f5; }
 .log-entry {
   font-size: 10px; color: var(--text-dim);
   padding: 2px 0; line-height: 1.3;
@@ -277,7 +296,10 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 }
 .small-piles { display: flex; flex-direction: column; gap: 8px; align-items: center; }
 .small-pile { display: flex; flex-direction: column; align-items: center; gap: 3px; position: relative; }
-.weakness-back { background: repeating-linear-gradient(45deg, #1a0040, #1a0040 4px, #2a0060 4px, #2a0060 8px); }
+.weakness-back  { background: repeating-linear-gradient(45deg, #0a2a0a, #0a2a0a 4px, #1a4a1a 4px, #1a4a1a 8px); }
+.kick-back      { background: repeating-linear-gradient(45deg, #3a1500, #3a1500 4px, #6a2a00 4px, #6a2a00 8px); }
+.deck-back      { background: repeating-linear-gradient(135deg, #0d1b3e 0px, #0d1b3e 6px, #1a2a50 6px, #1a2a50 10px, #0d1b3e 10px, #0d1b3e 14px, #c9a227 14px, #c9a227 15px); }
+.destroyed-back { background: repeating-linear-gradient(45deg, #1a0505, #1a0505 4px, #3a0a0a 4px, #3a0a0a 8px); }
 
 /* Board center */
 .board-center {
@@ -362,20 +384,11 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   text-transform: uppercase; pointer-events: none; white-space: nowrap;
   opacity: 0.5;
 }
-.special-options { display: flex; gap: 8px; flex-wrap: wrap; }
-.btn-special {
-  padding: 8px 16px; border-radius: 6px; border: 1px solid var(--gold);
-  background: rgba(201,162,39,.15); color: var(--gold-light); cursor: pointer;
-  font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
-  transition: all var(--transition);
-}
-.btn-special:hover { background: rgba(201,162,39,.3); }
-
-/* Board right - persona + ongoing */
+/* Board right - persona + special options */
 .board-right {
   width: 150px; flex-shrink: 0; display: flex; flex-direction: column;
   padding: 10px 8px; gap: 8px; border-left: 1px solid var(--border);
-  background: rgba(0,0,0,.2);
+  background: rgba(0,0,0,.2); overflow-y: auto;
 }
 .persona-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .persona-card-large {
@@ -387,10 +400,28 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 .persona-card-large img { width: 100%; height: 100%; object-fit: cover; }
 .persona-card-large:hover { box-shadow: 0 0 32px rgba(201,162,39,.6); }
 .persona-name-label { font-size: 10px; color: var(--gold-light); font-weight: 700; letter-spacing: 1px; text-align: center; }
-.ongoing-label { font-size: 9px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; text-align: center; }
-.ongoing-zone, .under-zone {
-  display: flex; flex-direction: column; gap: 4px; align-items: center;
-  min-height: 40px;
+.btn-persona-pile {
+  width: 100%; padding: 5px 8px; border-radius: 6px;
+  border: 1px solid rgba(201,162,39,.4); background: rgba(201,162,39,.1);
+  color: var(--gold-light); cursor: pointer; font-size: 10px;
+  font-weight: 600; letter-spacing: .5px; text-transform: uppercase;
+  transition: all var(--transition); text-align: center;
+}
+.btn-persona-pile:hover { background: rgba(201,162,39,.25); border-color: var(--gold); }
+.special-options { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.btn-special {
+  padding: 6px 10px; border-radius: 6px; border: 1px solid var(--gold);
+  background: rgba(201,162,39,.15); color: var(--gold-light); cursor: pointer;
+  font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  transition: all var(--transition); width: 100%;
+}
+.btn-special:hover { background: rgba(201,162,39,.3); }
+
+/* Ongoing zone in play area - horizontal flow */
+.ongoing-label { font-size: 9px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; text-align: left; padding-left: 4px; }
+.ongoing-zone {
+  display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; align-items: center;
+  min-height: 36px; padding: 4px;
 }
 
 /* ── Player HUD ───────────────────────────────────────────────── */

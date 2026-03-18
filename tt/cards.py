@@ -337,7 +337,7 @@ class conner_kent(card_frame.card):
                 cards.append(c)
         cards_taken = 0
         while len(cards) > 0 and cards_taken < 2:
-            card_to_put_in_hand = effects.may_choose_one_of(f"{it} ({cards_taken + 1}/2)")
+            card_to_put_in_hand = effects.may_choose_one_of(f"{it} ({cards_taken + 1}/2)", player, cards, source=self, hint=ai_hint.BEST)
             if card_to_put_in_hand is not None:
                 player.hand.add(card_to_put_in_hand.pop_self())
             else:
@@ -462,8 +462,11 @@ class energy_absorption(card_frame.card):
         it = "You may destroy a card in your hand."
         player.draw_card()
         if len(player.hand.contents):
+            print("!! energy absorbtion")
+            print(player.hand.contents)
             to_destroy = effects.may_choose_one_of(it, player, player.hand.contents, source=self, hint=ai_hint.IFBAD)
-            to_destroy.destroy(player)
+            if to_destroy:
+                to_destroy.destroy(player)
         return 0
 
 

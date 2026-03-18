@@ -227,7 +227,7 @@ class mirakuru(card_frame.card):
 
     def play_action(self, player):
         # If this is the first card played this turn
-        if len(player.played.played_this_turn) == 1:
+        if len(player.played.played_this_turn) == 0:
             instruction_text = f"Would you like to put {self.name} and your hand under your Super Hero?"
             if effects.ok_or_no(instruction_text, player, self, ai_hint.RANDOM):
                 for c in player.hand.contents.copy():

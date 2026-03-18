@@ -65,7 +65,7 @@ def serialize_persona(p):
 
 def serialize_option(opt):
     """Serialize a query option - could be a card, persona, or button constant."""
-    if isinstance(opt, CardBase):
+    if isinstance(opt, CardBase) and hasattr(opt, 'cost'):
         result = serialize_card(opt)
         result["opt_type"] = "card"
         return result
@@ -198,6 +198,34 @@ def find_persona_by_id(persona_id):
     return None
 
 
+def _card_positions(boss):
+    """Flat dict: card_id_str → pile_name for every card in the game."""
+    positions = {}
+
+    def add(cards, name):
+        for c in cards:
+            cid = str(getattr(c, 'card_id', ''))
+            if cid:
+                positions[cid] = name
+
+    add(boss.lineup.contents,              'lineup')
+    add(boss.main_deck.contents,           'main_deck')
+    add(boss.kick_stack.contents,          'kick_stack')
+    add(boss.weakness_stack.contents,      'weakness_stack')
+    add(boss.supervillain_stack.contents,  'sv_stack')
+    add(boss.destroyed_stack.contents,     'destroyed')
+    for p in boss.players:
+        pid = p.pid
+        add(p.hand.contents,               f'p{pid}_hand')
+        add(p.deck.contents,               f'p{pid}_deck')
+        add(p.discard.contents,            f'p{pid}_discard')
+        add(p.played.contents,             f'p{pid}_played')
+        add(p.ongoing.contents,            f'p{pid}_ongoing')
+        add(p.under_superhero.contents,    f'p{pid}_under')
+        add(p.over_superhero.contents,     f'p{pid}_over')
+    return positions
+
+
 def serialize_state():
     """Serialize the complete current game state."""
     if not globe.boss:
@@ -240,6 +268,8 @@ def serialize_state():
         "turn_number": boss.turn_number,
         "main_deck_size": boss.main_deck.size(),
         "destroyed_count": boss.destroyed_stack.size(),
+        "destroyed_cards": [serialize_card(c) for c in boss.destroyed_stack.contents],
+        "card_positions": _card_positions(boss),
         "lineup": lineup,
         "sv_stack": {
             "top": sv_top,
@@ -250,6 +280,7 @@ def serialize_state():
         "kick_stack": {
             "count": boss.kick_stack.size(),
             "top_id": getattr(boss.kick_stack.contents[-1], 'card_id', None) if boss.kick_stack.contents else None,
+            "top": serialize_card(boss.kick_stack.contents[-1]) if boss.kick_stack.contents else None,
         },
         "weakness_stack": {
             "count": boss.weakness_stack.size(),

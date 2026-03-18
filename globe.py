@@ -1,3 +1,7 @@
+class GameAborted(Exception):
+    """Raised when a game is abandoned mid-thread so the game loop exits cleanly."""
+    pass
+
 boss = None
 view = None
 bus = None

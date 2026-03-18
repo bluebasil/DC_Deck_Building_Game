@@ -84,11 +84,10 @@ class controler:
 class human_view(controler):
 
     def await_turn(self, process):
-        # print(globe.bus.display,flush=True)
-        # try:
         print("Waiting for player input...", flush=True)
         while True:
-            # print(len(globe.bus.on_bus),flush = True)
+            if globe.bus is None:
+                raise globe.GameAborted()
             if len(globe.bus.on_bus) > 0:
                 result = process()
                 if result is not None:
@@ -246,6 +245,7 @@ class human_view(controler):
     def may_choose_one_of(self, instruction_text, player, cards, hint, source=None):
         options = [option.NO]
         options.extend(cards)
+        print(f"options: {options}", flush=True)
         globe.bus.clear()
         text = instruction_text
         # try:
