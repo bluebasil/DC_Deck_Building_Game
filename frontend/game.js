@@ -291,6 +291,7 @@ function buildOpponentPanel(p) {
         <div class="opp-stat">★ <span>${p.score}</span></div>
         <div class="opp-stat">🂠 <span>${p.hand_size}</span></div>
         <div class="opp-stat">🃏 <span>${p.deck_size}</span></div>
+        <div class="opp-stat opp-discard-btn" title="View discard pile">♻ <span>${p.discard_size}</span></div>
       </div>
       <div class="opponent-played">
         ${(p.played_this_turn || []).map(c =>
@@ -301,6 +302,13 @@ function buildOpponentPanel(p) {
       </div>
     </div>
   `;
+
+  div.querySelector('.opp-discard-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    const current = state.players.find(pl => pl.pid === p.pid);
+    openDiscardModal(current || p);
+  });
+
   return div;
 }
 
@@ -826,14 +834,20 @@ function renderActionLog() {
 }
 
 // ── Discard pile popup ────────────────────────────────────────────────────────
-function openDiscardModal() {
-  const me = getMyPlayer();
-  if (!me) return;
+function openDiscardModal(player) {
+  const p = player || getMyPlayer();
+  if (!p) return;
+
+  const titleEl = $('discard-modal').querySelector('.discard-panel-title');
+  if (titleEl) {
+    const name = p.persona ? p.persona.name : `Player ${p.pid}`;
+    titleEl.textContent = p.is_human ? 'YOUR DISCARD PILE' : `${name}'s DISCARD PILE`;
+  }
 
   const grid = $('discard-cards-grid');
   grid.innerHTML = '';
 
-  const cards = me.discard_cards || [];
+  const cards = p.discard_cards || [];
   if (cards.length === 0) {
     grid.innerHTML = '<div class="discard-empty">Discard pile is empty</div>';
   } else {
@@ -853,7 +867,7 @@ function closeDiscardModal() {
   hidePreview();
 }
 
-$('hud-discard').addEventListener('click', openDiscardModal);
+$('hud-discard').addEventListener('click', () => openDiscardModal());
 $('btn-close-discard').addEventListener('click', closeDiscardModal);
 $('discard-backdrop').addEventListener('click', closeDiscardModal);
 
@@ -962,6 +976,12 @@ function movePreview(e) {
 function hidePreview() {
   preview.classList.add('hidden');
 }
+
+// Hide the preview on any click (card removed from DOM before mouseleave fires)
+document.addEventListener('mousedown', () => {
+  clearTimeout(previewTimeout);
+  hidePreview();
+});
 
 // ── Card movement animations ─────────────────────────────────────────────────
 // Called BEFORE renderGameBoard so old cardRegistry positions are still valid.

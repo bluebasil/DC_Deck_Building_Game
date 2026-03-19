@@ -194,7 +194,7 @@ class bunker(card_frame.card):
 
     def play_action(self, player: model.player):
         it = "Choose one card of each type to put into your hand."
-        cards : list[card_frame.card]= player.reveal_card(True, 3)
+        cards : list[card_frame.card] = player.reveal_card(True, 3)
         for t in CardType.valid_cardtypes():
             this_type = []
             for c in cards:
@@ -286,7 +286,7 @@ class cloak_of_raven(card_frame.card):
     name = "Cloak Of Raven"
     vp = 1
     cost = 5
-    ctype = CardType.HERO
+    ctype = CardType.EQUIPMENT
     text = "+2 Power and an additional +1 Power for each different Super Power you control."
     image = "tt/images/cards/Cloak of Raven 5.jpg"
 
@@ -339,6 +339,8 @@ class conner_kent(card_frame.card):
         while len(cards) > 0 and cards_taken < 2:
             card_to_put_in_hand = effects.may_choose_one_of(f"{it} ({cards_taken + 1}/2)", player, cards, source=self, hint=ai_hint.BEST)
             if card_to_put_in_hand is not None:
+                cards.remove(card_to_put_in_hand)
+                cards_taken += 1
                 player.hand.add(card_to_put_in_hand.pop_self())
             else:
                 break

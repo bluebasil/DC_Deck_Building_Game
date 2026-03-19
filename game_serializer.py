@@ -130,8 +130,8 @@ def serialize_player(p, human_pid=None):
         # Show full hand only for human player; AI hand shows count only
         "hand": [serialize_card(c) for c in p.hand.contents] if is_human else [],
         "hand_size": p.hand.size(),
-        # Full discard list for human player (used by discard popup)
-        "discard_cards": [serialize_card(c) for c in p.discard.contents] if is_human else [],
+        # Full discard list for all players (used by discard popup, including opponent view)
+        "discard_cards": [serialize_card(c) for c in p.discard.contents],
         "played": [serialize_card(c) for c in p.played.contents],
         "played_this_turn": [serialize_card(c) for c in p.played.played_this_turn],
         "ongoing": [serialize_card(c) for c in p.ongoing.contents],

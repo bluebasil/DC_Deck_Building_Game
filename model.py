@@ -931,12 +931,14 @@ class model:
         output_persona_stats(self.players,end_reason)
 
     def register(self,func):
-        elf.notify = func
+        self.notify = func
 
     def clear_queue(self):
         if globe.DEBUG:
             print(f"start clear: {len(self.trigger_queue)}", flush=True)
         while len(self.trigger_queue) > 0:
+            print(f"{self.trigger_queue[-1].trigger_id}", flush=True)
+            print(self.trigger_queue[-1].data, flush=True)
             self.trigger_queue.pop(0).run()
         if globe.DEBUG:
             print("end clear", flush=True)

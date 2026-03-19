@@ -108,7 +108,7 @@ def get_starting_deck(player):
     # and will be drawn before their first turn.  This is very usefull for testing cards.
 
     # make sure that we cange where 'custom' points, it should point to the set of the cards we are testing
-    assemble.append(custom.energy_absorption(player))
+    assemble.append(custom.bunker(player))
     # assemble.append(custom.catwoman(player))
     # assemble.append(custom.green_arrows_bow(player))
     # assemble.append(custom.eclipso(player))
