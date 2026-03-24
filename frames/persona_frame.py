@@ -61,12 +61,12 @@ class persona:
 
 	#def trigger(self,trigger_id,data,player,pay_forward = False,first_result = False,immediate = False):
 
-	#Happenss at the end of the turn.
+	#Happenss at the begining of the turn.
 	#Used to set up abilities for the turn
 	def ready(self):
 		return
 
-	#Happens at the end of the turn
+	#Happens at the end of the turn (and at game start, before first turn)
 	#Used to clean up anything needed
 	#Also used to set up abilites that should be active during other players turns
 	def reset(self):

@@ -194,7 +194,11 @@ class bunker(card_frame.card):
 
     def play_action(self, player: model.player):
         it = "Choose one card of each type to put into your hand."
-        cards : list[card_frame.card] = player.reveal_card(True, 3)
+        cards : list[card_frame.card] = player.reveal_card(True, 3)[:]
+        card_backup = cards[:]
+        print("before", flush=True)
+        for c in card_backup:
+            print(c.name, c, c.owner_type, c.owner.persona.name, c.find_self()[0].name, c.find_self()[0].owner.persona.name, flush=True)
         for t in CardType.valid_cardtypes():
             this_type = []
             for c in cards:
@@ -208,8 +212,19 @@ class bunker(card_frame.card):
                                                        source=self, hint=ai_hint.BEST)
                 player.hand.add(to_put_in_hand.pop_self())
                 cards.remove(to_put_in_hand)
+                print("Tracking1 ", to_put_in_hand.name, flush=True)
+                to_put_in_hand.find_self()
+                
         for c in cards:
             player.discard_a_card(c)
+            print(c.name, c, c.owner_type, c.owner.persona.name, c.find_self()[0].name, c.find_self()[0].owner.persona.name, flush=True)
+            print("Tracking2 ", c.name, flush=True)
+            c.find_self()
+        print("After", flush=True)
+        for c in card_backup:
+            print(c.name, c, c.owner_type, c.owner.persona.name, c.find_self()[0].name, c.find_self()[0].owner.persona.name, flush=True)
+            
+        
         return 0
 
 
