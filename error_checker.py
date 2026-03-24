@@ -95,6 +95,16 @@ class dupe_checker:
                         "ERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO\nERRORERRORERRORERRORERRORERRORERRORERRORERRROERRORERRORERRORERRORERRORERRORERRORERRORERRRO",
                         file=buf)
                     print("ERROR card number unexpected:", c.name, count, c.owner, file=buf)
+                    for p in globe.boss.players:
+                        print(p.persona.name)
+                    print("---Card Debug Info:---", flush=True)
+                    print(c)
+                    print(c.__dict__, flush=True)
+                    print(c.location_tracking, flush=True)
+                    for p in c.location_tracking:
+                        print(p[0].name, p[1], None if p[3] is None else p[3].persona.name, flush=True)
+                    print("---Card Owner Debug Info:---", flush=True)
+                    print(c.owner.__dict__)
                     for p in found:
                         print("pile ", p.name, file=buf)
                         if p.owner is not None:

@@ -33,6 +33,7 @@ class card:
     has_stack_ongoing = False
     rotation = 0
     power = 0
+    location_tracking = None
 
     #stats
     times_played = 0
@@ -46,6 +47,7 @@ class card:
         if _ARCADE_AVAILABLE:
             self.texture = arcade.load_texture(self.image)
         self.frozen = []
+        self.location_tracking = []
 
     def get_ctype(self) -> list[CardType]:
         return [self.ctype]
@@ -137,6 +139,7 @@ class card:
         location = self.find_self()
         # print(self.name,location[0].name,location[1])
         if location is not None:
+            self.location_tracking.append(location)
             location[0].contents.remove(self)
             if location[2]:
                 trigger.all(trigger.LEFT_PLAY, [self], location[3])
@@ -172,6 +175,7 @@ class card:
             # Firestorm.  May interact weirdly, firestorm always puts it back on superhero i think
             elif self in p.over_superhero.contents:
                 return p.over_superhero, p.over_superhero.contents.index(self), False, p
+        exit()
 
     # return self
 

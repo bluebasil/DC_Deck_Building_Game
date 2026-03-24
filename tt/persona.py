@@ -53,7 +53,7 @@ class blue_beatle(persona_frame.persona):
     action = None
 
     def special_action_click(self, player: model.player):
-        if len(player.played) + len(player.ongoing) >= 7:
+        if len(player.played.contents) + len(player.ongoing.contents) >= 7:
             player.draw_card(1, False, True)
             player.played.special_options.remove(self.action)
 

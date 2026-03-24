@@ -8,18 +8,19 @@ from crossover_2 import deck as c2_deck
 from hu import deck as hu_deck
 from tt import deck as tt_deck
 # For testing individual cards
-from hu import cards as custom
+from tt import cards as custom
 # I have just implimented the personas of HU for now.  They can be accessed if any_pick == True
 # from hu import persona as hu_personas
 from frames import card_frame
 import globe
+from constants import owners
 
 # All available sets (never mutated - used as source of truth)
 _all_sets = None
 def _get_all_sets():
 	global _all_sets
 	if _all_sets is None:
-		_all_sets = [base_deck.this_set, fe_deck.this_set, hu_deck.this_set, c1_deck.this_set, c2_deck.this_set]
+		_all_sets = [base_deck.this_set, fe_deck.this_set, hu_deck.this_set, tt_deck.this_set, c1_deck.this_set, c2_deck.this_set]
 	return _all_sets
 
 # As sets are chosen, they are moved from decks to choosen_sets
@@ -108,7 +109,7 @@ def get_starting_deck(player):
     # and will be drawn before their first turn.  This is very usefull for testing cards.
 
     # make sure that we cange where 'custom' points, it should point to the set of the cards we are testing
-    # assemble.append(custom.shazam(player))
+    # assemble.append(custom.bunker(player))
     # assemble.append(custom.catwoman(player))
     # assemble.append(custom.green_arrows_bow(player))
     # assemble.append(custom.eclipso(player))
@@ -176,9 +177,10 @@ def initialize_supervillains():
     smallest_villain_amount = 99
     for d in prioritize:
         smallest_villain_amount = min(smallest_villain_amount, len(d))
+    assemble : list[card_frame.card] = []
     # If there are more than 1 set to choose from...
     if len(prioritize) > 1:
-        assemble = []
+        
         # Set last SV
         assemble.append(random.choice(prioritize)[0])
         for d in prioritize:
@@ -190,6 +192,8 @@ def initialize_supervillains():
             assemble.append(random.choice(prioritize)[-count_from_end])
     else:
         assemble = prioritize[0]
+    for c in assemble:
+        c.owner_type = owners.VILLAINDECK
     return assemble
 
 

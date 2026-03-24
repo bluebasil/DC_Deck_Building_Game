@@ -80,7 +80,8 @@
         </div>
         <div class="small-piles">
           <div class="small-pile" id="pile-kick" title="Kick Stack">
-            <div class="pile-card small"></div>
+            <!-- <div class="pile-card small kick-back"></div> -->
+            <div id="kick-card" class="pile-card small kick-card"></div>
             <div id="kick-count" class="pile-count">0</div>
             <div class="pile-label">KICK</div>
           </div>
@@ -90,9 +91,14 @@
             <div class="pile-label">WEAKNESS</div>
           </div>
           <div class="small-pile" id="pile-main-deck" title="Main Deck">
-            <div class="pile-card small"></div>
+            <div class="pile-card small deck-back"></div>
             <div id="main-deck-count" class="pile-count">0</div>
             <div class="pile-label">DECK</div>
+          </div>
+          <div class="small-pile" id="pile-destroyed" title="Destroyed Cards — Click to view">
+            <div class="pile-card small destroyed-back"></div>
+            <div id="destroyed-count" class="pile-count">0</div>
+            <div class="pile-label">DESTROYED</div>
           </div>
         </div>
       </div>
@@ -112,19 +118,20 @@
       <div id="lineup" class="lineup"></div>
       <div id="play-area" class="play-area">
         <div id="played-cards" class="played-cards"></div>
-        <div id="special-options" class="special-options"></div>
+        <div class="ongoing-label">ONGOING</div>
+        <div id="my-ongoing" class="ongoing-zone"></div>
       </div>
     </div>
 
-    <!-- Right: persona + ongoing -->
+    <!-- Right: persona + special options -->
     <div class="board-right">
+      <button id="btn-over-persona" class="btn-persona-pile hidden">▲ ABOVE (<span id="over-persona-count">0</span>)</button>
       <div id="my-persona-wrap" class="persona-wrap">
         <div id="my-persona-card" class="persona-card-large"></div>
         <div id="my-persona-name" class="persona-name-label"></div>
       </div>
-      <div class="ongoing-label">ONGOING</div>
-      <div id="my-ongoing" class="ongoing-zone"></div>
-      <div id="my-under" class="under-zone"></div>
+      <button id="btn-under-persona" class="btn-persona-pile hidden">▼ UNDER (<span id="under-persona-count">0</span>)</button>
+      <div id="special-options" class="special-options"></div>
     </div>
 
   </div><!-- /board -->
@@ -142,7 +149,7 @@
         <span id="score-value">0</span>
         <span class="hud-stat-label">VP</span>
       </div>
-      <div class="hud-stat">
+      <div class="hud-stat" id="hud-player-deck">
         <span class="hud-stat-icon">🂠</span>
         <span id="deck-value">0</span>
         <span class="hud-stat-label">DECK</span>
@@ -194,6 +201,42 @@
   </div>
 </div>
 
+<!-- ═══════════════════ ABOVE PERSONA MODAL ═══════════════════ -->
+<div id="over-persona-modal" class="discard-modal hidden">
+  <div id="over-persona-backdrop" class="discard-backdrop"></div>
+  <div class="discard-panel">
+    <div class="discard-panel-header">
+      <span class="discard-panel-title">ABOVE SUPER HERO</span>
+      <button id="btn-close-over-persona" class="btn-close-modal">✕</button>
+    </div>
+    <div id="over-persona-cards-grid" class="discard-cards-grid"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ UNDER PERSONA MODAL ═══════════════════ -->
+<div id="under-persona-modal" class="discard-modal hidden">
+  <div id="under-persona-backdrop" class="discard-backdrop"></div>
+  <div class="discard-panel">
+    <div class="discard-panel-header">
+      <span class="discard-panel-title">UNDER SUPER HERO</span>
+      <button id="btn-close-under-persona" class="btn-close-modal">✕</button>
+    </div>
+    <div id="under-persona-cards-grid" class="discard-cards-grid"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ DESTROYED MODAL ═══════════════════ -->
+<div id="destroyed-modal" class="discard-modal hidden">
+  <div id="destroyed-backdrop" class="discard-backdrop"></div>
+  <div class="discard-panel">
+    <div class="discard-panel-header">
+      <span class="discard-panel-title">DESTROYED CARDS</span>
+      <button id="btn-close-destroyed" class="btn-close-modal">✕</button>
+    </div>
+    <div id="destroyed-cards-grid" class="discard-cards-grid"></div>
+  </div>
+</div>
+
 <!-- ═══════════════════ CARD PREVIEW ═══════════════════ -->
 <div id="card-preview" class="card-preview hidden">
   <img id="preview-img" src="" alt="" />
@@ -212,7 +255,12 @@
 <div id="turn-banner" class="turn-banner hidden"></div>
 
 <!-- ═══════════════════ CONNECTION STATUS ═══════════════════ -->
-<div id="connection-status" class="conn-status disconnected">Connecting…</div>
+<div id="conn-wrapper">
+  <div id="connection-status" class="conn-status disconnected">Connecting…</div>
+  <div id="conn-dropdown" class="conn-dropdown hidden">
+    <button id="restart-btn" class="conn-dropdown-item">↺ Restart Game</button>
+  </div>
+</div>
 
 <script src="game.js"></script>
 </body>

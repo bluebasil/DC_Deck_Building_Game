@@ -92,6 +92,8 @@ def _run_game(set_indices, player_configs):
         # Emit final game-over state
         _emit_state()
 
+    except globe.GameAborted:
+        print("[game thread] Game aborted by user.", flush=True)
     except Exception as e:
         err = traceback.format_exc()
         print(f"[game thread error]\n{err}", flush=True)

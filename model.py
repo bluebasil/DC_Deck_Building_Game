@@ -49,7 +49,7 @@ class pile:
     contents = None
     # Not all piles have owners, like the line-up
     # Note: the owners constants could be set as owners here if desired
-    # but right now, any non-player piles and None as their owner
+    # but right now, any non-player piles have None as their owner
     owner = None
     # Not nessesary but usefull for debuging
     name = ""
@@ -414,10 +414,18 @@ class player:
     # 'look at the top three cards of your deck' have to do some annoying things to get the top 3
     # (They pop the card after reveling, in a loop, and then later put the cards back)
     def reveal_card(self, public: bool = True, number: int = 1):
-        if not self.manage_reveal(number=number):
-            return None
-        can_reveal = min(len(self.deck.contents), number)
-        top_cards = self.deck.contents[-can_reveal:]
+        reveal_depth = 1
+        top_cards = []
+        while reveal_depth <= number:
+            if len(self.deck.contents) < reveal_depth:
+                # need to shuffle discard now
+                self.discard.shuffle()
+                temp_discard = self.discard.contents
+                self.discard.contents = []
+                temp_discard.extend(self.deck.contents)
+                self.deck.contents = temp_discard
+            top_cards.append(self.deck.contents[-reveal_depth])
+            reveal_depth += 1
         if public:
             reveal_text = f"This was on the top of {self.persona.name}'s deck."
             effects.reveal(reveal_text, self, top_cards)
@@ -425,10 +433,11 @@ class player:
             return top_cards
         return top_cards[0]
 
+
     # If the deck is empty, shuffle the discard pile into the deck
     def manage_reveal(self, number: int = 1):
         if not self.deck.can_draw(number=number):
-            self.deck.contents = self.discard.contents
+            self.deck.contents.extend(self.discard.contents)
             self.discard.contents = []
             self.deck.shuffle()
             return self.deck.can_draw(number=number)
@@ -492,6 +501,13 @@ class player:
             globe.boss.destroyed_stack.add(card)
         elif card.owner_type == owners.VILLAINDECK:
             globe.boss.supervillain_stack.add(card)
+        else:
+            print("EEERRRROOOORRR Card has no owner: ", card.owner_type, card.owner, card.name)
+            exit()
+        location = card.find_self()
+        if location is not None:
+            card.location_tracking.append(location)
+
 
     # self.discard.add(card.pop_self())
     # self.discarded_this_turn.append(card)
@@ -931,12 +947,14 @@ class model:
         output_persona_stats(self.players,end_reason)
 
     def register(self,func):
-        elf.notify = func
+        self.notify = func
 
     def clear_queue(self):
         if globe.DEBUG:
             print(f"start clear: {len(self.trigger_queue)}", flush=True)
         while len(self.trigger_queue) > 0:
+            print(f"{self.trigger_queue[-1].trigger_id}", flush=True)
+            print(self.trigger_queue[-1].data, flush=True)
             self.trigger_queue.pop(0).run()
         if globe.DEBUG:
             print("end clear", flush=True)

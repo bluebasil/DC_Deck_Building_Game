@@ -5,8 +5,9 @@
 'use strict';
 
 // ── Config ─────────────────────────────────────────────────────────────────
-// const SERVER_URL = window.location.origin;   // same origin as Flask
-const SERVER_URL = 'https://dc-deck-builder-16370628759.us-central1.run.app';
+const SERVER_URL = window.location.hostname === 'localhost'
+    ? window.location.origin
+    : 'https://dc-deck-builder-16370628759.us-central1.run.app';
 const IMG_ROOT   = 'card-images/';
 
 // ── Socket.IO ───────────────────────────────────────────────────────────────
@@ -68,6 +69,27 @@ socket.on('connect', () => {
 socket.on('disconnect', () => {
   $('connection-status').textContent = 'Disconnected';
   $('connection-status').className = 'conn-status disconnected';
+  $('conn-dropdown').classList.add('hidden');
+});
+
+// Toggle dropdown on badge click (only when connected)
+$('connection-status').addEventListener('click', e => {
+  if (!$('connection-status').classList.contains('connected')) return;
+  e.stopPropagation();
+  $('conn-dropdown').classList.toggle('hidden');
+});
+
+// Restart game
+$('restart-btn').addEventListener('click', () => {
+  $('conn-dropdown').classList.add('hidden');
+  socket.emit('abandon_game');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (!$('conn-wrapper').contains(e.target)) {
+    $('conn-dropdown').classList.add('hidden');
+  }
 });
 socket.on('available_sets', data => {
   availableSets = data;
@@ -110,7 +132,11 @@ function handleStateUpdate(newState) {
   updateActionLog(newState);
 
   // Calculate card movement animations BEFORE re-rendering (needs old cardRegistry positions)
-  const pendingAnims = calcAnimations(newState.events || [], old);
+  const pendingAnims = calcAnimations(
+    old && old.card_positions,
+    newState.card_positions,
+    old
+  );
 
   renderGameBoard(old);
   renderQuery();
@@ -265,6 +291,7 @@ function buildOpponentPanel(p) {
         <div class="opp-stat">★ <span>${p.score}</span></div>
         <div class="opp-stat">🂠 <span>${p.hand_size}</span></div>
         <div class="opp-stat">🃏 <span>${p.deck_size}</span></div>
+        <div class="opp-stat opp-discard-btn" title="View discard pile">♻ <span>${p.discard_size}</span></div>
       </div>
       <div class="opponent-played">
         ${(p.played_this_turn || []).map(c =>
@@ -275,6 +302,13 @@ function buildOpponentPanel(p) {
       </div>
     </div>
   `;
+
+  div.querySelector('.opp-discard-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    const current = state.players.find(pl => pl.pid === p.pid);
+    openDiscardModal(current || p);
+  });
+
   return div;
 }
 
@@ -312,9 +346,43 @@ function renderSVStack() {
     addHover(svCard, sv.top);
   }
 
-  $('kick-count').textContent    = state.kick_stack.count;
-  $('weakness-count').textContent = state.weakness_stack.count;
+  // Kick pile — show top card face-up
+  // const kickPileCard = $('pile-kick').querySelector('.pile-card');
+  const kickCard  = $('kick-card');
+  const kickCount = $('kick-count');
+  const kick = state.kick_stack;
+
+  kickCount.textContent = kick.count;
+  kickCard.innerHTML = '';
+
+  if (kick.top) {
+    const img = document.createElement('img');
+    img.src = imgUrl(kick.top.image);
+    img.alt = kick.top.name;
+    img.onerror = () => img.style.display = 'none';
+    kickCard.appendChild(img);
+
+    const badge = document.createElement('div');
+    badge.className = 'card-cost-badge';
+    badge.textContent = kick.top.cost;
+    kickCard.appendChild(badge);
+
+    const me = getMyPlayer();
+    if (me && isMyTurn() && me.power >= kick.top.cost) {
+      kickCard.classList.add('buyable');
+    } else {
+      kickCard.classList.remove('buyable');
+    }
+
+    kickCard.onclick = () => {
+      if (isMyTurn()) sendCardAction(kick.top.id);
+    };
+    addHover(kickCard, kick.top);
+  }
+
+  $('weakness-count').textContent  = state.weakness_stack.count;
   $('main-deck-count').textContent = state.main_deck_size;
+  $('destroyed-count').textContent = state.destroyed_count || 0;
 }
 
 function renderLineup(old) {
@@ -410,15 +478,18 @@ function renderPlayArea() {
     const el = buildGameCard(card, 'ongoing', true);
     addHover(el, card);
     ongoingZone.appendChild(el);
+    cardRegistry[card.id] = el;
   });
 
-  const underZone = $('my-under');
-  underZone.innerHTML = '';
-  (me.under_persona || []).forEach(card => {
-    const el = buildGameCard(card, 'under', true);
-    addHover(el, card);
-    underZone.appendChild(el);
-  });
+  // Above/under persona pile count buttons
+  const overCount  = (me.over_persona  || []).length;
+  const underCount = (me.under_persona || []).length;
+  const btnOver  = $('btn-over-persona');
+  const btnUnder = $('btn-under-persona');
+  $('over-persona-count').textContent  = overCount;
+  $('under-persona-count').textContent = underCount;
+  btnOver.classList.toggle('hidden',  overCount  === 0);
+  btnUnder.classList.toggle('hidden', underCount === 0);
 }
 
 function renderPlayerHUD() {
@@ -471,7 +542,7 @@ function renderHand(me) {
 
     if (isMyTurn()) {
       el.classList.add('playable');
-      el.onclick = () => playCard(card, el);
+      el.onclick = () => playCard(card);
     }
 
     el.style.left            = xPos + 'px';
@@ -524,10 +595,9 @@ function initDropZone() {
     zone.classList.remove('drop-active');
     if (draggedCard && isMyTurn()) {
       const card = draggedCard;
-      const el   = draggedEl;
       draggedCard = null;
       draggedEl   = null;
-      playCard(card, el);
+      playCard(card);
     }
   });
 }
@@ -592,36 +662,10 @@ function sendSpecialAction(specialId) {
   socket.emit('action', { type: 'special', special_id: specialId });
 }
 
-function playCard(card, el) {
-  if (!el) {
-    sendCardAction(card.id);
-    return;
-  }
-  // Animate card from hand to play area, then send action
-  const playArea  = $('played-cards');
-  const targetRect = playArea.getBoundingClientRect();
-  const sourceRect = el.getBoundingClientRect();
-
-  // Create flying clone
-  const clone = el.cloneNode(true);
-  clone.style.cssText = `
-    position:fixed; left:${sourceRect.left}px; top:${sourceRect.top}px;
-    width:${sourceRect.width}px; height:${sourceRect.height}px;
-    z-index:200; pointer-events:none; border-radius:8px; overflow:hidden;
-  `;
-  document.body.appendChild(clone);
-
-  const destX = targetRect.left + targetRect.width / 2 - sourceRect.width / 2;
-  const destY = targetRect.top  + targetRect.height / 2 - sourceRect.height / 2;
-
-  gsap.to(clone, {
-    left: destX, top: destY, duration: 0.35,
-    ease: 'power2.out',
-    onComplete: () => {
-      clone.remove();
-      sendCardAction(card.id);
-    }
-  });
+function playCard(card) {
+  // Send action immediately; state-diff animation will fire on state update
+  // using the card's current position in cardRegistry as the source rect.
+  sendCardAction(card.id);
 }
 
 $('btn-end-turn').addEventListener('click', () => {
@@ -754,16 +798,16 @@ function updateActionLog(newState) {
   const events = newState.events || [];
   events.forEach(event => {
     const player = newState.players && newState.players.find(p => p.pid === event.pid);
-    if (!player || player.is_human) return;
+    if (!player) return;
     const name = player.persona ? player.persona.name : `P${event.pid}`;
-    if (event.type === 'play') addLogEntry(name, event.card_name, 'played');
-    if (event.type === 'gain') addLogEntry(name, event.card_name, 'bought');
+    if (event.type === 'play') addLogEntry(name, event.card_name, 'played', player.is_human);
+    if (event.type === 'gain') addLogEntry(name, event.card_name, 'bought', player.is_human);
   });
 }
 
-function addLogEntry(playerName, cardName, verb) {
-  actionLog.unshift({ playerName, cardName, verb: verb || 'played' });
-  if (actionLog.length > 10) actionLog.pop();
+function addLogEntry(playerName, cardName, verb, isHuman) {
+  actionLog.unshift({ playerName, cardName, verb: verb || 'played', isHuman: !!isHuman });
+  if (actionLog.length > 15) actionLog.pop();
   renderActionLog();
 }
 
@@ -782,6 +826,7 @@ function renderActionLog() {
   actionLog.forEach(entry => {
     const div = document.createElement('div');
     div.className = 'log-entry';
+    if (entry.isHuman) div.classList.add('log-entry-human');
     const verbClass = entry.verb === 'bought' ? 'log-verb-buy' : 'log-verb-play';
     div.innerHTML = `<span class="log-player">${entry.playerName}</span> <span class="${verbClass}">${entry.verb}</span> <span class="log-card">${entry.cardName}</span>`;
     container.appendChild(div);
@@ -789,14 +834,20 @@ function renderActionLog() {
 }
 
 // ── Discard pile popup ────────────────────────────────────────────────────────
-function openDiscardModal() {
-  const me = getMyPlayer();
-  if (!me) return;
+function openDiscardModal(player) {
+  const p = player || getMyPlayer();
+  if (!p) return;
+
+  const titleEl = $('discard-modal').querySelector('.discard-panel-title');
+  if (titleEl) {
+    const name = p.persona ? p.persona.name : `Player ${p.pid}`;
+    titleEl.textContent = p.is_human ? 'YOUR DISCARD PILE' : `${name}'s DISCARD PILE`;
+  }
 
   const grid = $('discard-cards-grid');
   grid.innerHTML = '';
 
-  const cards = me.discard_cards || [];
+  const cards = p.discard_cards || [];
   if (cards.length === 0) {
     grid.innerHTML = '<div class="discard-empty">Discard pile is empty</div>';
   } else {
@@ -816,9 +867,57 @@ function closeDiscardModal() {
   hidePreview();
 }
 
-$('hud-discard').addEventListener('click', openDiscardModal);
+$('hud-discard').addEventListener('click', () => openDiscardModal());
 $('btn-close-discard').addEventListener('click', closeDiscardModal);
 $('discard-backdrop').addEventListener('click', closeDiscardModal);
+
+// ── Persona pile modals ───────────────────────────────────────────────────────
+function openPersonaPileModal(which) {
+  const me = getMyPlayer();
+  if (!me) return;
+  const cards  = which === 'over' ? (me.over_persona || []) : (me.under_persona || []);
+  const gridId = which === 'over' ? 'over-persona-cards-grid' : 'under-persona-cards-grid';
+  const modalId = which === 'over' ? 'over-persona-modal' : 'under-persona-modal';
+  const grid = $(gridId);
+  grid.innerHTML = '';
+  if (cards.length === 0) {
+    grid.innerHTML = '<div class="discard-empty">No cards here</div>';
+  } else {
+    cards.forEach(card => { const el = buildGameCard(card); addHover(el, card); grid.appendChild(el); });
+  }
+  $(modalId).classList.remove('hidden');
+}
+function closePersonaPileModal(which) {
+  const modalId = which === 'over' ? 'over-persona-modal' : 'under-persona-modal';
+  $(modalId).classList.add('hidden');
+  hidePreview();
+}
+$('btn-over-persona').addEventListener('click',       () => openPersonaPileModal('over'));
+$('btn-under-persona').addEventListener('click',      () => openPersonaPileModal('under'));
+$('btn-close-over-persona').addEventListener('click', () => closePersonaPileModal('over'));
+$('btn-close-under-persona').addEventListener('click',() => closePersonaPileModal('under'));
+$('over-persona-backdrop').addEventListener('click',  () => closePersonaPileModal('over'));
+$('under-persona-backdrop').addEventListener('click', () => closePersonaPileModal('under'));
+
+// ── Destroyed pile modal ──────────────────────────────────────────────────────
+function openDestroyedModal() {
+  const grid = $('destroyed-cards-grid');
+  grid.innerHTML = '';
+  const cards = (state && state.destroyed_cards) || [];
+  if (cards.length === 0) {
+    grid.innerHTML = '<div class="discard-empty">No destroyed cards</div>';
+  } else {
+    cards.forEach(card => { const el = buildGameCard(card); addHover(el, card); grid.appendChild(el); });
+  }
+  $('destroyed-modal').classList.remove('hidden');
+}
+function closeDestroyedModal() {
+  $('destroyed-modal').classList.add('hidden');
+  hidePreview();
+}
+$('pile-destroyed').addEventListener('click', openDestroyedModal);
+$('btn-close-destroyed').addEventListener('click', closeDestroyedModal);
+$('destroyed-backdrop').addEventListener('click', closeDestroyedModal);
 
 // ── Card preview tooltip ─────────────────────────────────────────────────────
 const preview = $('card-preview');
@@ -878,82 +977,178 @@ function hidePreview() {
   preview.classList.add('hidden');
 }
 
+// Hide the preview on any click (card removed from DOM before mouseleave fires)
+document.addEventListener('mousedown', () => {
+  clearTimeout(previewTimeout);
+  hidePreview();
+});
+
 // ── Card movement animations ─────────────────────────────────────────────────
 // Called BEFORE renderGameBoard so old cardRegistry positions are still valid.
-// Returns an array of animation descriptors to be played after re-render.
-function calcAnimations(events, oldState) {
+// Uses full card_positions diff for resilient detection of any card movement.
+
+// Reference card dimensions for each pile element (width × height in px, maintaining ~5:7 ratio)
+const PILE_CARD_SIZE = {
+  'lineup':            { w: 110, h: 154 },
+  'pile-kick':         { w: 55, h: 77 },
+  'pile-weakness':     { w: 55, h: 77 },
+  'pile-main-deck':    { w: 55, h: 77 },
+  'pile-destroyed':    { w: 55, h: 77 },
+  'sv-stack':          { w: 88, h: 124 },
+  'hud-discard':       { w: 55, h: 77 },
+  'hud-player-deck':   { w: 55, h: 77 },
+  'played-cards':      { w: 88, h: 124 },
+  'hand-zone':         { w: 88, h: 124 },
+  'my-ongoing':        { w: 66, h: 93 },
+  'btn-under-persona': { w: 55, h: 77 },
+  'btn-over-persona':  { w: 55, h: 77 },
+};
+
+// Whether a pile shows cards face-down (card back visible)
+function isFaceDown(pileName) {
+  if (!pileName) return false;
+  if (pileName === 'main_deck') return true;
+  if (pileName.endsWith('_deck')) return true;          // all player decks
+  if (myPid !== null) {
+    if (pileName === `p${myPid}_hand`)  return false;   // human hand: face-up
+    if (pileName === `p${myPid}_under`) return false;   // human under-hero: face-up
+  }
+  if (pileName.endsWith('_hand'))  return true;         // opponent hands
+  if (pileName.endsWith('_under')) return true;         // opponent under-hero
+  return false;                                         // everything else: face-up
+}
+
+function getPileElementId(pileName) {
+  if (!pileName) return null;
+  if (pileName === 'main_deck')      return 'pile-main-deck';
+  if (pileName === 'lineup')         return 'lineup';
+  if (pileName === 'kick_stack')     return 'pile-kick';
+  if (pileName === 'weakness_stack') return 'pile-weakness';
+  if (pileName === 'sv_stack')       return 'sv-stack';
+  if (pileName === 'destroyed')      return 'pile-destroyed';
+  if (myPid !== null) {
+    if (pileName === `p${myPid}_discard`) return 'hud-discard';
+    if (pileName === `p${myPid}_played`)  return 'played-cards';
+    if (pileName === `p${myPid}_ongoing`) return 'my-ongoing';
+    if (pileName === `p${myPid}_under`)   return 'btn-under-persona';
+    if (pileName === `p${myPid}_over`)    return 'btn-over-persona';
+    if (pileName === `p${myPid}_hand`)    return 'hand-zone';
+    if (pileName === `p${myPid}_deck`)    return 'hud-player-deck';
+    // All opponent piles → their opponent panel element
+    const m = pileName.match(/^p(\d+)_/);
+    if (m && parseInt(m[1]) !== myPid) return `opponent-${m[1]}`;
+  }
+  return null;  // no mapping found
+}
+
+function findCardData(cardId, snapshot) {
+  if (!snapshot) return null;
+  const allArrays = [
+    snapshot.lineup || [],
+    ...(snapshot.players || []).flatMap(p => [
+      p.hand || [], p.played || [], p.ongoing || [],
+      p.under_persona || [], p.over_persona || [],
+    ]),
+  ];
+  for (const arr of allArrays) {
+    const found = arr.find(c => c && c.id === cardId);
+    if (found) return found;
+  }
+  return null;
+}
+
+function calcAnimations(oldPositions, newPositions, oldState) {
+  if (!oldPositions || !newPositions || myPid === null) return [];
   const anims = [];
+  const seen  = new Set();
 
-  // ── State-diff: new cards in human hand → draw animation (deck → hand) ──
-  if (myPid !== null && oldState) {
-    const newPlayer = state.players && state.players.find(p => p.pid === myPid);
-    const oldPlayer = oldState.players && oldState.players.find(p => p.pid === myPid);
-    const newHand   = (newPlayer && newPlayer.hand) || [];
-    const oldHand   = (oldPlayer && oldPlayer.hand) || [];
-    const oldHandIds = new Set(oldHand.map(c => c.id));
-    const deckEl = $('pile-main-deck');
-    if (deckEl) {
-      newHand.forEach(c => {
-        if (!oldHandIds.has(c.id)) {
-          anims.push({ card: c, fromRect: deckEl.getBoundingClientRect(), toId: 'hand-zone' });
-        }
-      });
+  for (const [cardId, newPile] of Object.entries(newPositions)) {
+    const oldPile = oldPositions[cardId];
+    if (!oldPile || oldPile === newPile) continue;  // new card or unchanged
+    if (seen.has(cardId)) continue;
+    seen.add(cardId);
+
+    const srcId  = getPileElementId(oldPile);
+    const destId = getPileElementId(newPile);
+
+    // Skip if either pile has no element mapping (shouldn't happen with full coverage)
+    if (!srcId || !destId) continue;
+
+    // Get source rect — always try cardRegistry first (exact individual card position).
+    // Only use entry if element is still in the DOM; stale entries from cleared containers
+    // return {left:0,top:0,w:0,h:0} and cause 0,0 animations.
+    let fromRect = null;
+    const registryEl = cardRegistry[cardId];
+    if (registryEl && registryEl.isConnected) {
+      const r = registryEl.getBoundingClientRect();
+      if (r.width > 0 || r.height > 0) fromRect = r;
     }
-  }
-
-  // ── State-diff: cards removed from lineup → gain animation (lineup → discard) ──
-  if (oldState) {
-    const newLineupIds = new Set((state.lineup || []).map(c => c.id));
-    (oldState.lineup || []).forEach(c => {
-      if (!newLineupIds.has(c.id)) {
-        const cardEl = cardRegistry[c.id];
-        if (cardEl) {
-          anims.push({ card: c, fromRect: cardEl.getBoundingClientRect(), toId: 'hud-discard' });
-        }
-      }
-    });
-  }
-
-  // ── Events: gain redirected to deck (not in lineup diff) ──
-  (events || []).forEach(event => {
-    if (event.type === 'gain' && event.pid === myPid && event.to === 'deck') {
-      const cardEl = cardRegistry[event.card_id];
-      if (cardEl && !anims.find(a => a.card.id === event.card_id)) {
-        anims.push({
-          card: { image: event.card_image, name: event.card_name, id: event.card_id, type: 'unknown' },
-          fromRect: cardEl.getBoundingClientRect(),
-          toId: 'pile-main-deck',
-        });
-      }
+    // Fallback: use pile element rect
+    if (!fromRect) {
+      const el = $(srcId);
+      if (el) fromRect = el.getBoundingClientRect();
     }
-  });
+    if (!fromRect) continue;
+
+    const destEl = $(destId);
+    if (!destEl) continue;
+
+    const faceDown = isFaceDown(oldPile);
+    const cardData = findCardData(cardId, oldState);
+    anims.push({ card: cardData || { id: cardId }, fromRect, toId: destId, srcId, faceDown });
+  }
 
   return anims;
 }
 
 function playAnimations(anims) {
   anims.forEach((anim, i) => {
-    flyCardOverlay(anim.card, anim.fromRect, anim.toId, i * 0.08);
+    flyCardOverlay(anim.card, anim.fromRect, anim.toId, anim.srcId, i * 0.08, anim.faceDown);
   });
 }
 
-function flyCardOverlay(cardData, fromRect, toId, delay) {
+function flyCardOverlay(cardData, fromRect, toId, srcId, delay, faceDown) {
   const toEl = $(toId);
   if (!toEl || !fromRect) return;
   const toRect = toEl.getBoundingClientRect();
 
-  const w = fromRect.width  || 88;
-  const h = fromRect.height || 124;
+  // Determine start size from srcId hint, falling back to clamped fromRect
+  // Opponent panels are large containers — treat them as small-card size
+  const srcSize = PILE_CARD_SIZE[srcId] || (srcId && srcId.startsWith('opponent-') ? { w: 55, h: 77 } : null);
+  const rawW = Math.min(fromRect.width  || 88, 140);
+  const rawH = Math.min(fromRect.height || 124, 196);
+  // Enforce ~5:7 card aspect ratio
+  const aspect = 5 / 7;
+  let startW, startH;
+  if (srcSize) {
+    startW = srcSize.w; startH = srcSize.h;
+  } else if (rawW / rawH > aspect + 0.15) {
+    startH = rawH; startW = Math.round(rawH * aspect);
+  } else if (rawW / rawH < aspect - 0.15) {
+    startW = rawW; startH = Math.round(rawW / aspect);
+  } else {
+    startW = rawW; startH = rawH;
+  }
 
-  // Build a card clone as overlay
+  // Destination size for scale animation
+  const destSize = PILE_CARD_SIZE[toId] || (toId && toId.startsWith('opponent-') ? { w: 55, h: 77 } : { w: 88, h: 124 });
+  const endScale = destSize.w / startW;
+
+  // Position overlay so its center aligns with the source rect center
+  const startX = fromRect.left + fromRect.width  / 2 - startW / 2;
+  const startY = fromRect.top  + fromRect.height / 2 - startH / 2;
+
+  // Build card clone as overlay
   const el = document.createElement('div');
   el.style.cssText = `
-    position:fixed; left:${fromRect.left}px; top:${fromRect.top}px;
-    width:${w}px; height:${h}px; z-index:9999; pointer-events:none;
+    position:fixed; left:${startX}px; top:${startY}px;
+    width:${startW}px; height:${startH}px; z-index:9999; pointer-events:none;
     border-radius:8px; overflow:hidden; border:2px solid rgba(201,162,39,.9);
-    box-shadow:0 0 20px rgba(201,162,39,.6);
+    box-shadow:0 0 20px rgba(201,162,39,.6); transform-origin:center center;
   `;
-  if (cardData && cardData.image) {
+  if (faceDown) {
+    el.classList.add('deck-back');
+  } else if (cardData && cardData.image) {
     const img = document.createElement('img');
     img.src = imgUrl(cardData.image);
     img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
@@ -964,17 +1159,16 @@ function flyCardOverlay(cardData, fromRect, toId, delay) {
   }
   document.body.appendChild(el);
 
-  const destX = toRect.left + toRect.width  / 2 - w / 2;
-  const destY = toRect.top  + toRect.height / 2 - h / 2;
+  // Fly center of card to center of destination
+  const destX = toRect.left + toRect.width  / 2 - startW / 2;
+  const destY = toRect.top  + toRect.height / 2 - startH / 2;
 
-  // Phase 1: fly to destination at full opacity
   gsap.to(el, {
-    left: destX, top: destY,
+    left: destX, top: destY, scale: endScale,
     delay, duration: 0.4, ease: 'power2.out',
     onComplete: () => {
-      // Phase 2: quick fade out at destination
       gsap.to(el, {
-        opacity: 0, scale: 0.6, duration: 0.25, ease: 'power2.in',
+        opacity: 0, duration: 0.2, ease: 'power1.in',
         onComplete: () => el.remove(),
       });
     },
