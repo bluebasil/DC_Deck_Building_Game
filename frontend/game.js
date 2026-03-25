@@ -525,7 +525,7 @@ function renderHand(me) {
   const cards = me.hand || [];
   const count = cards.length;
   const maxW  = zone.offsetWidth || 600;
-  const cardW = 120;  // matches --hand-card-w
+  const cardW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--hand-card-w'), 10) || 120;
   const spread = Math.min((maxW - cardW) / Math.max(count - 1, 1), 88);
   const maxRot = Math.min(3 * count, 18);
   const totalW = (count - 1) * spread + cardW;
@@ -569,7 +569,8 @@ function renderHand(me) {
       });
     }
 
-    addHover(el, card);
+    addHover(el, card, isMyTurn()); // skipTouch=true when playable — addTouchDrag handles it
+    if (isMyTurn()) addTouchDrag(el, card);
     zone.appendChild(el);
     cardRegistry[card.id] = el;
   });
@@ -600,6 +601,135 @@ function initDropZone() {
       playCard(card);
     }
   });
+}
+
+// ── Touch drag-to-play (mobile) ──────────────────────────────────────────────
+function createGhostCard(sourceEl, rect) {
+  const ghost = document.createElement('div');
+  ghost.style.cssText = `
+    position:fixed; left:${rect.left}px; top:${rect.top}px;
+    width:${rect.width}px; height:${rect.height}px;
+    z-index:9999; pointer-events:none;
+    border-radius:8px; overflow:hidden;
+    border:2px solid rgba(201,162,39,.9);
+    box-shadow:0 12px 32px rgba(0,0,0,.75), 0 0 20px rgba(201,162,39,.5);
+    transform-origin:center center;
+  `;
+  const img = sourceEl.querySelector('img');
+  if (img) {
+    const gi = document.createElement('img');
+    gi.src = img.src;
+    gi.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+    gi.draggable = false;
+    ghost.appendChild(gi);
+  } else {
+    ghost.style.background = getComputedStyle(sourceEl).background;
+  }
+  document.body.appendChild(ghost);
+  return ghost;
+}
+
+// Attach immediate touch drag-to-play to a hand card element.
+// - Tap  (<8 px movement, <500 ms) → lets the existing onclick fire.
+// - Hold (>500 ms, no movement)    → shows card preview.
+// - Drag (>8 px movement)          → ghost card follows finger; release over
+//   play area plays the card; release elsewhere snaps ghost back.
+function addTouchDrag(el, card) {
+  el.addEventListener('touchstart', e => {
+    const t0        = e.touches[0];
+    const startX    = t0.clientX;
+    const startY    = t0.clientY;
+    const touchOffX = t0.clientX - el.getBoundingClientRect().left;
+    const touchOffY = t0.clientY - el.getBoundingClientRect().top;
+    const startRect = el.getBoundingClientRect();   // snapshot before any layout shift
+    let isDragging  = false;
+    let ghost       = null;
+
+    // Long-hold without movement → show preview
+    let holdTimer = setTimeout(() => {
+      holdTimer = null;
+      if (!isDragging) showPreviewAtRect(el.getBoundingClientRect(), card);
+    }, 500);
+
+    function onMove(e) {
+      const t  = e.touches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+
+      if (!isDragging) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        // Movement threshold crossed — start drag
+        isDragging = true;
+        if (holdTimer !== null) { clearTimeout(holdTimer); holdTimer = null; }
+        hidePreview();
+        ghost = createGhostCard(el, startRect);
+        el.style.opacity = '0.3';
+        gsap.fromTo(ghost, { scale: 1 }, { scale: 1.12, duration: 0.15, ease: 'back.out(2)' });
+      }
+
+      e.preventDefault(); // prevent page scroll while dragging
+
+      // Ghost follows finger, offset so it appears where the card was grabbed
+      ghost.style.left = (t.clientX - touchOffX) + 'px';
+      ghost.style.top  = (t.clientY - touchOffY) + 'px';
+
+      // Highlight drop zone
+      const over = document.elementFromPoint(t.clientX, t.clientY);
+      $('played-cards').classList.toggle('drop-active', $('played-cards').contains(over));
+    }
+
+    function cleanup() {
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend',   onEnd);
+      el.removeEventListener('touchcancel', onCancel);
+    }
+
+    function onEnd(e) {
+      if (holdTimer !== null) { clearTimeout(holdTimer); holdTimer = null; }
+      cleanup();
+      if (!isDragging) return; // was a tap — let onclick fire normally
+
+      e.preventDefault(); // suppress click since drag handled interaction
+      el.style.opacity = '';
+      const t = e.changedTouches[0];
+      const over = document.elementFromPoint(t.clientX, t.clientY);
+      const dropZone = $('played-cards');
+      dropZone.classList.remove('drop-active');
+
+      if (dropZone.contains(over)) {
+        // Fly ghost into play area, then play the card
+        const dest = dropZone.getBoundingClientRect();
+        gsap.to(ghost, {
+          left:  dest.left + (dest.width  - startRect.width)  / 2,
+          top:   dest.top  + (dest.height - startRect.height) / 2,
+          scale: 0.85, opacity: 0, duration: 0.2, ease: 'power2.in',
+          onComplete: () => ghost.remove(),
+        });
+        playCard(card);
+      } else {
+        // Snap ghost back to where the card lives
+        gsap.to(ghost, {
+          left: startRect.left, top: startRect.top,
+          scale: 1, opacity: 0, duration: 0.25, ease: 'power2.out',
+          onComplete: () => ghost.remove(),
+        });
+      }
+    }
+
+    function onCancel() {
+      if (holdTimer !== null) { clearTimeout(holdTimer); holdTimer = null; }
+      cleanup();
+      if (isDragging) {
+        el.style.opacity = '';
+        if (ghost) ghost.remove();
+        $('played-cards').classList.remove('drop-active');
+      }
+    }
+
+    el.addEventListener('touchmove',   onMove);   // not passive — needs preventDefault
+    el.addEventListener('touchend',    onEnd);
+    el.addEventListener('touchcancel', onCancel);
+  }, { passive: true });
 }
 
 // ── Card building ───────────────────────────────────────────────────────────
@@ -766,27 +896,63 @@ function renderTurnIndicator(old, newState) {
 // ── Game over ───────────────────────────────────────────────────────────────
 function renderGameOver() {
   if (!state) return;
+
+  const endReason    = state.end_reason || 'regular';
+  const scores       = state.player_scores || [];
+  const everyoneLost = endReason === 'main_deck';
+
+  const ranked = state.players.slice()
+    .map((p, i) => ({
+      name:    p.persona ? p.persona.name : `Player ${p.pid}`,
+      image:   p.persona ? imgUrl(p.persona.image) : '',
+      score:   scores[i] !== undefined ? scores[i] : p.score,
+      isHuman: p.is_human,
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  const humanWon = ranked.findIndex(p => p.isHuman) === 0;
+
+  // ── Result heading ──────────────────────────────────────────
+  const resultEl = $('gameover-result');
+  const reasonEl = $('gameover-reason');
+
+  if (everyoneLost) {
+    resultEl.textContent = 'EVERYONE LOST';
+    resultEl.className   = 'gameover-result everyone-lost';
+    reasonEl.textContent = 'The main deck ran out of cards';
+  } else if (humanWon) {
+    resultEl.textContent = 'YOU WIN!';
+    resultEl.className   = 'gameover-result win';
+    reasonEl.textContent = 'All supervillains defeated';
+  } else {
+    resultEl.textContent = 'YOU LOSE';
+    resultEl.className   = 'gameover-result lose';
+    reasonEl.textContent = 'All supervillains defeated';
+  }
+
+  gsap.fromTo(resultEl,
+    { scale: 1.45, opacity: 0 },
+    { scale: 1, opacity: 1, duration: 0.55, ease: 'back.out(2.2)' }
+  );
+  gsap.from(reasonEl, { opacity: 0, y: 8, duration: 0.35, delay: 0.45 });
+
+  // ── Score table ─────────────────────────────────────────────
   const scoresEl = $('gameover-scores');
   scoresEl.innerHTML = '';
 
-  const players = state.players.slice();
-  const scores  = state.player_scores || [];
-  const ranked  = players.map((p, i) => ({
-    name: p.persona ? p.persona.name : `Player ${p.pid}`,
-    score: scores[i] !== undefined ? scores[i] : p.score,
-    isHuman: p.is_human,
-  })).sort((a, b) => b.score - a.score);
-
   ranked.forEach((p, i) => {
+    const isWinner = i === 0 && !everyoneLost;
     const row = document.createElement('div');
-    row.className = 'score-row';
+    row.className = ['score-row', isWinner ? 'winner' : '', p.isHuman ? 'human' : ''].filter(Boolean).join(' ');
     row.innerHTML = `
-      <div class="score-rank ${i === 0 ? 'first' : ''}">${i + 1}</div>
-      <div class="score-name">${p.name}${p.isHuman ? ' (You)' : ''}</div>
+      <div class="score-rank ${isWinner ? 'first' : ''}">${i + 1}</div>
+      ${p.image ? `<img class="score-persona-img" src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">` : ''}
+      <div class="score-name">${p.name}${p.isHuman ? '<span class="you-badge">YOU</span>' : ''}</div>
       <div class="score-pts">${p.score} <span>VP</span></div>
+      ${isWinner ? '<div class="score-trophy">🏆</div>' : ''}
     `;
     scoresEl.appendChild(row);
-    gsap.from(row, { x: -40, opacity: 0, delay: i * 0.15, duration: 0.4, ease: 'power2.out' });
+    gsap.from(row, { x: -50, opacity: 0, delay: 0.6 + i * 0.12, duration: 0.38, ease: 'power2.out' });
   });
 }
 
@@ -923,7 +1089,8 @@ $('destroyed-backdrop').addEventListener('click', closeDestroyedModal);
 const preview = $('card-preview');
 let previewTimeout = null;
 
-function addHover(el, card) {
+// skipTouch: pass true for hand cards — addTouchDrag handles their touch events.
+function addHover(el, card, skipTouch = false) {
   el.addEventListener('mouseenter', e => {
     clearTimeout(previewTimeout);
     previewTimeout = setTimeout(() => showPreview(e, card), 200);
@@ -933,6 +1100,20 @@ function addHover(el, card) {
     clearTimeout(previewTimeout);
     hidePreview();
   });
+
+  if (skipTouch) return;
+
+  // Mobile: long-press (500ms) shows preview for non-draggable cards
+  let touchHoldTimer = null;
+  el.addEventListener('touchstart', () => {
+    touchHoldTimer = setTimeout(() => {
+      touchHoldTimer = null;
+      showPreviewAtRect(el.getBoundingClientRect(), card);
+    }, 500);
+  }, { passive: true });
+  el.addEventListener('touchend',   () => { if (touchHoldTimer !== null) { clearTimeout(touchHoldTimer); touchHoldTimer = null; } });
+  el.addEventListener('touchmove',  () => { if (touchHoldTimer !== null) { clearTimeout(touchHoldTimer); touchHoldTimer = null; } }, { passive: true });
+  el.addEventListener('touchcancel',() => { if (touchHoldTimer !== null) { clearTimeout(touchHoldTimer); touchHoldTimer = null; } });
 }
 
 // Persona hover using the same tooltip mechanism
@@ -977,11 +1158,42 @@ function hidePreview() {
   preview.classList.add('hidden');
 }
 
-// Hide the preview on any click (card removed from DOM before mouseleave fires)
+// Show preview anchored to an element rect (used by mobile long-press).
+// autoHide=true: dismiss after 3 s (view-only cards).
+// autoHide=false: caller manages dismissal (drag-to-play mode).
+function showPreviewAtRect(rect, card, autoHide = false) {
+  $('preview-img').src  = imgUrl(card.image);
+  $('preview-img').alt  = card.name;
+  $('preview-name').textContent = card.name;
+  $('preview-text').textContent = card.text || card.attack_text || '';
+  $('preview-cost').textContent = `⚡ ${card.cost}`;
+  $('preview-vp').textContent   = `★ ${card.vp}`;
+  $('preview-type').textContent = (card.type || '').toUpperCase();
+  preview.classList.remove('hidden');
+
+  const pw = Math.min(240, window.innerWidth * 0.80);
+  let x = rect.left + rect.width / 2 - pw / 2;
+  let y = rect.top - 430;
+  if (y < 8) y = rect.bottom + 8;
+  if (x < 8) x = 8;
+  if (x + pw > window.innerWidth - 8) x = window.innerWidth - pw - 8;
+  preview.style.left = x + 'px';
+  preview.style.top  = y + 'px';
+
+  if (autoHide) setTimeout(hidePreview, 3000);
+}
+
+// Hide the preview on any click or touch (card removed from DOM before mouseleave fires)
 document.addEventListener('mousedown', () => {
   clearTimeout(previewTimeout);
   hidePreview();
 });
+document.addEventListener('touchstart', e => {
+  if (!preview.contains(e.target)) {
+    clearTimeout(previewTimeout);
+    hidePreview();
+  }
+}, { passive: true });
 
 // ── Card movement animations ─────────────────────────────────────────────────
 // Called BEFORE renderGameBoard so old cardRegistry positions are still valid.

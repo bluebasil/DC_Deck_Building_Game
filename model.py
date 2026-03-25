@@ -939,8 +939,9 @@ class model:
             output_persona_stats(self.players,"crash",details["msg"])
             return
 
-        #the game has ended, calculate vp (things may have changed since they last 
+        #the game has ended, calculate vp (things may have changed since they last
         #calulated their vp at the end of their turn)
+        self.end_reason = end_reason   # stored so the serializer can send it to the frontend
         for p in self.players:
             self.player_score.append(p.calculate_vp())
 

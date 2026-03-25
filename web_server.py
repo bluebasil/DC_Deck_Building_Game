@@ -65,6 +65,7 @@ def _emit_state():
 def _run_game(set_indices, player_configs):
     """Game loop executed in a background thread."""
     global _game_active
+    normal_game_over = False
     try:
         # Web mode: CPUs must not try to print to a view that doesn't exist
         globe.CPU_TERMINAL_INVISIBLE = True
@@ -89,8 +90,11 @@ def _run_game(set_indices, player_configs):
 
         globe.boss.start_game()
 
-        # Emit final game-over state
+        # Emit final game-over state and keep boss alive so reconnecting
+        # clients still see the game-over screen (not the lobby).
+        # globe.boss is cleared when the user clicks "Play Again" (abandon_game).
         _emit_state()
+        normal_game_over = True
 
     except globe.GameAborted:
         print("[game thread] Game aborted by user.", flush=True)
@@ -100,7 +104,9 @@ def _run_game(set_indices, player_configs):
         socketio.emit('game_error', {'message': str(e), 'detail': err}, namespace='/')
     finally:
         _game_active = False
-        globe.boss = None
+        if not normal_game_over:
+            # Abort or crash — clear state so clients return to lobby
+            globe.boss = None
 
 
 # ── Static file routes ────────────────────────────────────────────────────────

@@ -47,6 +47,7 @@ class felicity_smoak(persona_frame.persona):
 				elif len(player.under_superhero.contents) > 0:
 					instruction_text = "You may put a card from under your superhero into your hand."
 					result = effects.may_choose_one_of(instruction_text,player,player.under_superhero.contents,ai_hint.BEST)
+					player.hand.contents.append(result.pop_self())
 
 	def ready(self):
 		self.player.triggers.append(self.trigger)
