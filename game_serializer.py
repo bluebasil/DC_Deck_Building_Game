@@ -290,5 +290,6 @@ def serialize_state():
         "query": query,
         "game_ongoing": boss.game_ongoing,
         "player_scores": boss.player_score,
+        "end_reason": getattr(boss, 'end_reason', 'regular'),
         "events": events,
     }
