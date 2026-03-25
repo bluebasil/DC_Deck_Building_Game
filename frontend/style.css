@@ -288,7 +288,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   border-radius: var(--card-radius); overflow: hidden; cursor: pointer;
   transition: all var(--transition); box-shadow: 0 4px 16px #0006;
 }
-.pile-card img { width: 100%; height: 100%; object-fit: cover; }
+.pile-card img { width: 100%; height: 100%; object-fit: cover; -webkit-touch-callout: none; }
 .pile-card:hover { border-color: var(--gold); box-shadow: 0 0 16px rgba(201,162,39,.4); transform: scale(1.04); }
 .pile-card.small { width: 60px; height: 84px; }
 .pile-count {
@@ -462,7 +462,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   flex-shrink: 0; background: var(--surface);
   position: relative;
 }
-.game-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.game-card img { width: 100%; height: 100%; object-fit: cover; display: block; -webkit-touch-callout: none; }
 
 /* Hand cards use slightly larger size */
 .hand-zone .game-card {
