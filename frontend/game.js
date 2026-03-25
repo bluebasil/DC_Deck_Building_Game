@@ -730,6 +730,8 @@ function addTouchDrag(el, card) {
     el.addEventListener('touchend',    onEnd);
     el.addEventListener('touchcancel', onCancel);
   }, { passive: true });
+  // Suppress Chrome's native long-press context menu on images
+  el.addEventListener('contextmenu', e => e.preventDefault());
 }
 
 // ── Card building ───────────────────────────────────────────────────────────
@@ -1114,6 +1116,8 @@ function addHover(el, card, skipTouch = false) {
   el.addEventListener('touchend',   () => { if (touchHoldTimer !== null) { clearTimeout(touchHoldTimer); touchHoldTimer = null; } });
   el.addEventListener('touchmove',  () => { if (touchHoldTimer !== null) { clearTimeout(touchHoldTimer); touchHoldTimer = null; } }, { passive: true });
   el.addEventListener('touchcancel',() => { if (touchHoldTimer !== null) { clearTimeout(touchHoldTimer); touchHoldTimer = null; } });
+  // Suppress Chrome's native long-press context menu on images
+  el.addEventListener('contextmenu', e => e.preventDefault());
 }
 
 // Persona hover using the same tooltip mechanism
