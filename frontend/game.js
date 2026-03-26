@@ -1136,7 +1136,7 @@ function addPersonaHover(el, persona) {
 }
 
 function showPreview(e, card) {
-  previewFromTouch = false;
+  if (previewFromTouch) return;  // don't let synthesized mouseenter override a touch preview
   $('preview-img').src  = imgUrl(card.image);
   $('preview-img').alt  = card.name;
   $('preview-name').textContent = card.name;
@@ -1169,7 +1169,7 @@ function hidePreview() {
 // Show preview anchored to an element rect (used by mobile long-press).
 // autoHide=true: dismiss after 3 s (view-only cards).
 // autoHide=false: caller manages dismissal (drag-to-play mode).
-function showPreviewAtRect(rect, card, autoHide = false) {
+function showPreviewAtRect(_rect, card, autoHide = false) {
   previewFromTouch = true;
   $('preview-img').src  = imgUrl(card.image);
   $('preview-img').alt  = card.name;
@@ -1181,13 +1181,8 @@ function showPreviewAtRect(rect, card, autoHide = false) {
   preview.classList.remove('hidden');
 
   const pw = Math.min(240, window.innerWidth * 0.80);
-  let x = rect.left + rect.width / 2 - pw / 2;
-  let y = rect.top - 430;
-  if (y < 8) y = rect.bottom + 8;
-  if (x < 8) x = 8;
-  if (x + pw > window.innerWidth - 8) x = window.innerWidth - pw - 8;
-  preview.style.left = x + 'px';
-  preview.style.top  = y + 'px';
+  preview.style.left = ((window.innerWidth - pw) / 2) + 'px';
+  preview.style.top  = '15%';
 
   if (autoHide) setTimeout(hidePreview, 3000);
 }
