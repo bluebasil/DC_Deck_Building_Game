@@ -1090,6 +1090,7 @@ $('destroyed-backdrop').addEventListener('click', closeDestroyedModal);
 // ── Card preview tooltip ─────────────────────────────────────────────────────
 const preview = $('card-preview');
 let previewTimeout = null;
+let previewFromTouch = false;
 
 // skipTouch: pass true for hand cards — addTouchDrag handles their touch events.
 function addHover(el, card, skipTouch = false) {
@@ -1135,6 +1136,7 @@ function addPersonaHover(el, persona) {
 }
 
 function showPreview(e, card) {
+  previewFromTouch = false;
   $('preview-img').src  = imgUrl(card.image);
   $('preview-img').alt  = card.name;
   $('preview-name').textContent = card.name;
@@ -1148,6 +1150,7 @@ function showPreview(e, card) {
 
 function movePreview(e) {
   if (preview.classList.contains('hidden')) return;
+  if (previewFromTouch) return;
   const pw = 340, ph = 420;
   let x = e.clientX + 18;
   let y = e.clientY - 100;
@@ -1159,6 +1162,7 @@ function movePreview(e) {
 }
 
 function hidePreview() {
+  previewFromTouch = false;
   preview.classList.add('hidden');
 }
 
@@ -1166,6 +1170,7 @@ function hidePreview() {
 // autoHide=true: dismiss after 3 s (view-only cards).
 // autoHide=false: caller manages dismissal (drag-to-play mode).
 function showPreviewAtRect(rect, card, autoHide = false) {
+  previewFromTouch = true;
   $('preview-img').src  = imgUrl(card.image);
   $('preview-img').alt  = card.name;
   $('preview-name').textContent = card.name;
